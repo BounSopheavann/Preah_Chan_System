@@ -1,0 +1,164 @@
+DATABASE SCHEMA 05
+TABLE: patient_invites
+
+Dental Clinic Management System
+Version 1.0
+
+============================================================
+PURPOSE
+============================================================
+
+The patient_invites table stores temporary invitation records used to
+securely link a patient's clinic record with the Telegram Mini App.
+
+Each invite generates a unique QR code or invite token.
+
+After successful linking the invite becomes Used or Expired.
+
+Referenced by:
+- telegram_links (logical workflow)
+
+============================================================
+TABLE NAME
+============================================================
+
+patient_invites
+
+============================================================
+PRIMARY KEY
+============================================================
+
+invite_id
+Type: BIGINT UNSIGNED
+Auto Increment: YES
+Nullable: NO
+
+============================================================
+COLUMNS
+============================================================
+
+1. invite_id
+- BIGINT UNSIGNED
+- Primary Key
+- Auto Increment
+
+2. patient_id
+- BIGINT UNSIGNED
+- Required
+- FK -> patients.patient_id
+
+3. invite_token
+- VARCHAR(128)
+- Required
+- UNIQUE
+
+4. invite_type
+- ENUM('QR','Telegram','SMS','Manual')
+- Default: QR
+
+5. invite_status
+- ENUM('Pending','Used','Expired','Cancelled')
+- Default: Pending
+
+6. expires_at
+- DATETIME
+- Required
+
+7. created_by
+- BIGINT UNSIGNED
+- Required
+- FK -> users.user_id
+
+8. created_at
+- TIMESTAMP
+
+9. used_at
+- TIMESTAMP
+- Nullable
+
+============================================================
+FOREIGN KEYS
+============================================================
+
+patient_id -> patients(patient_id)
+created_by -> users(user_id)
+
+Recommended:
+ON UPDATE CASCADE
+ON DELETE RESTRICT
+
+============================================================
+INDEXES
+============================================================
+
+PRIMARY KEY (invite_id)
+
+UNIQUE (invite_token)
+
+INDEX (patient_id)
+INDEX (invite_status)
+INDEX (expires_at)
+INDEX (created_by)
+
+============================================================
+VALIDATION RULES
+============================================================
+
+- Invite token must be unique.
+- Invite must belong to an existing patient.
+- Expired invites cannot be reused.
+- Used invites cannot be reused.
+- Expiration time must be later than creation time.
+
+============================================================
+BUSINESS RULES
+============================================================
+
+1. One patient may receive multiple invites over time.
+2. Only one active invite should normally exist per patient.
+3. QR codes contain only the invite token.
+4. Staff generate invites, patients do not.
+5. Successful linking marks the invite as Used.
+
+============================================================
+RELATED MODULES
+============================================================
+
+Business Flow:
+1
+6
+
+System Flow:
+1
+6
+
+ERD:
+2
+
+============================================================
+LARAVEL MIGRATION REFERENCE
+============================================================
+
+id()
+foreignId('patient_id')->constrained('patients')
+string('invite_token',128)->unique()
+enum('invite_type',['QR','Telegram','SMS','Manual'])->default('QR')
+enum('invite_status',['Pending','Used','Expired','Cancelled'])->default('Pending')
+dateTime('expires_at')
+foreignId('created_by')->constrained('users')
+timestamp('used_at')->nullable()
+timestamps()
+
+============================================================
+EXAMPLE RECORD
+============================================================
+
+invite_id: 25
+patient_id: 100
+invite_token: 9fA82KxP7LmQ...
+invite_type: QR
+invite_status: Pending
+expires_at: 2026-08-15 14:00:00
+
+============================================================
+END OF DATABASE SCHEMA 05

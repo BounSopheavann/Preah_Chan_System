@@ -1,0 +1,185 @@
+DATABASE SCHEMA 06
+TABLE: telegram_links
+
+Dental Clinic Management System
+Version 1.0
+
+============================================================
+PURPOSE
+============================================================
+
+The telegram_links table stores the permanent relationship between a
+patient's clinic profile and their Telegram account.
+
+After a patient scans a valid QR code or invite token, one active
+Telegram link is created. This table is used for authentication and
+sending appointment reminders, recall notifications, treatment updates,
+and payment messages.
+
+Referenced by:
+- Recall module
+- Reminder service
+- Telegram Mini App
+- Notification service
+
+============================================================
+TABLE NAME
+============================================================
+
+telegram_links
+
+============================================================
+PRIMARY KEY
+============================================================
+
+telegram_link_id
+Type: BIGINT UNSIGNED
+Auto Increment: YES
+Nullable: NO
+
+============================================================
+COLUMNS
+============================================================
+
+1. telegram_link_id
+- BIGINT UNSIGNED
+- Primary Key
+- Auto Increment
+
+2. patient_id
+- BIGINT UNSIGNED
+- Required
+- FK -> patients.patient_id
+- UNIQUE (one active Telegram account per patient)
+
+3. telegram_user_id
+- BIGINT UNSIGNED
+- Required
+- UNIQUE
+
+4. telegram_username
+- VARCHAR(100)
+- Nullable
+
+5. first_name
+- VARCHAR(100)
+- Nullable
+
+6. last_name
+- VARCHAR(100)
+- Nullable
+
+7. photo_url
+- VARCHAR(255)
+- Nullable
+
+8. link_status
+- ENUM('Active','Unlinked','Suspended')
+- Default: Active
+
+9. linked_at
+- TIMESTAMP
+- Required
+
+10. last_login_at
+- TIMESTAMP
+- Nullable
+
+11. created_at
+- TIMESTAMP
+
+12. updated_at
+- TIMESTAMP
+
+============================================================
+FOREIGN KEYS
+============================================================
+
+patient_id -> patients(patient_id)
+
+Recommended:
+ON UPDATE CASCADE
+ON DELETE RESTRICT
+
+============================================================
+INDEXES
+============================================================
+
+PRIMARY KEY (telegram_link_id)
+
+UNIQUE (patient_id)
+
+UNIQUE (telegram_user_id)
+
+INDEX (link_status)
+
+INDEX (telegram_username)
+
+============================================================
+VALIDATION RULES
+============================================================
+
+- Patient must exist.
+- Telegram User ID must be unique.
+- One patient can only have one active Telegram link.
+- Suspended accounts cannot access the Mini App.
+- Unlinked accounts require a new invite token before relinking.
+
+============================================================
+BUSINESS RULES
+============================================================
+
+1. Patients cannot self-register directly.
+2. Staff must generate an invite before linking.
+3. One Telegram account belongs to one patient.
+4. One patient has only one active Telegram account.
+5. Old links should be marked Unlinked before creating a replacement.
+6. Telegram is used for reminders, follow-ups and patient portal access.
+
+============================================================
+RELATED MODULES
+============================================================
+
+Business Flow:
+1
+6
+
+System Flow:
+1
+6
+
+ERD:
+2
+6
+
+============================================================
+LARAVEL MIGRATION REFERENCE
+============================================================
+
+id()
+foreignId('patient_id')->unique()->constrained('patients')
+unsignedBigInteger('telegram_user_id')->unique()
+string('telegram_username',100)->nullable()
+string('first_name',100)->nullable()
+string('last_name',100)->nullable()
+string('photo_url',255)->nullable()
+enum('link_status',['Active','Unlinked','Suspended'])->default('Active')
+timestamp('linked_at')
+timestamp('last_login_at')->nullable()
+timestamps()
+
+============================================================
+EXAMPLE RECORD
+============================================================
+
+telegram_link_id: 8
+patient_id: 100
+telegram_user_id: 684512345
+telegram_username: dental_user
+first_name: Dara
+last_name: Sok
+link_status: Active
+linked_at: 2026-08-15 09:25:00
+
+============================================================
+END OF DATABASE SCHEMA 06

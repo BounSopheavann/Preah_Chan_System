@@ -1,0 +1,506 @@
+# ERD 3 – Clinical Notes & Treatment Planning
+
+You are working on a Dental Clinic Management System.
+
+This document is the official explanation of ERD 3.
+
+Treat this document as the source of truth.
+
+------------------------------------------------------------
+MODULE PURPOSE
+------------------------------------------------------------
+
+This module manages the dentist's clinical examination and treatment planning.
+
+Workflow
+
+Appointment
+        ↓
+Clinical Examination
+        ↓
+Clinical Note
+        ↓
+Treatment Plan
+        ↓
+Treatment Plan Items
+
+The purpose of this module is to record the patient's dental condition, diagnosis, and future treatment plan before treatment begins.
+
+------------------------------------------------------------
+TABLES
+------------------------------------------------------------
+
+This ERD contains four tables.
+
+1. appointments
+2. clinical_notes
+3. treatment_plans
+4. treatment_plan_items
+
+------------------------------------------------------------
+TABLE : appointments
+------------------------------------------------------------
+
+Purpose
+
+Stores every patient appointment.
+
+This table is created in ERD 1 and is referenced here.
+
+Primary Key
+
+appointment_id
+
+Referenced by
+
+clinical_notes.appointment_id
+
+treatment_plans.appointment_id
+
+------------------------------------------------------------
+Relationship
+------------------------------------------------------------
+
+One Appointment
+
+has
+
+One Clinical Note
+
+appointments.appointment_id
+        |
+        |
+        +--------<
+                 clinical_notes.appointment_id
+
+Relationship
+
+1 → 1
+
+------------------------------------------------------------
+
+One Appointment
+
+can have
+
+One Treatment Plan
+
+appointments.appointment_id
+        |
+        |
+        +--------<
+                 treatment_plans.appointment_id
+
+Relationship
+
+1 → 1
+
+------------------------------------------------------------
+TABLE : clinical_notes
+------------------------------------------------------------
+
+Purpose
+
+Stores the dentist's examination findings.
+
+Each appointment should have one clinical note.
+
+Primary Key
+
+clinical_note_id
+
+Columns
+
+clinical_note_id
+
+Primary Key
+
+appointment_id
+
+Foreign Key
+
+references
+
+appointments.appointment_id
+
+chief_complaint
+
+Patient's main concern.
+
+clinical_findings
+
+Examination findings.
+
+diagnosis
+
+Dentist diagnosis.
+
+recommendation
+
+Dentist recommendation.
+
+notes
+
+Additional notes.
+
+created_by
+
+Foreign Key
+
+references
+
+users.user_id
+
+created_at
+
+updated_at
+
+------------------------------------------------------------
+Relationship
+------------------------------------------------------------
+
+One Clinical Note
+
+belongs to
+
+One Appointment
+
+Relationship
+
+1 → 1
+
+------------------------------------------------------------
+TABLE : treatment_plans
+------------------------------------------------------------
+
+Purpose
+
+Stores the overall treatment plan for one appointment.
+
+Primary Key
+
+treatment_plan_id
+
+Columns
+
+treatment_plan_id
+
+Primary Key
+
+appointment_id
+
+Foreign Key
+
+references
+
+appointments.appointment_id
+
+estimated_total_cost
+
+estimated_duration
+
+overall_status
+
+Possible values
+
+Planned
+
+In Progress
+
+Completed
+
+Postponed
+
+Cancelled
+
+notes
+
+created_by
+
+Foreign Key
+
+references
+
+users.user_id
+
+created_at
+
+updated_at
+
+------------------------------------------------------------
+Relationship
+------------------------------------------------------------
+
+One Treatment Plan
+
+contains
+
+Many Treatment Plan Items
+
+treatment_plans.treatment_plan_id
+        |
+        |
+        +--------<
+                 treatment_plan_items.treatment_plan_id
+
+Relationship
+
+1 → Many
+
+------------------------------------------------------------
+TABLE : treatment_plan_items
+------------------------------------------------------------
+
+Purpose
+
+Stores every individual procedure planned for the patient.
+
+Each treatment plan may contain multiple procedures.
+
+Primary Key
+
+treatment_plan_item_id
+
+Columns
+
+treatment_plan_item_id
+
+Primary Key
+
+treatment_plan_id
+
+Foreign Key
+
+references
+
+treatment_plans.treatment_plan_id
+
+procedure_id
+
+Foreign Key
+
+references
+
+procedures.procedure_id
+(Defined in ERD 4)
+
+tooth_number
+
+Example
+
+11
+
+16
+
+26
+
+36
+
+tooth_surface
+
+Example
+
+O
+
+M
+
+D
+
+B
+
+L
+
+procedure_name
+
+estimated_price
+
+priority
+
+Possible values
+
+Low
+
+Medium
+
+High
+
+status
+
+Possible values
+
+Planned
+
+In Progress
+
+Completed
+
+Postponed
+
+Declined
+
+notes
+
+created_at
+
+updated_at
+
+------------------------------------------------------------
+Relationship
+------------------------------------------------------------
+
+Many Treatment Plan Items
+
+belong to
+
+One Treatment Plan
+
+Relationship
+
+Many → 1
+
+------------------------------------------------------------
+RELATIONSHIPS
+------------------------------------------------------------
+
+appointments (1)
+        |
+        +------|
+               clinical_notes
+
+One appointment
+
+One clinical note
+
+------------------------------------------------------------
+
+appointments (1)
+        |
+        +------|
+               treatment_plans
+
+One appointment
+
+One treatment plan
+
+------------------------------------------------------------
+
+treatment_plans (1)
+        |
+        +------<
+               treatment_plan_items
+
+One treatment plan
+
+Many treatment plan items
+
+------------------------------------------------------------
+
+procedures (1)
+        |
+        +------<
+               treatment_plan_items
+
+One procedure
+
+Many treatment plan items
+
+------------------------------------------------------------
+BUSINESS RULES
+------------------------------------------------------------
+
+Rule 1
+
+Every treatment plan belongs to exactly one appointment.
+
+------------------------------------------------------------
+
+Rule 2
+
+Every appointment should have one clinical note before treatment begins.
+
+------------------------------------------------------------
+
+Rule 3
+
+A treatment plan may contain one or many treatment plan items.
+
+------------------------------------------------------------
+
+Rule 4
+
+Each treatment plan item represents one procedure on one tooth.
+
+------------------------------------------------------------
+
+Rule 5
+
+Treatment plan items are independent.
+
+Each item has its own status.
+
+------------------------------------------------------------
+
+Rule 6
+
+Completing all treatment plan items automatically changes the treatment plan status to Completed.
+
+------------------------------------------------------------
+
+Rule 7
+
+Treatment plans cannot be deleted after treatment has started.
+
+------------------------------------------------------------
+
+Rule 8
+
+Only dentists are allowed to create or modify clinical notes and treatment plans.
+
+------------------------------------------------------------
+
+Rule 9
+
+Treatment plan items become Treatment Execution records during actual treatment (ERD 4).
+
+------------------------------------------------------------
+
+Rule 10
+
+Treatment plans are estimates only.
+
+Invoices are generated only after completed treatment executions in ERD 5.
+
+------------------------------------------------------------
+MODULE CONNECTIONS
+------------------------------------------------------------
+
+ERD 1
+Patient Management
+        ↓
+appointments
+
+ERD 2
+Telegram Integration
+        ↓
+Patients receive treatment progress notifications
+
+ERD 3
+Clinical Notes & Treatment Planning
+        ↓
+clinical_notes
+treatment_plans
+treatment_plan_items
+
+ERD 4
+Treatment Execution
+        ↓
+Uses treatment_plan_items
+
+ERD 5
+Billing
+        ↓
+Uses completed treatment executions
+
+------------------------------------------------------------
+END OF ERD 3
+------------------------------------------------------------

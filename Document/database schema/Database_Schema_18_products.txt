@@ -1,0 +1,172 @@
+DATABASE SCHEMA 18
+TABLE: products
+
+Dental Clinic Management System
+Version 1.0
+
+============================================================
+PURPOSE
+============================================================
+
+The products table stores every inventory item used or sold by the
+clinic.
+
+Products are referenced by purchase order items and stock movements.
+Current stock is maintained through inventory transactions rather than
+manual edits whenever possible.
+
+Referenced by:
+- purchase_order_items
+- stock_movements
+
+============================================================
+TABLE NAME
+============================================================
+
+products
+
+============================================================
+PRIMARY KEY
+============================================================
+
+product_id
+Type: BIGINT UNSIGNED
+Auto Increment: YES
+Nullable: NO
+
+============================================================
+COLUMNS
+============================================================
+
+1. product_id
+- BIGINT UNSIGNED
+- Primary Key
+- Auto Increment
+
+2. product_name
+- VARCHAR(150)
+- Required
+- UNIQUE
+
+3. category
+- VARCHAR(100)
+- Required
+
+4. unit
+- VARCHAR(50)
+- Required
+Examples:
+- Box
+- Piece
+- Bottle
+- Tube
+
+5. purchase_price
+- DECIMAL(12,2)
+- Required
+- Default: 0.00
+
+6. selling_price
+- DECIMAL(12,2)
+- Required
+- Default: 0.00
+
+7. current_stock
+- DECIMAL(12,2)
+- Required
+- Default: 0.00
+
+8. minimum_stock
+- DECIMAL(12,2)
+- Required
+- Default: 0.00
+
+9. status
+- ENUM('Active','Inactive')
+- Default: Active
+
+10. created_at
+- TIMESTAMP
+
+11. updated_at
+- TIMESTAMP
+
+============================================================
+INDEXES
+============================================================
+
+PRIMARY KEY (product_id)
+
+UNIQUE (product_name)
+
+INDEX (category)
+
+INDEX (status)
+
+INDEX (current_stock)
+
+============================================================
+VALIDATION RULES
+============================================================
+
+- Product name is required.
+- Product name must be unique.
+- Purchase price cannot be negative.
+- Selling price cannot be negative.
+- Current stock cannot be negative.
+- Minimum stock cannot be negative.
+
+============================================================
+BUSINESS RULES
+============================================================
+
+1. Every inventory item must have one product record.
+2. Products with transaction history should never be deleted.
+3. Inactive products remain available for historical reports.
+4. Low stock alerts are triggered when current stock reaches the minimum stock level.
+5. Stock values should be updated through stock movements.
+
+============================================================
+RELATED MODULES
+============================================================
+
+Business Flow:
+6
+
+System Flow:
+6
+
+ERD:
+6
+
+============================================================
+LARAVEL MIGRATION REFERENCE
+============================================================
+
+id()
+string('product_name',150)->unique()
+string('category',100)
+string('unit',50)
+decimal('purchase_price',12,2)->default(0)
+decimal('selling_price',12,2)->default(0)
+decimal('current_stock',12,2)->default(0)
+decimal('minimum_stock',12,2)->default(0)
+enum('status',['Active','Inactive'])->default('Active')
+timestamps()
+
+============================================================
+EXAMPLE RECORD
+============================================================
+
+product_id: 101
+product_name: Composite Resin A2
+category: Restorative Material
+unit: Tube
+purchase_price: 18.50
+selling_price: 35.00
+current_stock: 24
+minimum_stock: 5
+status: Active
+
+============================================================
+END OF DATABASE SCHEMA 18

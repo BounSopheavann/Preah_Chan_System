@@ -1,0 +1,216 @@
+SCREEN NAVIGATION 1
+Dental Clinic Management System
+
+MODULE
+Patient Registration & Appointment Booking
+
+PURPOSE
+
+This document defines the navigation between all screens used during
+patient registration and appointment booking.
+
+It complements:
+- Business Flow 1
+- System Flow 1
+- ERD 1
+
+============================================================
+PRIMARY USERS
+============================================================
+
+Receptionist
+Administrator
+
+============================================================
+SCREEN HIERARCHY
+============================================================
+
+Login
+  ↓
+Dashboard
+  ├── Patient List
+  │      ├── New Patient
+  │      ├── Patient Profile
+  │      └── Edit Patient
+  ├── Appointment Calendar
+  │      ├── Appointment Booking
+  │      └── Appointment Detail
+  └── Global Search
+         └── Patient Profile
+
+============================================================
+LOGIN
+============================================================
+
+Entry:
+Application starts.
+
+Buttons:
+- Login -> Dashboard
+- Exit -> Close application
+
+Failed login:
+Remain on Login screen.
+
+============================================================
+DASHBOARD
+============================================================
+
+Entry:
+Successful login.
+
+Menus:
+- Dashboard
+- Patients
+- Calendar
+- Appointments
+- Billing
+- Recall
+- Inventory
+- Reports
+- Settings
+- Logout
+
+Quick Actions:
+- Register Patient
+- Book Appointment
+- Today's Schedule
+
+============================================================
+PATIENT LIST
+============================================================
+
+Entry:
+Dashboard -> Patients
+
+Functions:
+- Search by phone
+- Search by patient code
+- Search by name
+- Filter active patients
+
+Buttons:
++ New Patient -> New Patient Screen
+Patient Row -> Patient Profile
+Back -> Dashboard
+
+============================================================
+NEW PATIENT
+============================================================
+
+Required:
+- Name
+- Phone
+
+Optional:
+- Gender
+- DOB
+- Address
+- Medical Information
+
+Save:
+Create patient
+Return to Patient Profile
+
+Cancel:
+Return to Patient List
+
+Validation:
+Duplicate phone -> Display warning
+Missing required field -> Stay on page
+
+============================================================
+PATIENT PROFILE
+============================================================
+
+Tabs:
+- Overview
+- Medical
+- Appointments
+- Billing
+- Files
+
+Buttons:
+Book Appointment -> Appointment Booking
+Edit -> Edit Patient
+Back -> Patient List
+
+============================================================
+APPOINTMENT BOOKING
+============================================================
+
+Entry:
+Patient Profile
+OR
+Dashboard Quick Action
+
+Fields:
+- Dentist
+- Date
+- Time
+- Appointment Type
+- Reason
+
+Save:
+Validate slot
+Create appointment
+Open Appointment Detail
+
+Cancel:
+Return to previous screen
+
+Conflict:
+Display available slots.
+
+============================================================
+APPOINTMENT DETAIL
+============================================================
+
+Display:
+- Patient
+- Dentist
+- Date
+- Time
+- Status
+
+Buttons:
+Edit
+Cancel Appointment
+Check-in (when appointment day arrives)
+Back
+
+============================================================
+CALENDAR
+============================================================
+
+Views:
+- Day
+- Week
+- Month
+
+Selecting a slot:
+Open Appointment Booking with date/time pre-filled.
+
+Selecting an appointment:
+Open Appointment Detail.
+
+============================================================
+GLOBAL RULES
+============================================================
+
+Save:
+Remain on current screen unless a new record is created.
+
+Cancel:
+Return to previous screen.
+
+Delete:
+Show confirmation dialog.
+
+Back:
+Return to previous screen.
+
+Logout:
+Return to Login.
+
+END OF SCREEN NAVIGATION 1

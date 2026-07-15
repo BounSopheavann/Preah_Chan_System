@@ -1,0 +1,388 @@
+BUSINESS FLOW 2 – PATIENT ARRIVAL & CHECK-IN
+
+You are working on a Dental Clinic Management System.
+
+This document is the official explanation of Business Flow 2.
+
+Treat this document as the source of truth.
+
+This document explains WHAT happens when a patient arrives at the
+clinic, WHO performs each task, HOW the system responds, WHAT
+validations occur, and WHICH database records are affected.
+
+Future ERDs, APIs, UI screens, business logic, and automation should
+follow this document.
+
+============================================================ MODULE
+PURPOSE ============================================================
+
+Business Flow 2 manages the patient’s arrival before clinical treatment
+begins.
+
+Booked Appointment ↓ Patient Arrives ↓ Verify Identity ↓ Verify Contact
+Information ↓ Verify Medical Information ↓ Check-in ↓ Waiting Queue ↓
+Dentist Calls Patient
+
+Goal
+
+• Verify the correct patient. • Keep patient information up to date. •
+Ensure medical alerts are reviewed. • Place the patient into today’s
+treatment queue. • Prepare the appointment for examination.
+
+============================================================ ACTORS
+============================================================
+
+Patient
+
+Receptionist
+
+Dentist
+
+System
+
+============================================================
+PRE-CONDITIONS
+============================================================
+
+• Patient has a booked appointment. • Receptionist is logged into the
+system. • Appointment exists in today’s schedule.
+
+============================================================ WORKFLOW
+============================================================
+
+STEP 1 PATIENT ARRIVES
+
+Business Action
+
+Patient arrives at the reception desk.
+
+Receptionist greets the patient.
+
+System Response
+
+No database changes.
+
+============================================================
+
+STEP 2 LOCATE APPOINTMENT
+
+Business Action
+
+Receptionist searches using:
+
+1.  Phone number
+2.  Patient code
+3.  Patient name
+4.  Today’s appointment list
+
+System Response
+
+Search:
+
+patients
+
+appointments
+
+Decision
+
+Appointment found?
+
+YES
+
+→ Open appointment.
+
+NO
+
+→ Continue validation.
+
+Second Decision
+
+Walk-in patient?
+
+YES
+
+→ Create a new same-day appointment if clinic policy allows.
+
+NO
+
+→ Inform patient that no appointment exists.
+
+============================================================
+
+STEP 3 VERIFY PATIENT IDENTITY
+
+Business Action
+
+Receptionist confirms:
+
+• Full name
+
+• Phone number
+
+• Date of birth (optional)
+
+System Response
+
+Display patient profile.
+
+============================================================
+
+STEP 4 VERIFY CONTACT INFORMATION
+
+Business Action
+
+Receptionist asks whether any information has changed.
+
+Examples
+
+• Phone
+
+• Email
+
+• Address
+
+• Emergency contact
+
+Decision
+
+Information changed?
+
+YES
+
+→ Receptionist updates profile.
+
+NO
+
+→ Continue.
+
+System Response
+
+Update patients table.
+
+Save updated_at timestamp.
+
+============================================================
+
+STEP 5 VERIFY MEDICAL INFORMATION
+
+Business Action
+
+Receptionist confirms:
+
+• Allergies
+
+• Medical conditions
+
+• Current medications
+
+• Consent status
+
+Decision
+
+Medical information changed?
+
+YES
+
+→ Update patient profile.
+
+NO
+
+→ Continue.
+
+System Response
+
+Save changes.
+
+Highlight medical alerts for dentist.
+
+============================================================
+
+STEP 6 CHECK-IN PATIENT
+
+Business Action
+
+Receptionist clicks Check-in.
+
+System Response
+
+Update appointment status.
+
+Booked / Confirmed
+
+↓
+
+Checked-in
+
+Record:
+
+• Check-in time (optional)
+
+• User performing check-in
+
+Refresh today’s waiting queue.
+
+============================================================
+
+STEP 7 PATIENT WAITS
+
+Business Action
+
+Patient waits in reception.
+
+System Response
+
+Patient appears in waiting queue.
+
+Queue may be sorted by:
+
+• Appointment time
+
+• Check-in time
+
+• Priority (Emergency)
+
+============================================================
+
+STEP 8 DENTIST CALLS PATIENT
+
+Business Action
+
+Dentist selects next patient.
+
+System Response
+
+Update appointment status.
+
+Checked-in
+
+↓
+
+In Chair
+
+Record treatment start time (optional).
+
+============================================================ VALIDATION
+RULES ============================================================
+
+• Appointment must exist before check-in.
+
+• Cancelled appointments cannot be checked in.
+
+• No-show appointments cannot be checked in.
+
+• Only receptionists may perform check-in.
+
+• Patient cannot have multiple active In Chair appointments.
+
+• Consent should be accepted before treatment begins.
+
+• Medical alerts must remain visible throughout treatment.
+
+============================================================ DATABASE
+IMPACT ============================================================
+
+Tables Read
+
+patients
+
+appointments
+
+users
+
+Tables Updated
+
+patients
+
+appointments
+
+Tables Created
+
+None
+
+============================================================ STATUS
+CHANGES ============================================================
+
+Appointment
+
+Booked
+
+↓
+
+Confirmed (optional)
+
+↓
+
+Checked-in
+
+↓
+
+In Chair
+
+============================================================ BUSINESS
+RULES ============================================================
+
+1.  Verify identity every visit.
+
+2.  Verify contact information every visit.
+
+3.  Verify medical information every visit.
+
+4.  Returning patients are never re-registered.
+
+5.  Receptionist owns check-in.
+
+6.  Dentist changes appointment to In Chair.
+
+============================================================ OUTPUTS
+============================================================
+
+• Verified patient profile
+
+• Updated medical information
+
+• Checked-in appointment
+
+• Waiting queue record
+
+============================================================ EXCEPTION
+FLOWS ============================================================
+
+Late arrival
+
+→ Receptionist decides whether to continue or reschedule.
+
+Patient arrives too early
+
+→ Patient waits until appointment time.
+
+Patient has no appointment
+
+→ Walk-in workflow if allowed.
+
+Medical alert discovered
+
+→ Notify dentist immediately.
+
+Consent declined
+
+→ Dentist decides whether treatment may continue.
+
+============================================================
+POST-CONDITIONS
+============================================================
+
+• Patient is ready for examination.
+
+• Dentist can begin Business Flow 3.
+
+============================================================ NEXT
+BUSINESS FLOW
+============================================================
+
+Business Flow 3
+
+Examination & Treatment Planning
+
+============================================================ END OF
+BUSINESS FLOW 2
+============================================================

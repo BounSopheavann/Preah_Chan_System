@@ -1,0 +1,616 @@
+# ERD 1 – Patient Management & Appointment System
+
+You are working on a Dental Clinic Management System.
+
+This document is the official explanation of ERD 1.
+
+Treat this document as the source of truth.
+
+------------------------------------------------------------
+MODULE PURPOSE
+------------------------------------------------------------
+
+This module manages the first part of the clinic workflow.
+
+Patient Registration
+        ↓
+Patient Profile
+        ↓
+Appointment Booking
+        ↓
+Appointment Scheduling
+
+It allows receptionists to register patients, create appointments, assign dentists, and manage appointment statuses.
+
+This module is the entry point of the entire system.
+
+------------------------------------------------------------
+TABLES
+------------------------------------------------------------
+
+This ERD contains four tables.
+
+1. users
+2. patients
+3. appointment_types
+4. appointments
+
+------------------------------------------------------------
+TABLE : users
+------------------------------------------------------------
+
+Purpose
+
+Stores every staff member that can log into the system.
+
+Examples
+
+Administrator
+Dentist
+Receptionist
+Assistant
+
+Primary Key
+
+user_id
+
+Columns
+
+user_id
+Primary Key
+
+full_name
+Staff full name.
+
+username
+Unique login username.
+
+password_hash
+Encrypted password.
+
+role
+
+Possible values
+
+Admin
+Receptionist
+Dentist
+Assistant
+
+phone
+
+email
+
+status
+
+Possible values
+
+Active
+Inactive
+
+created_at
+
+updated_at
+
+------------------------------------------------------------
+Relationship
+------------------------------------------------------------
+
+One User
+can create
+many Patients
+
+users.user_id
+        |
+        |
+        +--------<
+                 patients.created_by
+
+Relationship
+
+1 → Many
+
+------------------------------------------------------------
+
+One User
+can create
+many Appointments
+
+users.user_id
+        |
+        |
+        +--------<
+                 appointments.created_by
+
+Relationship
+
+1 → Many
+
+------------------------------------------------------------
+
+One User
+(Dentist)
+
+can be assigned to
+
+many Appointments
+
+users.user_id
+        |
+        |
+        +--------<
+                 appointments.dentist_id
+
+Relationship
+
+1 → Many
+
+------------------------------------------------------------
+TABLE : patients
+------------------------------------------------------------
+
+Purpose
+
+Stores one permanent patient record.
+
+Each patient only exists once.
+
+Every visit belongs to the same patient profile.
+
+Primary Key
+
+patient_id
+
+Columns
+
+patient_id
+Primary Key
+
+patient_code
+
+Clinic patient number.
+
+Example
+
+PT00001
+
+full_name
+
+gender
+
+date_of_birth
+
+phone
+
+email
+
+address
+
+emergency_contact_name
+
+emergency_contact_phone
+
+allergy
+
+medical_condition
+
+medication
+
+consent_status
+
+Possible values
+
+Pending
+Accepted
+Declined
+
+preferred_contact_method
+
+Possible values
+
+Phone
+Telegram
+Email
+SMS
+
+created_by
+
+Foreign Key
+
+references
+
+users.user_id
+
+created_at
+
+updated_at
+
+------------------------------------------------------------
+Relationship
+------------------------------------------------------------
+
+One Patient
+
+can have
+
+many Appointments
+
+patients.patient_id
+        |
+        |
+        +--------<
+                 appointments.patient_id
+
+Relationship
+
+1 → Many
+
+------------------------------------------------------------
+
+One User
+
+creates
+
+many Patients
+
+users.user_id
+        |
+        |
+        +--------<
+                 patients.created_by
+
+Relationship
+
+Many Patients
+
+belong to
+
+one User
+
+------------------------------------------------------------
+TABLE : appointment_types
+------------------------------------------------------------
+
+Purpose
+
+Stores predefined appointment categories.
+
+Receptionists select one type while booking.
+
+Primary Key
+
+appointment_type_id
+
+Columns
+
+appointment_type_id
+
+Primary Key
+
+name
+
+Examples
+
+Consultation
+
+Cleaning
+
+Extraction
+
+Root Canal
+
+Crown
+
+Emergency
+
+Review
+
+default_duration
+
+Minutes
+
+Example
+
+30
+
+description
+
+status
+
+Active
+
+Inactive
+
+created_at
+
+------------------------------------------------------------
+Relationship
+------------------------------------------------------------
+
+One Appointment Type
+
+can be used by
+
+many Appointments
+
+appointment_types.appointment_type_id
+            |
+            |
+            +--------<
+                     appointments.appointment_type_id
+
+Relationship
+
+1 → Many
+
+------------------------------------------------------------
+TABLE : appointments
+------------------------------------------------------------
+
+Purpose
+
+Stores every scheduled visit.
+
+Each appointment belongs to exactly one patient.
+
+Primary Key
+
+appointment_id
+
+Columns
+
+appointment_id
+
+Primary Key
+
+patient_id
+
+Foreign Key
+
+references
+
+patients.patient_id
+
+dentist_id
+
+Foreign Key
+
+references
+
+users.user_id
+
+created_by
+
+Foreign Key
+
+references
+
+users.user_id
+
+appointment_type_id
+
+Foreign Key
+
+references
+
+appointment_types.appointment_type_id
+
+appointment_date
+
+start_time
+
+end_time
+
+status
+
+Possible values
+
+Booked
+
+Confirmed
+
+Checked-in
+
+In Chair
+
+Completed
+
+Cancelled
+
+No-show
+
+reason_for_visit
+
+appointment_notes
+
+created_at
+
+updated_at
+
+------------------------------------------------------------
+RELATIONSHIPS
+------------------------------------------------------------
+
+patients (1)
+        |
+        +------<
+               appointments
+
+One patient
+
+Many appointments
+
+------------------------------------------------------------
+
+users (1)
+        |
+        +------<
+               patients
+
+One user creates many patients
+
+------------------------------------------------------------
+
+users (1)
+        |
+        +------<
+               appointments.created_by
+
+One receptionist creates many appointments
+
+------------------------------------------------------------
+
+users (1)
+        |
+        +------<
+               appointments.dentist_id
+
+One dentist treats many appointments
+
+------------------------------------------------------------
+
+appointment_types (1)
+        |
+        +------<
+               appointments
+
+One appointment type
+
+Many appointments
+
+------------------------------------------------------------
+BUSINESS RULES
+------------------------------------------------------------
+
+Rule 1
+
+One patient must only have one patient profile.
+
+Never create duplicate patients.
+
+Search by phone first.
+
+------------------------------------------------------------
+
+Rule 2
+
+Every appointment must belong to exactly one patient.
+
+------------------------------------------------------------
+
+Rule 3
+
+Every appointment must have one appointment type.
+
+------------------------------------------------------------
+
+Rule 4
+
+Every appointment must have one assigned dentist.
+
+------------------------------------------------------------
+
+Rule 5
+
+Receptionist creates appointments.
+
+Dentists do not create appointments during normal workflow.
+
+------------------------------------------------------------
+
+Rule 6
+
+Returning patients are never re-registered.
+
+Reuse the existing patient profile.
+
+------------------------------------------------------------
+
+Rule 7
+
+Appointment status lifecycle
+
+Booked
+
+↓
+
+Confirmed
+
+↓
+
+Checked-in
+
+↓
+
+In Chair
+
+↓
+
+Completed
+
+Alternative
+
+Booked
+
+↓
+
+Cancelled
+
+or
+
+Booked
+
+↓
+
+No-show
+
+------------------------------------------------------------
+
+Rule 8
+
+Deleting appointments is not recommended.
+
+Instead
+
+change status to
+
+Cancelled
+
+------------------------------------------------------------
+
+Rule 9
+
+Every patient profile records allergies, medications, medical conditions, and consent status before treatment.
+
+------------------------------------------------------------
+
+Rule 10
+
+This ERD is the foundation of every other ERD.
+
+Future modules reference these tables.
+
+ERD 2
+Telegram Integration
+→ patients
+
+ERD 3
+Treatment Planning
+→ appointments
+
+ERD 4
+Treatment Execution
+→ appointments
+
+ERD 5
+Billing
+→ appointments
+→ patients
+
+ERD 6
+Recall
+→ patients
+
+------------------------------------------------------------
+END OF ERD 1
+------------------------------------------------------------

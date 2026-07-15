@@ -1,0 +1,371 @@
+BUSINESS FLOW 3 – EXAMINATION & TREATMENT PLANNING
+
+You are working on a Dental Clinic Management System.
+
+This document is the official explanation of Business Flow 3.
+
+Treat this document as the source of truth.
+
+This document explains how the dentist examines the patient, records
+clinical findings, creates a diagnosis, prepares a treatment plan, and
+determines whether treatment will begin immediately or be scheduled for
+another visit.
+
+Future ERDs, APIs, UI screens, business logic, AI features, and reports
+should follow this document.
+
+============================================================ MODULE
+PURPOSE ============================================================
+
+Business Flow 3 begins when the patient has already been checked in.
+
+Checked-in ↓ Dentist Calls Patient ↓ Patient Moves to Dental Chair ↓
+Clinical Examination ↓ Diagnosis ↓ Treatment Planning ↓ Patient Decision
+↓ Proceed to Treatment or Schedule Future Visit
+
+Goal
+
+• Record complete clinical information. • Produce an accurate diagnosis.
+• Build a structured treatment plan. • Obtain patient approval. •
+Prepare treatment execution.
+
+============================================================ ACTORS
+============================================================
+
+Patient
+
+Dentist
+
+Dental Assistant
+
+System
+
+============================================================
+PRE-CONDITIONS
+============================================================
+
+• Patient has a Checked-in appointment. • Dentist is assigned to the
+appointment. • Patient profile exists. • Medical information has already
+been verified. • Consent is available or will be confirmed before
+treatment.
+
+============================================================ WORKFLOW
+============================================================
+
+STEP 1 CALL PATIENT
+
+Business Action
+
+Dentist selects the next patient from today’s waiting queue.
+
+Dental assistant escorts the patient to the treatment room.
+
+System Response
+
+Update appointment status.
+
+Checked-in
+
+↓
+
+In Chair
+
+Optionally record treatment start time.
+
+============================================================
+
+STEP 2 REVIEW PATIENT HISTORY
+
+Business Action
+
+Dentist reviews the patient’s complete history before examination.
+
+Information displayed:
+
+• Previous appointments • Previous treatments • Medical conditions •
+Allergies • Current medications • Consent status • X-rays • Clinical
+images • Outstanding treatment plans
+
+System Response
+
+Load all related patient records.
+
+Highlight medical alerts.
+
+============================================================
+
+STEP 3 INTERVIEW PATIENT
+
+Business Action
+
+Dentist asks questions including:
+
+• Chief complaint • Symptoms • Pain location • Pain duration • Pain
+severity • Previous dental treatment • Current concerns
+
+System Response
+
+Save chief complaint.
+
+Create new clinical note.
+
+============================================================
+
+STEP 4 PERFORM CLINICAL EXAMINATION
+
+Business Action
+
+Dentist performs examination.
+
+Possible findings include:
+
+• Tooth number • Tooth surface • Caries • Fracture • Missing tooth •
+Gingival condition • Periodontal condition • Occlusion • Existing
+restoration • Mobility • Infection
+
+Additional records
+
+• Clinical photographs • X-rays • Intraoral scans (future)
+
+System Response
+
+Store examination findings.
+
+Attach uploaded files.
+
+============================================================
+
+STEP 5 CREATE DIAGNOSIS
+
+Business Action
+
+Dentist determines diagnosis.
+
+Examples
+
+• Dental caries • Irreversible pulpitis • Periapical abscess •
+Gingivitis • Periodontitis • Broken crown • Impacted wisdom tooth
+
+System Response
+
+Create diagnosis record.
+
+Link diagnosis to appointment.
+
+============================================================
+
+STEP 6 CREATE TREATMENT PLAN
+
+Business Action
+
+Dentist creates one or more treatment items.
+
+Each item contains:
+
+• Procedure • Tooth number • Estimated price • Estimated duration •
+Priority • Clinical notes
+
+Default Status
+
+Planned
+
+System Response
+
+Save treatment plan.
+
+Create treatment plan items.
+
+============================================================
+
+STEP 7 DISCUSS TREATMENT
+
+Business Action
+
+Dentist explains:
+
+• Diagnosis • Treatment options • Risks • Benefits • Estimated cost •
+Estimated visits
+
+Decision
+
+Patient accepts treatment?
+
+YES
+
+→ Continue.
+
+NO
+
+→ Mark treatment items as Declined or Postponed.
+
+System Response
+
+Update treatment plan status.
+
+============================================================
+
+STEP 8 DECIDE WHEN TO TREAT
+
+Decision
+
+Treatment starts today?
+
+YES
+
+→ Continue to Business Flow 4.
+
+NO
+
+→ Receptionist schedules another appointment before patient leaves.
+
+System Response
+
+Save treatment plan.
+
+Keep appointment completed after consultation.
+
+============================================================ VALIDATION
+RULES ============================================================
+
+• Only dentists may create diagnoses.
+
+• Only dentists may create treatment plans.
+
+• Every diagnosis belongs to one appointment.
+
+• Every treatment plan belongs to one appointment.
+
+• Every treatment item references one treatment plan.
+
+• Tooth number should be recorded whenever applicable.
+
+• Medical alerts remain visible during examination.
+
+============================================================ DATABASE
+IMPACT ============================================================
+
+Tables Read
+
+patients
+
+appointments
+
+clinical_notes
+
+treatment_plans
+
+users
+
+files
+
+Tables Created
+
+clinical_notes
+
+diagnosis
+
+treatment_plans
+
+treatment_plan_items
+
+Tables Updated
+
+appointments
+
+============================================================ STATUS
+CHANGES ============================================================
+
+Appointment
+
+Checked-in
+
+↓
+
+In Chair
+
+↓
+
+Completed (Consultation Only)
+
+OR
+
+Continue to Treatment Execution
+
+Treatment Plan
+
+Created
+
+↓
+
+Planned
+
+============================================================ BUSINESS
+RULES ============================================================
+
+1.  Every examination must produce clinical notes.
+
+2.  Every diagnosis must belong to one appointment.
+
+3.  Treatment planning is performed before treatment unless emergency
+    care is required.
+
+4.  Multiple treatment items may exist under one treatment plan.
+
+5.  Patient approval should be obtained before treatment begins.
+
+============================================================ OUTPUTS
+============================================================
+
+• Clinical notes
+
+• Diagnosis
+
+• Treatment plan
+
+• Treatment plan items
+
+• Patient decision
+
+============================================================ EXCEPTION
+FLOWS ============================================================
+
+Emergency case discovered
+
+→ Skip normal planning if necessary and perform emergency treatment.
+
+Additional X-rays required
+
+→ Suspend diagnosis until imaging is complete.
+
+Patient refuses treatment
+
+→ Record refusal and optionally schedule review.
+
+Medical condition prevents treatment
+
+→ Postpone treatment and record the reason.
+
+============================================================
+POST-CONDITIONS
+============================================================
+
+• Diagnosis has been recorded.
+
+• Treatment plan exists.
+
+• Patient understands proposed treatment.
+
+• Patient either proceeds to treatment or leaves with a future
+appointment.
+
+============================================================ NEXT
+BUSINESS FLOW
+============================================================
+
+Business Flow 4
+
+Treatment Execution
+
+============================================================ END OF
+BUSINESS FLOW 3
+============================================================

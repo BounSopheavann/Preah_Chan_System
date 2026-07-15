@@ -1,0 +1,143 @@
+DATABASE SCHEMA 10
+TABLE: procedures
+
+Dental Clinic Management System
+Version 1.0
+
+============================================================
+PURPOSE
+============================================================
+
+The procedures table stores the master list of all dental procedures
+offered by the clinic.
+
+This is a lookup (master) table managed by administrators. It provides
+standard procedure names, default prices and estimated durations.
+
+Referenced by:
+- treatment_plan_items.procedure_id
+- treatment_execution.procedure_id
+
+============================================================
+TABLE NAME
+============================================================
+
+procedures
+
+============================================================
+PRIMARY KEY
+============================================================
+
+procedure_id
+Type: BIGINT UNSIGNED
+Auto Increment: YES
+Nullable: NO
+
+============================================================
+COLUMNS
+============================================================
+
+1. procedure_id
+- BIGINT UNSIGNED
+- Primary Key
+- Auto Increment
+
+2. procedure_name
+- VARCHAR(150)
+- Required
+- UNIQUE
+
+3. description
+- TEXT
+- Nullable
+
+4. default_price
+- DECIMAL(12,2)
+- Required
+- Default: 0.00
+
+5. estimated_duration
+- SMALLINT UNSIGNED
+- Required
+- Minutes
+
+6. status
+- ENUM('Active','Inactive')
+- Default: Active
+
+7. created_at
+- TIMESTAMP
+
+8. updated_at
+- TIMESTAMP
+
+============================================================
+INDEXES
+============================================================
+
+PRIMARY KEY (procedure_id)
+
+UNIQUE (procedure_name)
+
+INDEX (status)
+
+============================================================
+VALIDATION RULES
+============================================================
+
+- Procedure name is required.
+- Procedure name must be unique.
+- Default price cannot be negative.
+- Estimated duration must be greater than zero.
+- Inactive procedures cannot be selected for new treatment plans.
+
+============================================================
+BUSINESS RULES
+============================================================
+
+1. Administrators maintain the procedure list.
+2. Procedure names should remain consistent across the clinic.
+3. Historical procedure records must never be deleted.
+4. Inactive procedures remain available for historical reporting.
+5. Actual treatment prices may differ from the default price.
+
+============================================================
+RELATED MODULES
+============================================================
+
+Business Flow:
+3
+4
+
+System Flow:
+3
+4
+
+ERD:
+3
+4
+
+============================================================
+LARAVEL MIGRATION REFERENCE
+============================================================
+
+id()
+string('procedure_name',150)->unique()
+text('description')->nullable()
+decimal('default_price',12,2)->default(0)
+unsignedSmallInteger('estimated_duration')
+enum('status',['Active','Inactive'])->default('Active')
+timestamps()
+
+============================================================
+EXAMPLE RECORD
+============================================================
+
+procedure_id: 7
+procedure_name: Root Canal
+default_price: 250.00
+estimated_duration: 90
+status: Active
+
+============================================================
+END OF DATABASE SCHEMA 10

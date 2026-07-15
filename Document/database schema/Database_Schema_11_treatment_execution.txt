@@ -1,0 +1,209 @@
+DATABASE SCHEMA 11
+TABLE: treatment_execution
+
+Dental Clinic Management System
+Version 1.0
+
+============================================================
+PURPOSE
+============================================================
+
+The treatment_execution table stores every dental procedure actually
+performed by the dentist.
+
+Each record represents one completed, incomplete, or cancelled
+procedure performed during an appointment.
+
+This table is the bridge between Treatment Planning and Billing.
+
+Referenced by:
+- invoice_items
+- treatment_files
+- prescriptions
+
+============================================================
+TABLE NAME
+============================================================
+
+treatment_execution
+
+============================================================
+PRIMARY KEY
+============================================================
+
+treatment_execution_id
+Type: BIGINT UNSIGNED
+Auto Increment: YES
+Nullable: NO
+
+============================================================
+COLUMNS
+============================================================
+
+1. treatment_execution_id
+- BIGINT UNSIGNED
+- Primary Key
+- Auto Increment
+
+2. appointment_id
+- BIGINT UNSIGNED
+- Required
+- FK -> appointments.appointment_id
+
+3. treatment_plan_item_id
+- BIGINT UNSIGNED
+- Required
+- FK -> treatment_plan_items.treatment_plan_item_id
+
+4. procedure_id
+- BIGINT UNSIGNED
+- Required
+- FK -> procedures.procedure_id
+
+5. performed_by
+- BIGINT UNSIGNED
+- Required
+- FK -> users.user_id
+
+6. tooth_number
+- VARCHAR(10)
+- Required
+
+7. tooth_surface
+- VARCHAR(10)
+- Nullable
+
+8. quantity
+- INTEGER UNSIGNED
+- Default: 1
+
+9. unit_price
+- DECIMAL(12,2)
+- Required
+
+10. total_price
+- DECIMAL(12,2)
+- Required
+
+11. treatment_status
+- ENUM('Completed','Incomplete','Cancelled')
+- Default: Completed
+
+12. clinical_notes
+- TEXT
+- Nullable
+
+13. performed_at
+- DATETIME
+- Required
+
+14. created_at
+- TIMESTAMP
+
+15. updated_at
+- TIMESTAMP
+
+============================================================
+FOREIGN KEYS
+============================================================
+
+appointment_id -> appointments(appointment_id)
+
+treatment_plan_item_id ->
+treatment_plan_items(treatment_plan_item_id)
+
+procedure_id -> procedures(procedure_id)
+
+performed_by -> users(user_id)
+
+Recommended:
+ON UPDATE CASCADE
+ON DELETE RESTRICT
+
+============================================================
+INDEXES
+============================================================
+
+PRIMARY KEY (treatment_execution_id)
+
+INDEX (appointment_id)
+INDEX (treatment_plan_item_id)
+INDEX (procedure_id)
+INDEX (performed_by)
+INDEX (treatment_status)
+INDEX (performed_at)
+
+============================================================
+VALIDATION RULES
+============================================================
+
+- Appointment must exist.
+- Procedure must exist.
+- Treatment Plan Item must exist.
+- Only dentists may perform treatment.
+- Total price must be greater than or equal to zero.
+- Performed date is required.
+
+============================================================
+BUSINESS RULES
+============================================================
+
+1. Every treatment execution belongs to one appointment.
+2. Every execution normally originates from one treatment plan item.
+3. One completed treatment execution creates one invoice item.
+4. Clinical notes should describe the actual treatment performed.
+5. Historical treatment records must never be deleted.
+6. Actual treatment may differ from the original treatment plan.
+
+============================================================
+RELATED MODULES
+============================================================
+
+Business Flow:
+4
+5
+
+System Flow:
+4
+5
+
+ERD:
+4
+5
+
+============================================================
+LARAVEL MIGRATION REFERENCE
+============================================================
+
+id()
+foreignId('appointment_id')->constrained('appointments')
+foreignId('treatment_plan_item_id')->constrained('treatment_plan_items')
+foreignId('procedure_id')->constrained('procedures')
+foreignId('performed_by')->constrained('users')
+string('tooth_number',10)
+string('tooth_surface',10)->nullable()
+unsignedInteger('quantity')->default(1)
+decimal('unit_price',12,2)
+decimal('total_price',12,2)
+enum('treatment_status',['Completed','Incomplete','Cancelled'])->default('Completed')
+text('clinical_notes')->nullable()
+dateTime('performed_at')
+timestamps()
+
+============================================================
+EXAMPLE RECORD
+============================================================
+
+treatment_execution_id: 501
+appointment_id: 1001
+treatment_plan_item_id: 201
+procedure_id: 7
+performed_by: 3
+tooth_number: 36
+quantity: 1
+unit_price: 250.00
+total_price: 250.00
+treatment_status: Completed
+
+============================================================
+END OF DATABASE SCHEMA 11

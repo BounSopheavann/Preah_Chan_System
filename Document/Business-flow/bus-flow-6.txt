@@ -1,0 +1,359 @@
+BUSINESS FLOW 6 – FOLLOW-UP, RECALL & TELEGRAM PATIENT PORTAL
+
+You are working on a Dental Clinic Management System.
+
+This document is the official explanation of Business Flow 6.
+
+Treat this document as the source of truth.
+
+This document explains how the clinic manages patient follow-up
+appointments, long-term recall reminders, and Telegram Mini App
+integration after a patient leaves the clinic.
+
+Future reminder services, Telegram integration, analytics, dashboards,
+and patient engagement features should follow this document.
+
+============================================================ MODULE
+PURPOSE ============================================================
+
+Business Flow 6 begins after billing has been completed.
+
+Payment Completed ↓ Determine Next Action ↓ Follow-up Required? ↓ Create
+Follow-up Appointment ↓ OR Create Recall Reminder ↓ Notify Patient ↓
+Patient Returns (Business Flow 2)
+
+Goal
+
+• Keep patients returning for treatment. • Reduce missed follow-up
+visits. • Improve long-term patient retention. • Provide patients with a
+simple self-service portal.
+
+============================================================ ACTORS
+============================================================
+
+Patient
+
+Receptionist
+
+Dentist
+
+Administrator
+
+System
+
+Telegram Mini App
+
+============================================================
+PRE-CONDITIONS
+============================================================
+
+• Billing workflow is complete. • Appointment status is Completed. •
+Patient profile exists.
+
+============================================================ WORKFLOW
+============================================================
+
+STEP 1 DETERMINE NEXT ACTION
+
+Business Action
+
+Dentist decides whether the patient needs:
+
+• Follow-up visit • Additional treatment • Routine recall • No further
+appointment
+
+System Response
+
+Display treatment outcome options.
+
+============================================================
+
+STEP 2 CREATE FOLLOW-UP
+
+Decision
+
+Follow-up required?
+
+YES
+
+Business Action
+
+Receptionist schedules the next appointment.
+
+Examples
+
+• Crown fitting
+
+• Root canal continuation
+
+• Suture removal
+
+• Orthodontic review
+
+System Response
+
+Create new appointment.
+
+Link to existing patient.
+
+============================================================
+
+STEP 3 CREATE RECALL
+
+Decision
+
+Routine recall required?
+
+YES
+
+Business Action
+
+Receptionist or system schedules future recall.
+
+Examples
+
+• 6-month cleaning
+
+• Annual examination
+
+• Preventive check-up
+
+System Response
+
+Create recall record.
+
+Store:
+
+• Due date
+
+• Reminder status
+
+• Recall reason
+
+============================================================
+
+STEP 4 SEND REMINDERS
+
+System Response
+
+Automatically send reminders through:
+
+• Telegram
+
+• SMS
+
+• Email
+
+Reminder timing may include:
+
+• 24 hours before appointment
+
+• 2 hours before appointment
+
+• Recall due date
+
+Track reminder status:
+
+• Sent
+
+• Delivered
+
+• Read (future)
+
+• Failed
+
+============================================================
+
+STEP 5 TELEGRAM MINI APP
+
+Business Action
+
+Receptionist links patient’s Telegram account using a secure QR code or
+invitation token.
+
+System Response
+
+Create Telegram link.
+
+Patient may view:
+
+• Upcoming appointments
+
+• Treatment progress
+
+• Outstanding balance
+
+• Treatment history
+
+• Recall reminders
+
+• Clinic announcements (future)
+
+============================================================
+
+STEP 6 PATIENT RESPONSE
+
+Decision
+
+Patient books appointment?
+
+YES
+
+→ Return to Business Flow 2.
+
+NO
+
+→ Continue monitoring recall schedule.
+
+System Response
+
+Update reminder outcome.
+
+Examples
+
+• Booked
+
+• Ignored
+
+• Declined
+
+============================================================ VALIDATION
+RULES ============================================================
+
+• Every recall belongs to one patient.
+
+• Every follow-up appointment belongs to one patient.
+
+• Telegram account may only link to one patient profile.
+
+• Reminder dates cannot occur before today’s date.
+
+• Duplicate recall reminders should be prevented.
+
+============================================================ DATABASE
+IMPACT ============================================================
+
+Tables Read
+
+patients
+
+appointments
+
+treatment_plans
+
+invoices
+
+Tables Created
+
+recalls
+
+appointments (follow-up)
+
+telegram_links
+
+patient_invites
+
+Tables Updated
+
+patients
+
+recalls
+
+appointments
+
+============================================================ STATUS
+CHANGES ============================================================
+
+Recall
+
+Created
+
+↓
+
+Scheduled
+
+↓
+
+Reminder Sent
+
+↓
+
+Booked
+
+OR
+
+Ignored
+
+Appointment
+
+Completed
+
+↓
+
+New Appointment Booked
+
+============================================================ BUSINESS
+RULES ============================================================
+
+1.  Every patient should leave with one of three outcomes:
+
+• Treatment completed
+
+• Follow-up appointment booked
+
+• Recall reminder created
+
+2.  Follow-up appointments have higher priority than routine recalls.
+
+3.  Telegram linking should be performed by staff using a secure QR
+    code.
+
+4.  Returning patients always reuse the existing patient profile.
+
+============================================================ OUTPUTS
+============================================================
+
+• Follow-up appointment
+
+• Recall record
+
+• Reminder history
+
+• Telegram account link
+
+• Updated patient engagement history
+
+============================================================ EXCEPTION
+FLOWS ============================================================
+
+Patient declines follow-up
+
+→ Record refusal.
+
+Reminder delivery fails
+
+→ Retry using another communication method.
+
+Telegram linking fails
+
+→ Generate a new secure invitation token.
+
+Patient changes phone number
+
+→ Update profile before sending future reminders.
+
+============================================================
+POST-CONDITIONS
+============================================================
+
+• Patient has an appropriate next action.
+
+• Reminder schedule is active.
+
+• Telegram portal is linked if available.
+
+• Clinic can continue long-term patient tracking.
+
+============================================================ END OF
+BUSINESS FLOW 6
+============================================================

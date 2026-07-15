@@ -1,0 +1,143 @@
+DATABASE SCHEMA 03
+TABLE: appointment_types
+
+Dental Clinic Management System
+Version 1.0
+
+============================================================
+PURPOSE
+============================================================
+
+The appointment_types table stores predefined appointment categories.
+
+Receptionists select one appointment type when creating an appointment.
+The default duration helps the scheduling system automatically calculate
+appointment end times.
+
+Examples:
+- Consultation
+- Cleaning
+- Filling
+- Extraction
+- Root Canal
+- Crown
+- Emergency
+- Review
+
+Referenced by:
+- appointments.appointment_type_id
+
+============================================================
+TABLE NAME
+============================================================
+
+appointment_types
+
+============================================================
+PRIMARY KEY
+============================================================
+
+appointment_type_id
+Type: BIGINT UNSIGNED
+Auto Increment: YES
+Nullable: NO
+
+============================================================
+COLUMNS
+============================================================
+
+1. appointment_type_id
+- BIGINT UNSIGNED
+- Primary Key
+- Auto Increment
+
+2. name
+- VARCHAR(100)
+- Required
+- UNIQUE
+
+3. default_duration
+- SMALLINT UNSIGNED
+- Required
+- Minutes
+
+4. description
+- TEXT
+- Nullable
+
+5. status
+- ENUM('Active','Inactive')
+- Default: Active
+
+6. created_at
+- TIMESTAMP
+
+7. updated_at
+- TIMESTAMP
+
+============================================================
+INDEXES
+============================================================
+
+PRIMARY KEY (appointment_type_id)
+
+UNIQUE (name)
+
+INDEX (status)
+
+============================================================
+VALIDATION RULES
+============================================================
+
+- Name is required.
+- Name must be unique.
+- Default duration must be greater than zero.
+- Inactive appointment types cannot be selected for new appointments.
+
+============================================================
+BUSINESS RULES
+============================================================
+
+1. Appointment types are managed by administrators.
+2. Receptionists cannot create duplicate appointment types.
+3. Default duration is used when scheduling appointments.
+4. Appointment history must keep the original appointment type.
+5. Inactive appointment types remain for historical records.
+
+============================================================
+RELATED MODULES
+============================================================
+
+Business Flow:
+1
+2
+
+System Flow:
+1
+2
+
+ERD:
+1
+
+============================================================
+LARAVEL MIGRATION REFERENCE
+============================================================
+
+id()
+string('name',100)->unique()
+unsignedSmallInteger('default_duration')
+text('description')->nullable()
+enum('status',['Active','Inactive'])->default('Active')
+timestamps()
+
+============================================================
+EXAMPLE RECORD
+============================================================
+
+appointment_type_id: 1
+name: Consultation
+default_duration: 30
+status: Active
+
+============================================================
+END OF DATABASE SCHEMA 03

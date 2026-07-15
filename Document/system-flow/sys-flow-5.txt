@@ -1,0 +1,377 @@
+System Flow 5 Specification
+
+Billing, Payment & Invoice Processing
+
+This document defines System Flow 5 for the Dental Clinic Management
+System.
+
+System Flow 5 begins immediately after the dentist completes treatment.
+
+All completed procedures have already been recorded by System Flow 4.
+
+This flow ends after payment is processed and the invoice reaches its
+final status.
+
+------------------------------------------------------------------------
+
+Primary Actors
+
+-   Receptionist (Cashier)
+
+Supporting Actors
+
+-   Patient
+-   Dentist (optional for discounts or pricing approval)
+
+System
+
+-   Dental Clinic Management System
+
+------------------------------------------------------------------------
+
+Scope
+
+Included
+
+-   Generate invoice
+-   Load completed procedures
+-   Calculate totals
+-   Discount handling
+-   Partial payment
+-   Multiple payment methods
+-   Outstanding balance
+-   Receipt generation
+-   Payment recording
+
+Excluded
+
+-   Follow-up appointment
+-   Recall scheduling
+
+Those belong to System Flow 6.
+
+------------------------------------------------------------------------
+
+Overall Business Logic
+
+The system automatically converts completed procedures into invoice
+items.
+
+Receptionists should never manually type treatment prices unless they
+have permission.
+
+Every payment must be recorded.
+
+Every invoice must finish with a valid status.
+
+------------------------------------------------------------------------
+
+Flow
+
+START
+
+Treatment completed.
+
+↓
+
+Receptionist opens Billing module.
+
+↓
+
+System loads today’s completed procedures.
+
+Decision
+
+Completed procedures found?
+
+YES
+
+Generate invoice.
+
+NO
+
+Display error.
+
+Return to dentist.
+
+------------------------------------------------------------------------
+
+Invoice Generation
+
+System creates invoice.
+
+Include:
+
+-   Patient
+-   Invoice number
+-   Procedures
+-   Tooth numbers
+-   Unit prices
+-   Quantity
+-   Discounts
+-   Taxes (if enabled)
+-   Grand total
+
+Display invoice.
+
+------------------------------------------------------------------------
+
+Discount
+
+Decision
+
+Discount requested?
+
+YES
+
+Decision
+
+Receptionist authorized?
+
+YES
+
+Apply discount.
+
+Record:
+
+-   Discount type
+-   Amount
+-   Reason
+
+NO
+
+Request admin/dentist approval.
+
+Decision
+
+Approved?
+
+YES
+
+Apply discount.
+
+NO
+
+Continue without discount.
+
+NO
+
+Continue.
+
+------------------------------------------------------------------------
+
+Payment
+
+System displays balance.
+
+Patient selects payment method.
+
+Options:
+
+-   Cash
+-   Credit Card
+-   Bank Transfer
+-   QR Payment
+-   Mobile Payment
+-   Mixed Payment
+
+Receptionist enters payment.
+
+Decision
+
+Full payment?
+
+YES
+
+Invoice status
+
+Paid
+
+Balance = 0
+
+NO
+
+Decision
+
+Partial payment?
+
+YES
+
+Record payment.
+
+Calculate remaining balance.
+
+Invoice status
+
+Partially Paid
+
+Outstanding balance saved.
+
+NO
+
+Invoice status
+
+Unpaid
+
+------------------------------------------------------------------------
+
+Receipt
+
+System generates receipt.
+
+Decision
+
+Print receipt?
+
+YES
+
+Print.
+
+NO
+
+Continue.
+
+Decision
+
+Send digital receipt?
+
+YES
+
+Send:
+
+-   Telegram
+-   Email
+-   WhatsApp
+-   SMS
+
+NO
+
+Continue.
+
+------------------------------------------------------------------------
+
+Finish
+
+System records:
+
+-   Payment
+-   Invoice
+-   Transaction history
+-   Payment method
+-   Cashier
+
+Appointment Status
+
+Treatment Completed
+
+↓
+
+Completed
+
+System Flow 6 begins.
+
+------------------------------------------------------------------------
+
+Database Operations
+
+Read
+
+-   procedures
+-   invoices
+-   patients
+-   pricing
+
+Create
+
+-   invoice
+-   payment
+-   receipt
+-   payment history
+
+Update
+
+-   invoice status
+-   patient balance
+-   appointment status
+
+------------------------------------------------------------------------
+
+Status Changes
+
+Invoice
+
+Draft
+
+↓
+
+Paid
+
+or
+
+Partially Paid
+
+or
+
+Unpaid
+
+Appointment
+
+Treatment Completed
+
+↓
+
+Completed
+
+------------------------------------------------------------------------
+
+Validation Rules
+
+-   Invoice must contain at least one completed procedure.
+-   Total must equal procedure prices minus discounts plus taxes.
+-   Payment cannot exceed invoice total.
+-   Every payment requires a payment method.
+-   Discounts require authorization when configured.
+-   Receipt generated only after invoice creation.
+
+------------------------------------------------------------------------
+
+Decisions
+
+1.  Completed procedures found?
+2.  Discount requested?
+3.  Receptionist authorized?
+4.  Discount approved?
+5.  Full payment?
+6.  Partial payment?
+7.  Print receipt?
+8.  Send digital receipt?
+
+------------------------------------------------------------------------
+
+Diagram Rules
+
+Use standard flowchart symbols.
+
+Oval
+
+Start / End
+
+Rectangle
+
+System process
+
+Diamond
+
+Decision
+
+Arrows
+
+Normal process flow.
+
+Every decision must include YES and NO branches.
+
+System Flow 5 ends after invoice processing is complete and before
+follow-up or recall scheduling begins.
+
+System Flow 6 starts with post-treatment follow-up and recall
+management.

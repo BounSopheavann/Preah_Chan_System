@@ -1,0 +1,188 @@
+SCREEN NAVIGATION 4
+Dental Clinic Management System
+
+MODULE
+Treatment Execution & Clinical Procedures
+
+PURPOSE
+
+Defines screen navigation while treatment is being performed.
+This module starts after an approved treatment plan and ends when the
+visit is completed and ready for billing.
+
+Related Documents
+- Business Flow 4
+- System Flow 4
+- ERD 4
+
+============================================================
+PRIMARY USERS
+============================================================
+
+Dentist
+Dental Assistant
+Administrator (Read)
+
+============================================================
+SCREEN HIERARCHY
+============================================================
+
+Treatment Plan
+      ↓
+Treatment Execution
+      ├── Procedure Recording
+      ├── Anesthesia
+      ├── Consumables
+      ├── Clinical Images
+      ├── Prescription
+      └── Treatment Summary
+
+============================================================
+TREATMENT EXECUTION
+============================================================
+
+Entry:
+Treatment Plan → Start Treatment
+
+Displays:
+- Planned procedures
+- Tooth numbers
+- Previous notes
+- Images
+- Medical alerts
+
+Buttons:
+Start Procedure
+View Images
+View Odontogram
+Finish Visit
+Back
+
+============================================================
+PROCEDURE RECORDING
+============================================================
+
+Functions:
+- Select procedure
+- Tooth number
+- Tooth surface
+- Duration
+- Clinical notes
+
+Buttons:
+Save Procedure
+Next Procedure
+Cancel
+
+Validation:
+Responsible dentist required.
+Clinical notes required before completion.
+
+============================================================
+ANESTHESIA
+============================================================
+
+Fields:
+- Drug
+- Dosage
+- Quantity
+- Injection site
+
+Buttons:
+Save
+Skip
+Back
+
+============================================================
+CONSUMABLES
+============================================================
+
+Functions:
+- Add material
+- Quantity used
+- Optional batch number
+
+Buttons:
+Add
+Remove
+Save
+
+============================================================
+CLINICAL IMAGES
+============================================================
+
+Functions:
+- Capture image
+- Upload X-ray
+- View attachments
+
+Buttons:
+Attach
+Delete (permission)
+Back
+
+============================================================
+PRESCRIPTION
+============================================================
+
+Fields:
+- Medicine
+- Dosage
+- Frequency
+- Duration
+- Instructions
+
+Buttons:
+Save Prescription
+Skip
+
+============================================================
+TREATMENT SUMMARY
+============================================================
+
+Displays:
+- Completed procedures
+- Remaining procedures
+- Recommendations
+- Post-operative instructions
+
+Buttons:
+Complete Visit
+Return to Treatment
+Print Summary
+
+Complete Visit:
+Navigate to Billing (Navigation 5)
+
+============================================================
+GLOBAL RULES
+============================================================
+
+Save:
+Remain on current screen.
+
+Finish Visit:
+Update appointment status.
+Navigate to Billing.
+
+Back:
+Return to previous screen.
+
+Logout:
+Return to Login.
+
+============================================================
+ERROR NAVIGATION
+============================================================
+
+Missing clinical note:
+Remain on Procedure Recording.
+
+Treatment interrupted:
+Save progress.
+Return to Treatment Summary.
+
+Missing procedure:
+Prevent visit completion.
+
+END OF SCREEN NAVIGATION 4

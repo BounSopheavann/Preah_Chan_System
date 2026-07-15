@@ -1,0 +1,408 @@
+System Flow 3 Specification
+
+Clinical Examination, Diagnosis & Treatment Planning
+
+This document defines System Flow 3 for the Dental Clinic Management
+System.
+
+This flow begins when the patient has already completed reception
+check-in and is called into the treatment room.
+
+This flow ends when the dentist finishes the examination, records the
+diagnosis, creates the treatment plan, and decides whether treatment
+will begin immediately or be scheduled for another visit.
+
+------------------------------------------------------------------------
+
+Primary Actors
+
+-   Dentist
+-   Dental Assistant (optional)
+
+Supporting Actor
+
+-   Patient
+
+System
+
+-   Dental Clinic Management System
+
+------------------------------------------------------------------------
+
+Scope
+
+Included
+
+-   Patient enters treatment room
+-   Open patient record
+-   Review medical history
+-   Review previous treatments
+-   Clinical examination
+-   Record findings
+-   Diagnosis
+-   Tooth chart (Odontogram)
+-   X-ray / image attachment
+-   Treatment plan creation
+-   Cost estimation
+-   Patient approval
+-   Decision to start treatment now or later
+
+Excluded
+
+-   Actual treatment procedure
+-   Billing
+-   Payment
+-   Follow-up
+
+Those belong to later System Flows.
+
+------------------------------------------------------------------------
+
+Overall Business Logic
+
+The receptionist no longer participates.
+
+The dentist becomes the primary user.
+
+The system acts as an electronic dental record (EDR), displaying patient
+history while allowing the dentist to document today’s visit.
+
+Nothing should be handwritten outside the system.
+
+Every examination should result in one of these outcomes:
+
+• Treatment starts today. • Future appointment is required. • Patient
+declines treatment.
+
+------------------------------------------------------------------------
+
+Flow
+
+START
+
+Patient status:
+
+Waiting
+
+↓
+
+Dentist calls patient.
+
+↓
+
+Receptionist/Assistant changes appointment status.
+
+Waiting
+
+↓
+
+In Chair
+
+↓
+
+System opens patient’s appointment.
+
+------------------------------------------------------------------------
+
+Patient Summary
+
+System displays:
+
+-   Patient profile
+-   Age
+-   Medical alerts
+-   Allergies
+-   Current medication
+-   Previous diagnoses
+-   Previous procedures
+-   Outstanding balance
+-   Last visit
+-   X-rays
+-   Images
+-   Clinical notes
+
+Dentist reviews information.
+
+Decision
+
+Medical alert exists?
+
+YES
+
+Display alert prominently.
+
+Dentist acknowledges alert.
+
+Continue.
+
+NO
+
+Continue.
+
+------------------------------------------------------------------------
+
+Clinical Examination
+
+Dentist interviews patient.
+
+Record:
+
+-   Chief complaint
+-   Pain level
+-   Symptoms
+-   Duration
+-   Medical changes
+
+Dentist performs oral examination.
+
+System records:
+
+-   Tooth number
+-   Tooth surface
+-   Findings
+-   Periodontal condition
+-   Caries
+-   Missing teeth
+-   Existing restoration
+-   Crown
+-   Implant
+-   Fracture
+-   Infection
+-   Other observations
+
+------------------------------------------------------------------------
+
+Images
+
+Decision
+
+Need X-ray or image?
+
+YES
+
+Capture or upload:
+
+-   X-ray
+-   Clinical photo
+-   Scan
+
+Attach to patient record.
+
+NO
+
+Continue.
+
+------------------------------------------------------------------------
+
+Diagnosis
+
+Dentist enters:
+
+-   Diagnosis
+-   Notes
+-   Priority
+
+Save diagnosis.
+
+------------------------------------------------------------------------
+
+Treatment Planning
+
+Dentist creates treatment plan.
+
+Each item contains:
+
+-   Procedure
+-   Tooth
+-   Estimated duration
+-   Dentist
+-   Estimated cost
+-   Priority
+-   Notes
+
+Treatment Status
+
+Planned
+
+------------------------------------------------------------------------
+
+Estimate
+
+System calculates:
+
+-   Procedure prices
+-   Estimated total
+-   Estimated visits
+
+Display estimate.
+
+------------------------------------------------------------------------
+
+Patient Decision
+
+Dentist explains treatment.
+
+Decision
+
+Patient accepts?
+
+YES
+
+Continue.
+
+NO
+
+Decision
+
+Decline permanently?
+
+YES
+
+Treatment item status
+
+Declined
+
+Save.
+
+End.
+
+NO
+
+Treatment item status
+
+Postponed
+
+Future appointment recommended.
+
+End.
+
+------------------------------------------------------------------------
+
+Treatment Timing
+
+Decision
+
+Start treatment today?
+
+YES
+
+Appointment status remains
+
+In Chair
+
+System Flow 4 begins.
+
+NO
+
+Book another appointment.
+
+Treatment plan remains
+
+Planned
+
+End.
+
+------------------------------------------------------------------------
+
+Database Operations
+
+Read
+
+-   patients
+-   appointments
+-   medical_history
+-   clinical_notes
+-   procedures
+-   xray
+-   files
+
+Create
+
+-   clinical note
+-   diagnosis
+-   treatment plan
+-   image attachment
+
+Update
+
+-   appointment status
+-   odontogram
+-   patient history
+
+------------------------------------------------------------------------
+
+Status Changes
+
+Appointment
+
+Waiting
+
+↓
+
+In Chair
+
+Treatment Plan
+
+None
+
+↓
+
+Planned
+
+or
+
+Declined
+
+or
+
+Postponed
+
+------------------------------------------------------------------------
+
+Validation Rules
+
+-   Dentist must be assigned.
+-   Patient must be checked in.
+-   Clinical note cannot be empty.
+-   Diagnosis required before treatment planning.
+-   Every treatment plan must contain at least one procedure.
+-   Images must be linked to the current visit.
+-   Treatment estimate is automatically calculated.
+
+------------------------------------------------------------------------
+
+Decisions
+
+1.  Medical alert?
+2.  Need X-ray?
+3.  Patient accepts treatment?
+4.  Decline permanently?
+5.  Start treatment today?
+
+------------------------------------------------------------------------
+
+Diagram Rules
+
+Use standard flowchart symbols.
+
+Oval
+
+Start / End
+
+Rectangle
+
+System process
+
+Diamond
+
+Decision
+
+Arrows
+
+Normal process flow.
+
+Every decision must contain YES and NO branches.
+
+System Flow 3 ends immediately before any dental procedure begins.
+
+System Flow 4 starts when treatment actually begins.

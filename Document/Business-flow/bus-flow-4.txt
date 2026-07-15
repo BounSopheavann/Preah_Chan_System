@@ -1,0 +1,357 @@
+BUSINESS FLOW 4 – TREATMENT EXECUTION
+
+You are working on a Dental Clinic Management System.
+
+This document is the official explanation of Business Flow 4.
+
+Treat this document as the source of truth.
+
+This document explains how approved treatment plans are carried out, how
+completed procedures are recorded, how patient records are updated, and
+how treatment is prepared for billing.
+
+Future ERDs, APIs, UI screens, reports, inventory integration, and
+billing modules should follow this document.
+
+============================================================ MODULE
+PURPOSE ============================================================
+
+Business Flow 4 manages the actual dental treatment.
+
+Approved Treatment Plan ↓ Treatment Begins ↓ Perform Procedures ↓ Record
+Clinical Details ↓ Update Treatment Status ↓ Treatment Completed ↓ Ready
+for Billing
+
+Goal
+
+• Execute approved treatment safely. • Record every completed procedure.
+• Build a complete clinical history. • Prepare completed procedures for
+billing.
+
+============================================================ ACTORS
+============================================================
+
+Patient
+
+Dentist
+
+Dental Assistant
+
+System
+
+============================================================
+PRE-CONDITIONS
+============================================================
+
+• Appointment status is In Chair. • Treatment plan exists. • Dentist is
+assigned. • Patient has approved treatment (except emergency cases). •
+Medical alerts are visible.
+
+============================================================ WORKFLOW
+============================================================
+
+STEP 1 REVIEW TREATMENT PLAN
+
+Business Action
+
+Dentist reviews:
+
+• Diagnosis • Planned procedures • Tooth numbers • Previous clinical
+notes • X-rays • Medical alerts
+
+System Response
+
+Load treatment plan and patient history.
+
+============================================================
+
+STEP 2 START TREATMENT
+
+Business Action
+
+Dentist begins the first planned procedure.
+
+Dental assistant prepares instruments and materials.
+
+System Response
+
+Update treatment item status.
+
+Planned
+
+↓
+
+In Progress
+
+============================================================
+
+STEP 3 PERFORM PROCEDURE
+
+Business Action
+
+Dentist performs treatment.
+
+Examples
+
+• Scaling • Filling • Extraction • Root Canal • Crown Preparation •
+Crown Delivery • Denture Adjustment • Emergency Treatment
+
+Assistant provides chairside support.
+
+============================================================
+
+STEP 4 RECORD CLINICAL DETAILS
+
+Business Action
+
+Dentist records:
+
+• Procedure performed • Tooth number • Tooth surface • Materials used •
+Local anesthesia • Clinical notes • Prescription • Complications (if
+any)
+
+Assistant may upload:
+
+• Clinical photos • X-rays • Supporting documents
+
+System Response
+
+Create procedure record.
+
+Store attachments.
+
+============================================================
+
+STEP 5 UPDATE TREATMENT STATUS
+
+Decision
+
+Procedure completed?
+
+YES
+
+→ Mark procedure Completed.
+
+NO
+
+→ Keep status In Progress or Planned.
+
+Decision
+
+More procedures remaining today?
+
+YES
+
+→ Continue next treatment item.
+
+NO
+
+→ Continue to final review.
+
+System Response
+
+Update treatment plan items.
+
+============================================================
+
+STEP 6 FINAL CLINICAL REVIEW
+
+Business Action
+
+Dentist reviews completed treatment.
+
+Decision
+
+Additional visit required?
+
+YES
+
+→ Create remaining planned treatment items.
+
+→ Recommend next appointment.
+
+NO
+
+→ Finish today’s treatment.
+
+System Response
+
+Save treatment summary.
+
+============================================================
+
+STEP 7 COMPLETE APPOINTMENT
+
+Business Action
+
+Dentist confirms treatment is finished.
+
+System Response
+
+Update appointment status.
+
+In Chair
+
+↓
+
+Completed
+
+Generate billable procedure list.
+
+Mark completed procedures as ready for invoice generation.
+
+============================================================ VALIDATION
+RULES ============================================================
+
+• Only dentists may complete procedures.
+
+• Procedures cannot be completed before treatment starts.
+
+• Every completed procedure belongs to one appointment.
+
+• Tooth number should be recorded whenever applicable.
+
+• Completed procedures cannot be deleted directly.
+
+• Changes after completion should be tracked by audit logs.
+
+============================================================ DATABASE
+IMPACT ============================================================
+
+Tables Read
+
+appointments
+
+patients
+
+treatment_plans
+
+treatment_plan_items
+
+clinical_notes
+
+users
+
+Tables Created
+
+procedures
+
+clinical_notes
+
+prescriptions (optional)
+
+attachments (optional)
+
+Tables Updated
+
+appointments
+
+treatment_plans
+
+treatment_plan_items
+
+============================================================ STATUS
+CHANGES ============================================================
+
+Appointment
+
+In Chair
+
+↓
+
+Completed
+
+Treatment Item
+
+Planned
+
+↓
+
+In Progress
+
+↓
+
+Completed
+
+OR
+
+Postponed
+
+============================================================ BUSINESS
+RULES ============================================================
+
+1.  Only approved procedures should be performed.
+
+2.  Clinical notes should be recorded immediately after treatment.
+
+3.  Multiple procedures may be completed during one appointment.
+
+4.  Incomplete procedures remain available for future appointments.
+
+5.  Every completed procedure becomes eligible for billing.
+
+============================================================ OUTPUTS
+============================================================
+
+• Completed procedure records
+
+• Updated clinical history
+
+• Updated treatment plan
+
+• Appointment marked Completed
+
+• Billable procedures
+
+============================================================ EXCEPTION
+FLOWS ============================================================
+
+Patient requests to stop treatment
+
+→ Record completed work.
+
+→ Leave remaining procedures Planned.
+
+→ Schedule another visit.
+
+Medical emergency occurs
+
+→ Stop treatment immediately.
+
+→ Record incident.
+
+→ Provide emergency care.
+
+Equipment failure
+
+→ Pause treatment.
+
+→ Reschedule remaining procedures.
+
+Additional treatment discovered
+
+→ Update treatment plan before continuing.
+
+============================================================
+POST-CONDITIONS
+============================================================
+
+• Treatment history is complete.
+
+• Clinical notes are saved.
+
+• Completed procedures are ready for invoice generation.
+
+• Appointment is completed.
+
+============================================================ NEXT
+BUSINESS FLOW
+============================================================
+
+Business Flow 5
+
+Billing & Payment
+
+============================================================ END OF
+BUSINESS FLOW 4
+============================================================

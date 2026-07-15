@@ -1,0 +1,343 @@
+BUSINESS FLOW 5 – BILLING & PAYMENT
+
+You are working on a Dental Clinic Management System.
+
+This document is the official explanation of Business Flow 5.
+
+Treat this document as the source of truth.
+
+This document explains how completed dental procedures are converted
+into invoice items, how payments are processed, how outstanding balances
+are managed, and how the patient’s financial records are updated.
+
+Future ERDs, APIs, accounting modules, dashboards, reports, and payment
+integrations should follow this document.
+
+============================================================ MODULE
+PURPOSE ============================================================
+
+Business Flow 5 manages the clinic’s financial workflow after treatment
+has been completed.
+
+Completed Appointment ↓ Generate Invoice ↓ Review Charges ↓ Receive
+Payment ↓ Generate Receipt ↓ Update Patient Balance ↓ Ready for
+Follow-up / Recall
+
+Goal
+
+• Automatically generate invoices from completed procedures. • Record
+accurate payments. • Track outstanding balances. • Produce receipts. •
+Maintain complete financial history.
+
+============================================================ ACTORS
+============================================================
+
+Patient
+
+Receptionist
+
+Administrator
+
+System
+
+============================================================
+PRE-CONDITIONS
+============================================================
+
+• Appointment status is Completed. • One or more completed procedures
+exist. • Billable procedures are available.
+
+============================================================ WORKFLOW
+============================================================
+
+STEP 1 GENERATE INVOICE
+
+Business Action
+
+Receptionist opens the completed appointment.
+
+System Response
+
+Automatically retrieve:
+
+• Completed procedures • Treatment prices • Quantity • Existing
+discounts (if applicable)
+
+Generate invoice draft.
+
+============================================================
+
+STEP 2 REVIEW INVOICE
+
+Business Action
+
+Receptionist reviews:
+
+• Procedures • Unit prices • Quantity • Discounts • Taxes (if
+applicable) • Grand total
+
+Decision
+
+Invoice correct?
+
+YES
+
+→ Continue.
+
+NO
+
+→ Administrator reviews pricing if price adjustment is required.
+
+System Response
+
+Recalculate totals automatically.
+
+============================================================
+
+STEP 3 PATIENT MAKES PAYMENT
+
+Business Action
+
+Receptionist asks for payment.
+
+Supported methods
+
+• Cash • Credit Card • Bank Transfer • QR Payment • Other electronic
+payment
+
+Decision
+
+Full payment?
+
+YES
+
+→ Continue.
+
+NO
+
+→ Record partial payment.
+
+System Response
+
+Calculate:
+
+• Amount paid • Remaining balance
+
+============================================================
+
+STEP 4 RECORD PAYMENT
+
+Business Action
+
+Receptionist records:
+
+• Payment amount • Payment method • Payment reference • Notes (optional)
+
+System Response
+
+Create payment record.
+
+Update invoice balance.
+
+============================================================
+
+STEP 5 GENERATE RECEIPT
+
+Business Action
+
+Receptionist provides receipt.
+
+Receipt may be:
+
+• Printed • PDF • Telegram (future) • Email (future)
+
+System Response
+
+Generate receipt number.
+
+Store receipt history.
+
+============================================================
+
+STEP 6 UPDATE FINANCIAL STATUS
+
+Decision
+
+Balance remaining?
+
+NO
+
+→ Invoice status
+
+Paid
+
+YES
+
+→ Invoice status
+
+Partially Paid
+
+System Response
+
+Update patient outstanding balance.
+
+============================================================
+
+STEP 7 FINISH VISIT
+
+Business Action
+
+Receptionist confirms payment is complete.
+
+Patient leaves clinic.
+
+System Response
+
+Close billing workflow.
+
+Patient becomes eligible for Business Flow 6.
+
+============================================================ VALIDATION
+RULES ============================================================
+
+• Only completed procedures may appear on invoices.
+
+• Every payment belongs to one invoice.
+
+• Invoice total cannot be negative.
+
+• Partial payments are allowed.
+
+• Payment amount cannot exceed outstanding balance unless overpayment is
+supported.
+
+• Administrators control pricing changes.
+
+============================================================ DATABASE
+IMPACT ============================================================
+
+Tables Read
+
+appointments
+
+patients
+
+procedures
+
+treatment_plans
+
+Tables Created
+
+invoices
+
+invoice_items
+
+payments
+
+receipts
+
+Tables Updated
+
+patients
+
+appointments
+
+invoices
+
+============================================================ STATUS
+CHANGES ============================================================
+
+Invoice
+
+Draft
+
+↓
+
+Issued
+
+↓
+
+Paid
+
+OR
+
+Partially Paid
+
+Payment
+
+Created
+
+↓
+
+Completed
+
+============================================================ BUSINESS
+RULES ============================================================
+
+1.  Completed procedures automatically become invoice items.
+
+2.  Receptionists collect payments.
+
+3.  Administrators manage service pricing.
+
+4.  Every payment must have an audit history.
+
+5.  Outstanding balances remain visible on the patient profile.
+
+============================================================ OUTPUTS
+============================================================
+
+• Invoice
+
+• Invoice items
+
+• Payment record
+
+• Receipt
+
+• Updated patient balance
+
+============================================================ EXCEPTION
+FLOWS ============================================================
+
+Patient cannot pay today
+
+→ Leave invoice unpaid or partially paid.
+
+→ Record outstanding balance.
+
+Incorrect invoice detected
+
+→ Correct invoice before payment.
+
+Payment transaction fails
+
+→ Retry payment or select another payment method.
+
+Refund requested
+
+→ Administrator follows refund policy and records adjustment.
+
+============================================================
+POST-CONDITIONS
+============================================================
+
+• Financial records are complete.
+
+• Invoice status is updated.
+
+• Payment history is recorded.
+
+• Patient is ready for follow-up or recall.
+
+============================================================ NEXT
+BUSINESS FLOW
+============================================================
+
+Business Flow 6
+
+Follow-up, Recall & Patient Portal
+
+============================================================ END OF
+BUSINESS FLOW 5
+============================================================

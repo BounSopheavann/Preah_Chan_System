@@ -1,0 +1,182 @@
+DATABASE SCHEMA 09
+TABLE: treatment_plan_items
+
+Dental Clinic Management System
+Version 1.0
+
+============================================================
+PURPOSE
+============================================================
+
+The treatment_plan_items table stores every individual procedure planned
+for a patient's treatment plan.
+
+Each record represents one procedure for one tooth (or tooth surface).
+
+After treatment begins, each completed item becomes a
+treatment_execution record.
+
+Referenced by:
+- treatment_execution
+
+============================================================
+TABLE NAME
+============================================================
+
+treatment_plan_items
+
+============================================================
+PRIMARY KEY
+============================================================
+
+treatment_plan_item_id
+Type: BIGINT UNSIGNED
+Auto Increment: YES
+Nullable: NO
+
+============================================================
+COLUMNS
+============================================================
+
+1. treatment_plan_item_id
+- BIGINT UNSIGNED
+- Primary Key
+- Auto Increment
+
+2. treatment_plan_id
+- BIGINT UNSIGNED
+- Required
+- FK -> treatment_plans.treatment_plan_id
+
+3. procedure_id
+- BIGINT UNSIGNED
+- Required
+- FK -> procedures.procedure_id
+
+4. tooth_number
+- VARCHAR(10)
+- Required
+
+5. tooth_surface
+- VARCHAR(10)
+- Nullable
+
+6. procedure_name
+- VARCHAR(150)
+- Required
+
+7. estimated_price
+- DECIMAL(12,2)
+- Required
+- Default: 0.00
+
+8. priority
+- ENUM('Low','Medium','High')
+- Default: Medium
+
+9. status
+- ENUM('Planned','In Progress','Completed','Postponed','Declined')
+- Default: Planned
+
+10. notes
+- TEXT
+- Nullable
+
+11. created_at
+- TIMESTAMP
+
+12. updated_at
+- TIMESTAMP
+
+============================================================
+FOREIGN KEYS
+============================================================
+
+treatment_plan_id -> treatment_plans(treatment_plan_id)
+
+procedure_id -> procedures(procedure_id)
+
+Recommended:
+ON UPDATE CASCADE
+ON DELETE RESTRICT
+
+============================================================
+INDEXES
+============================================================
+
+PRIMARY KEY (treatment_plan_item_id)
+
+INDEX (treatment_plan_id)
+INDEX (procedure_id)
+INDEX (status)
+INDEX (priority)
+INDEX (tooth_number)
+
+============================================================
+VALIDATION RULES
+============================================================
+
+- Treatment plan must exist.
+- Procedure must exist.
+- Estimated price cannot be negative.
+- Status must contain a valid value.
+- Tooth number is required.
+
+============================================================
+BUSINESS RULES
+============================================================
+
+1. One treatment plan contains many treatment plan items.
+2. Each item represents one planned procedure.
+3. Every item has its own lifecycle.
+4. Completed items create treatment execution records.
+5. Declined items remain in history and are not deleted.
+
+============================================================
+RELATED MODULES
+============================================================
+
+Business Flow:
+3
+4
+
+System Flow:
+3
+4
+
+ERD:
+3
+4
+
+============================================================
+LARAVEL MIGRATION REFERENCE
+============================================================
+
+id()
+foreignId('treatment_plan_id')->constrained('treatment_plans')
+foreignId('procedure_id')->constrained('procedures')
+string('tooth_number',10)
+string('tooth_surface',10)->nullable()
+string('procedure_name',150)
+decimal('estimated_price',12,2)->default(0)
+enum('priority',['Low','Medium','High'])->default('Medium')
+enum('status',['Planned','In Progress','Completed','Postponed','Declined'])->default('Planned')
+text('notes')->nullable()
+timestamps()
+
+============================================================
+EXAMPLE RECORD
+============================================================
+
+treatment_plan_item_id: 201
+treatment_plan_id: 45
+procedure_id: 7
+tooth_number: 36
+tooth_surface: O
+procedure_name: Root Canal
+estimated_price: 250.00
+priority: High
+status: Planned
+
+============================================================
+END OF DATABASE SCHEMA 09

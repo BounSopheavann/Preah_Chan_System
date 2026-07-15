@@ -1,0 +1,160 @@
+SCREEN NAVIGATION 2
+Dental Clinic Management System
+
+MODULE
+Patient Arrival, Check-in & Waiting Queue
+
+PURPOSE
+
+Defines all navigation related to patient arrival, check-in, queue management,
+and preparing the patient for the dentist.
+
+Related Documents
+- Business Flow 2
+- System Flow 2
+- ERD 1
+
+============================================================
+PRIMARY USERS
+============================================================
+
+Receptionist
+Administrator
+Dentist (Queue View)
+
+============================================================
+SCREEN HIERARCHY
+============================================================
+
+Dashboard
+   ├── Today's Appointments
+   │        ├── Appointment Detail
+   │        ├── Check-in
+   │        └── Walk-in Appointment
+   ├── Waiting Queue
+   │        └── Queue Detail
+   └── Patient Profile
+
+============================================================
+TODAY'S APPOINTMENTS
+============================================================
+
+Entry:
+Dashboard → Today's Appointments
+
+Functions:
+- Search today's bookings
+- Filter by dentist
+- Filter by status
+
+Buttons:
+Appointment Row → Appointment Detail
+Check-in → Check-in Screen
+Walk-in → Walk-in Appointment
+Back → Dashboard
+
+============================================================
+CHECK-IN SCREEN
+============================================================
+
+Displays:
+- Patient identity
+- Contact information
+- Medical alerts
+- Consent status
+- Appointment details
+
+Buttons:
+Check-in → Waiting Queue
+Edit Patient → Patient Profile
+Cancel → Appointment Detail
+
+Validation:
+- Appointment must be today
+- Appointment not Cancelled
+- Patient record exists
+
+============================================================
+WALK-IN APPOINTMENT
+============================================================
+
+Entry:
+Today's Appointments → Walk-in
+
+Steps:
+- Search existing patient
+- Register if new
+- Assign dentist
+- Select available slot
+
+Save:
+Create same-day appointment
+Open Check-in Screen
+
+Cancel:
+Return to Today's Appointments
+
+============================================================
+WAITING QUEUE
+============================================================
+
+Displays:
+- Queue number
+- Patient
+- Dentist
+- Appointment time
+- Priority
+- Status
+
+Buttons:
+Call Patient → Queue Detail
+Refresh
+Back → Dashboard
+
+============================================================
+QUEUE DETAIL
+============================================================
+
+Displays:
+- Patient summary
+- Medical alerts
+- Queue information
+
+Buttons:
+Send to Chair → Examination Screen (Navigation 3)
+Return to Queue
+View Patient Profile
+
+============================================================
+GLOBAL RULES
+============================================================
+
+Save:
+Stay on current screen unless status changes.
+
+Check-in Success:
+Automatically navigate to Waiting Queue.
+
+Back:
+Return to previous screen.
+
+Cancel:
+Discard changes and return.
+
+Logout:
+Return to Login.
+
+============================================================
+ERROR NAVIGATION
+============================================================
+
+Appointment not found:
+Return to Today's Appointments.
+
+No dentist available:
+Remain on Walk-in screen.
+
+Consent missing:
+Open Consent dialog before allowing Check-in.
+
+END OF SCREEN NAVIGATION 2

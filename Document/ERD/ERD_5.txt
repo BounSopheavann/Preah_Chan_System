@@ -1,0 +1,522 @@
+# ERD 5 – Billing & Payment Management
+
+You are working on a Dental Clinic Management System.
+
+This document is the official explanation of ERD 5.
+
+Treat this document as the source of truth.
+
+------------------------------------------------------------
+MODULE PURPOSE
+------------------------------------------------------------
+
+This module manages billing, invoice generation, and payment collection.
+
+Workflow
+
+Completed Treatment
+        ↓
+Invoice
+        ↓
+Invoice Items
+        ↓
+Payment
+        ↓
+Outstanding Balance
+
+The purpose of this module is to automatically generate invoices from completed treatments, record patient payments, and track outstanding balances.
+
+------------------------------------------------------------
+TABLES
+------------------------------------------------------------
+
+This ERD contains three tables.
+
+1. invoices
+2. invoice_items
+3. payments
+
+------------------------------------------------------------
+TABLE : invoices
+------------------------------------------------------------
+
+Purpose
+
+Stores one invoice for a patient's visit.
+
+Invoices summarize all completed treatments and calculate the final amount due.
+
+Primary Key
+
+invoice_id
+
+Columns
+
+invoice_id
+
+Primary Key
+
+patient_id
+
+Foreign Key
+
+references
+
+patients.patient_id
+
+appointment_id
+
+Foreign Key
+
+references
+
+appointments.appointment_id
+
+invoice_number
+
+Unique invoice number.
+
+subtotal
+
+discount_type
+
+Possible values
+
+Percentage
+
+Fixed Amount
+
+discount_value
+
+tax_amount
+
+grand_total
+
+amount_paid
+
+balance_amount
+
+invoice_status
+
+Possible values
+
+Pending
+
+Partially Paid
+
+Paid
+
+Cancelled
+
+issued_by
+
+Foreign Key
+
+references
+
+users.user_id
+
+issued_at
+
+updated_at
+
+------------------------------------------------------------
+Relationship
+------------------------------------------------------------
+
+One Invoice
+
+contains
+
+Many Invoice Items
+
+invoices.invoice_id
+        |
+        |
+        +--------<
+                 invoice_items.invoice_id
+
+Relationship
+
+1 → Many
+
+------------------------------------------------------------
+
+One Patient
+
+can have
+
+Many Invoices
+
+patients.patient_id
+        |
+        |
+        +--------<
+                 invoices.patient_id
+
+Relationship
+
+1 → Many
+
+------------------------------------------------------------
+
+One Appointment
+
+can generate
+
+One Invoice
+
+appointments.appointment_id
+        |
+        |
+        +--------<
+                 invoices.appointment_id
+
+Relationship
+
+1 → 1
+
+------------------------------------------------------------
+TABLE : invoice_items
+------------------------------------------------------------
+
+Purpose
+
+Stores every billable treatment included in an invoice.
+
+Each completed treatment becomes one invoice item.
+
+Primary Key
+
+invoice_item_id
+
+Columns
+
+invoice_item_id
+
+Primary Key
+
+invoice_id
+
+Foreign Key
+
+references
+
+invoices.invoice_id
+
+treatment_execution_id
+
+Foreign Key
+
+references
+
+treatment_execution.treatment_execution_id
+
+procedure_name
+
+quantity
+
+unit_price
+
+total_price
+
+notes
+
+created_at
+
+------------------------------------------------------------
+Relationship
+------------------------------------------------------------
+
+Many Invoice Items
+
+belong to
+
+One Invoice
+
+Relationship
+
+Many → 1
+
+------------------------------------------------------------
+
+One Treatment Execution
+
+creates
+
+One Invoice Item
+
+treatment_execution.treatment_execution_id
+        |
+        |
+        +--------<
+                 invoice_items.treatment_execution_id
+
+Relationship
+
+1 → 1
+
+------------------------------------------------------------
+TABLE : payments
+------------------------------------------------------------
+
+Purpose
+
+Stores every payment made by the patient.
+
+Supports full payment and partial payment.
+
+Primary Key
+
+payment_id
+
+Columns
+
+payment_id
+
+Primary Key
+
+invoice_id
+
+Foreign Key
+
+references
+
+invoices.invoice_id
+
+payment_method
+
+Possible values
+
+Cash
+
+Credit Card
+
+Bank Transfer
+
+KHQR
+
+ABA
+
+Wing
+
+Other
+
+payment_status
+
+Possible values
+
+Pending
+
+Completed
+
+Failed
+
+Refunded
+
+amount
+
+reference_number
+
+transaction_date
+
+received_by
+
+Foreign Key
+
+references
+
+users.user_id
+
+notes
+
+created_at
+
+------------------------------------------------------------
+Relationship
+------------------------------------------------------------
+
+One Invoice
+
+can have
+
+Many Payments
+
+invoices.invoice_id
+        |
+        |
+        +--------<
+                 payments.invoice_id
+
+Relationship
+
+1 → Many
+
+------------------------------------------------------------
+RELATIONSHIPS
+------------------------------------------------------------
+
+patients (1)
+        |
+        +------<
+               invoices
+
+One patient
+
+Many invoices
+
+------------------------------------------------------------
+
+appointments (1)
+        |
+        +------|
+               invoices
+
+One appointment
+
+One invoice
+
+------------------------------------------------------------
+
+invoices (1)
+        |
+        +------<
+               invoice_items
+
+One invoice
+
+Many invoice items
+
+------------------------------------------------------------
+
+treatment_execution (1)
+        |
+        +------|
+               invoice_items
+
+One treatment execution
+
+One invoice item
+
+------------------------------------------------------------
+
+invoices (1)
+        |
+        +------<
+               payments
+
+One invoice
+
+Many payments
+
+------------------------------------------------------------
+BUSINESS RULES
+------------------------------------------------------------
+
+Rule 1
+
+Invoices are automatically generated from completed treatment executions.
+
+------------------------------------------------------------
+
+Rule 2
+
+Only completed treatments can appear on an invoice.
+
+------------------------------------------------------------
+
+Rule 3
+
+One appointment generates only one invoice.
+
+------------------------------------------------------------
+
+Rule 4
+
+Each treatment execution creates one invoice item.
+
+------------------------------------------------------------
+
+Rule 5
+
+Patients may make one or multiple payments for the same invoice.
+
+------------------------------------------------------------
+
+Rule 6
+
+Invoice balance is calculated as:
+
+Balance = Grand Total - Total Payments
+
+------------------------------------------------------------
+
+Rule 7
+
+Invoice status changes automatically.
+
+Pending
+↓
+
+Partially Paid
+↓
+
+Paid
+
+------------------------------------------------------------
+
+Rule 8
+
+Only administrators or receptionists can issue invoices and record payments.
+
+------------------------------------------------------------
+
+Rule 9
+
+Invoices should never be deleted after payment.
+
+If mistakes occur, issue a credit note or adjustment instead.
+
+------------------------------------------------------------
+
+Rule 10
+
+Every payment must belong to one invoice.
+
+Payments cannot exist independently.
+
+------------------------------------------------------------
+MODULE CONNECTIONS
+------------------------------------------------------------
+
+ERD 1
+Patient Management
+        ↓
+patients
+appointments
+
+ERD 3
+Treatment Planning
+        ↓
+Treatment plans lead to treatment execution.
+
+ERD 4
+Treatment Execution
+        ↓
+Completed treatments generate invoice items.
+
+ERD 5
+Billing & Payment
+        ↓
+invoices
+invoice_items
+payments
+
+ERD 6
+Recall & Inventory
+        ↓
+Outstanding balances and completed visits may trigger follow-up reminders.
+
+------------------------------------------------------------
+END OF ERD 5
+------------------------------------------------------------

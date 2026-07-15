@@ -1,0 +1,177 @@
+SCREEN NAVIGATION 3
+Dental Clinic Management System
+
+MODULE
+Clinical Examination, Diagnosis & Treatment Planning
+
+PURPOSE
+
+Defines the navigation used by dentists during examination, diagnosis,
+odontogram charting, image review, and treatment planning.
+
+Related Documents
+- Business Flow 3
+- System Flow 3
+- ERD 3
+
+============================================================
+PRIMARY USERS
+============================================================
+
+Dentist
+Administrator (Read)
+Dental Assistant (Limited)
+
+============================================================
+SCREEN HIERARCHY
+============================================================
+
+Waiting Queue
+    ↓
+Patient Summary
+    ├── Examination
+    │      ├── Odontogram
+    │      ├── X-ray & Images
+    │      ├── Clinical Notes
+    │      └── Diagnosis
+    └── Treatment Plan
+            ├── Estimate
+            └── Treatment Decision
+
+============================================================
+PATIENT SUMMARY
+============================================================
+
+Entry:
+Waiting Queue → Call Patient
+
+Displays:
+- Patient profile
+- Medical alerts
+- Allergies
+- Previous treatments
+- Outstanding balance
+- Last visit
+
+Buttons:
+Start Examination → Examination
+View Files → X-ray & Images
+Back → Waiting Queue
+
+============================================================
+EXAMINATION
+============================================================
+
+Functions:
+- Record chief complaint
+- Pain assessment
+- Clinical findings
+- Tooth selection
+
+Buttons:
+Odontogram
+Clinical Notes
+Diagnosis
+Save Draft
+Next → Treatment Plan
+
+Validation:
+Clinical note required before continuing.
+
+============================================================
+ODONTOGRAM
+============================================================
+
+Functions:
+- Select tooth
+- Select surface
+- Record condition
+- Mark existing restoration
+
+Buttons:
+Save
+Back → Examination
+
+============================================================
+X-RAY & IMAGES
+============================================================
+
+Functions:
+- Upload image
+- View image
+- Zoom
+- Delete (permission required)
+
+Buttons:
+Attach
+Back → Examination
+
+============================================================
+DIAGNOSIS
+============================================================
+
+Fields:
+- Diagnosis
+- Priority
+- Recommendation
+
+Save:
+Return to Examination.
+
+============================================================
+TREATMENT PLAN
+============================================================
+
+Functions:
+- Add procedures
+- Tooth number
+- Estimated price
+- Estimated duration
+- Priority
+
+Buttons:
+Add Procedure
+Remove Procedure
+Calculate Estimate
+Save Plan
+
+Decision:
+Patient accepts?
+
+YES →
+Start Treatment → Navigation 4
+
+NO →
+Mark Postponed or Declined
+Return to Patient Summary
+
+============================================================
+GLOBAL RULES
+============================================================
+
+Save Draft:
+Remain on current screen.
+
+Save Plan:
+Refresh Treatment Plan.
+
+Back:
+Return to previous screen.
+
+Logout:
+Return to Login.
+
+============================================================
+ERROR NAVIGATION
+============================================================
+
+Medical alert:
+Display warning before examination.
+
+Missing diagnosis:
+Remain on Diagnosis screen.
+
+No treatment items:
+Prevent plan approval.
+
+END OF SCREEN NAVIGATION 3

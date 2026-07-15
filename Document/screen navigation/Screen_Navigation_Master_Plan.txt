@@ -1,0 +1,97 @@
+SCREEN NAVIGATION SPECIFICATION PLAN
+Dental Clinic Management System
+Version 1.0
+
+PURPOSE
+This document series defines how users navigate through the Dental Clinic Management System.
+It complements the Business Flow, System Flow, and ERD documents. It does not replace them.
+
+RECOMMENDED STRUCTURE
+
+Instead of one huge document, split the navigation into six modules that match the existing
+Business Flow and System Flow.
+
+Navigation 1
+Patient Registration & Appointment Booking
+Screens:
+- Login
+- Dashboard
+- Patient List
+- New Patient
+- Patient Profile
+- Appointment Booking
+- Appointment Detail
+- Calendar
+
+Navigation 2
+Arrival & Check-in
+Screens:
+- Today's Appointments
+- Check-in
+- Waiting Queue
+- Walk-in Registration
+
+Navigation 3
+Clinical Examination
+Screens:
+- Today's Queue
+- Patient Summary
+- Examination
+- Odontogram
+- X-ray Viewer
+- Treatment Plan
+
+Navigation 4
+Treatment Execution
+Screens:
+- Treatment Execution
+- Procedure Recording
+- Clinical Images
+- Prescription
+- Treatment Summary
+
+Navigation 5
+Billing & Payment
+Screens:
+- Billing
+- Invoice
+- Payment
+- Receipt
+- Outstanding Balance
+
+Navigation 6
+Follow-up & Recall
+Screens:
+- Follow-up
+- Recall
+- Reminder Center
+- Telegram Patient Portal
+- Recall Dashboard
+
+Each navigation document should describe:
+- Purpose of every screen
+- Who can access it
+- Entry points
+- Exit points
+- Buttons and destinations
+- Navigation after Save / Cancel / Delete
+- Error navigation
+- Related Business Flow
+- Related System Flow
+- Related ERD
+- Role permissions
+
+Estimated size:
+Navigation 1: 6-8 pages
+Navigation 2: 4-5 pages
+Navigation 3: 6-8 pages
+Navigation 4: 5-6 pages
+Navigation 5: 5-6 pages
+Navigation 6: 4-5 pages
+
+Total:
+6 TXT files
+Approximately 30-40 pages combined.
+
+This structure matches the existing project organization and makes it easier for another AI
+or developer to locate the relevant navigation specification for each module.

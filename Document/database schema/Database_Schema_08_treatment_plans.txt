@@ -1,0 +1,165 @@
+DATABASE SCHEMA 08
+TABLE: treatment_plans
+
+Dental Clinic Management System
+Version 1.0
+
+============================================================
+PURPOSE
+============================================================
+
+The treatment_plans table stores the overall treatment plan created by
+the dentist after completing the clinical examination.
+
+One appointment can have one treatment plan.
+A treatment plan may contain multiple treatment plan items.
+
+Referenced by:
+- treatment_plan_items
+- Treatment Execution
+
+============================================================
+TABLE NAME
+============================================================
+
+treatment_plans
+
+============================================================
+PRIMARY KEY
+============================================================
+
+treatment_plan_id
+Type: BIGINT UNSIGNED
+Auto Increment: YES
+Nullable: NO
+
+============================================================
+COLUMNS
+============================================================
+
+1. treatment_plan_id
+- BIGINT UNSIGNED
+- Primary Key
+- Auto Increment
+
+2. appointment_id
+- BIGINT UNSIGNED
+- Required
+- FK -> appointments.appointment_id
+- UNIQUE
+
+3. estimated_total_cost
+- DECIMAL(12,2)
+- Required
+- Default: 0.00
+
+4. estimated_duration
+- INTEGER
+- Required
+- Minutes
+
+5. overall_status
+- ENUM('Planned','In Progress','Completed','Postponed','Cancelled')
+- Default: Planned
+
+6. notes
+- TEXT
+- Nullable
+
+7. created_by
+- BIGINT UNSIGNED
+- Required
+- FK -> users.user_id
+
+8. created_at
+- TIMESTAMP
+
+9. updated_at
+- TIMESTAMP
+
+============================================================
+FOREIGN KEYS
+============================================================
+
+appointment_id -> appointments(appointment_id)
+
+created_by -> users(user_id)
+
+Recommended:
+ON UPDATE CASCADE
+ON DELETE RESTRICT
+
+============================================================
+INDEXES
+============================================================
+
+PRIMARY KEY (treatment_plan_id)
+
+UNIQUE (appointment_id)
+
+INDEX (overall_status)
+
+INDEX (created_by)
+
+============================================================
+VALIDATION RULES
+============================================================
+
+- Appointment must exist.
+- Only dentists can create treatment plans.
+- Estimated cost cannot be negative.
+- Estimated duration must be greater than zero.
+- One appointment can have only one treatment plan.
+
+============================================================
+BUSINESS RULES
+============================================================
+
+1. Every treatment plan belongs to one appointment.
+2. Treatment cannot begin without a treatment plan unless emergency workflow is enabled.
+3. Overall status updates automatically as treatment progresses.
+4. Treatment plans become permanent clinical records.
+5. Completed plans should not be deleted.
+
+============================================================
+RELATED MODULES
+============================================================
+
+Business Flow:
+3
+4
+
+System Flow:
+3
+4
+
+ERD:
+3
+4
+
+============================================================
+LARAVEL MIGRATION REFERENCE
+============================================================
+
+id()
+foreignId('appointment_id')->unique()->constrained('appointments')
+decimal('estimated_total_cost',12,2)->default(0)
+integer('estimated_duration')
+enum('overall_status',['Planned','In Progress','Completed','Postponed','Cancelled'])->default('Planned')
+text('notes')->nullable()
+foreignId('created_by')->constrained('users')
+timestamps()
+
+============================================================
+EXAMPLE RECORD
+============================================================
+
+treatment_plan_id: 45
+appointment_id: 1001
+estimated_total_cost: 350.00
+estimated_duration: 120
+overall_status: Planned
+created_by: 3
+
+============================================================
+END OF DATABASE SCHEMA 08

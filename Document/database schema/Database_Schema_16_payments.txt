@@ -1,0 +1,177 @@
+DATABASE SCHEMA 16
+TABLE: payments
+
+Dental Clinic Management System
+Version 1.0
+
+============================================================
+PURPOSE
+============================================================
+
+The payments table stores every payment transaction made by a patient
+against an invoice.
+
+It supports full payment, partial payment, multiple payment methods,
+and payment history.
+
+Referenced by:
+- Receipt Printing
+- Financial Reports
+- Outstanding Balance
+- Daily Cash Report
+
+============================================================
+TABLE NAME
+============================================================
+
+payments
+
+============================================================
+PRIMARY KEY
+============================================================
+
+payment_id
+Type: BIGINT UNSIGNED
+Auto Increment: YES
+Nullable: NO
+
+============================================================
+COLUMNS
+============================================================
+
+1. payment_id
+- BIGINT UNSIGNED
+- Primary Key
+- Auto Increment
+
+2. invoice_id
+- BIGINT UNSIGNED
+- Required
+- FK -> invoices.invoice_id
+
+3. payment_method
+- ENUM('Cash','Credit Card','Bank Transfer','KHQR','ABA','Wing','Other')
+- Required
+
+4. payment_status
+- ENUM('Pending','Completed','Failed','Refunded')
+- Default: Pending
+
+5. amount
+- DECIMAL(12,2)
+- Required
+
+6. reference_number
+- VARCHAR(100)
+- Nullable
+
+7. transaction_date
+- DATETIME
+- Required
+
+8. received_by
+- BIGINT UNSIGNED
+- Required
+- FK -> users.user_id
+
+9. notes
+- TEXT
+- Nullable
+
+10. created_at
+- TIMESTAMP
+
+11. updated_at
+- TIMESTAMP
+
+============================================================
+FOREIGN KEYS
+============================================================
+
+invoice_id -> invoices(invoice_id)
+
+received_by -> users(user_id)
+
+Recommended:
+ON UPDATE CASCADE
+ON DELETE RESTRICT
+
+============================================================
+INDEXES
+============================================================
+
+PRIMARY KEY (payment_id)
+
+INDEX (invoice_id)
+
+INDEX (payment_method)
+
+INDEX (payment_status)
+
+INDEX (transaction_date)
+
+INDEX (received_by)
+
+============================================================
+VALIDATION RULES
+============================================================
+
+- Invoice must exist.
+- Payment amount must be greater than zero.
+- Payment amount cannot exceed the remaining balance.
+- Completed payments require a transaction date.
+- Only authorized staff may record payments.
+
+============================================================
+BUSINESS RULES
+============================================================
+
+1. One invoice may have many payments.
+2. Partial payments are allowed.
+3. Invoice balance updates automatically after each completed payment.
+4. Refunded payments must remain in history.
+5. Payment records must never be deleted after completion.
+
+============================================================
+RELATED MODULES
+============================================================
+
+Business Flow:
+5
+
+System Flow:
+5
+
+ERD:
+5
+
+============================================================
+LARAVEL MIGRATION REFERENCE
+============================================================
+
+id()
+foreignId('invoice_id')->constrained('invoices')
+enum('payment_method',['Cash','Credit Card','Bank Transfer','KHQR','ABA','Wing','Other'])
+enum('payment_status',['Pending','Completed','Failed','Refunded'])->default('Pending')
+decimal('amount',12,2)
+string('reference_number',100)->nullable()
+dateTime('transaction_date')
+foreignId('received_by')->constrained('users')
+text('notes')->nullable()
+timestamps()
+
+============================================================
+EXAMPLE RECORD
+============================================================
+
+payment_id: 7001
+invoice_id: 3001
+payment_method: KHQR
+payment_status: Completed
+amount: 150.00
+reference_number: KHQR-987654321
+transaction_date: 2026-08-15 11:45:00
+received_by: 2
+
+============================================================
+END OF DATABASE SCHEMA 16

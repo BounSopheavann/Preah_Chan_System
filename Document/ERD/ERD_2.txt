@@ -1,0 +1,401 @@
+# ERD 2 – Telegram Integration & Patient Linking
+
+You are working on a Dental Clinic Management System.
+
+This document is the official explanation of ERD 2.
+
+Treat this document as the source of truth.
+
+------------------------------------------------------------
+MODULE PURPOSE
+------------------------------------------------------------
+
+This module securely links a patient's clinic record to their Telegram Mini App account.
+
+Workflow
+
+Patient Profile
+        ↓
+Patient Invite
+        ↓
+QR Code / Invite Token
+        ↓
+Telegram Login
+        ↓
+Telegram Account Linked
+
+This module prevents duplicate patient records and allows patients to access their clinic information through Telegram.
+
+------------------------------------------------------------
+TABLES
+------------------------------------------------------------
+
+This ERD contains three tables.
+
+1. patients
+2. patient_invites
+3. telegram_links
+
+------------------------------------------------------------
+TABLE : patients
+------------------------------------------------------------
+
+Purpose
+
+Stores one permanent patient profile.
+
+This table is created in ERD 1 and is referenced here.
+
+Primary Key
+
+patient_id
+
+Referenced by
+
+patient_invites.patient_id
+
+telegram_links.patient_id
+
+------------------------------------------------------------
+Relationship
+------------------------------------------------------------
+
+One Patient
+
+can have
+
+many Invite Records
+
+patients.patient_id
+        |
+        |
+        +--------<
+                 patient_invites.patient_id
+
+Relationship
+
+1 → Many
+
+------------------------------------------------------------
+
+One Patient
+
+can have
+
+one Telegram Account
+
+patients.patient_id
+        |
+        |
+        +--------<
+                 telegram_links.patient_id
+
+Relationship
+
+1 → 1
+
+------------------------------------------------------------
+TABLE : patient_invites
+------------------------------------------------------------
+
+Purpose
+
+Stores temporary invitation records used to connect a patient to Telegram.
+
+Each invitation generates a unique QR code or invite token.
+
+After successful linking, the invite expires.
+
+Primary Key
+
+invite_id
+
+Columns
+
+invite_id
+
+Primary Key
+
+patient_id
+
+Foreign Key
+
+references
+
+patients.patient_id
+
+invite_token
+
+Unique random token used in QR Code.
+
+invite_type
+
+Possible values
+
+QR
+
+Telegram
+
+SMS
+
+Manual
+
+invite_status
+
+Possible values
+
+Pending
+
+Used
+
+Expired
+
+Cancelled
+
+expires_at
+
+created_by
+
+Staff user who generated the invitation.
+
+created_at
+
+used_at
+
+------------------------------------------------------------
+Relationship
+------------------------------------------------------------
+
+Many Invite Records
+
+belong to
+
+One Patient
+
+patient_invites.patient_id
+        |
+        |
+        +-------->
+                patients.patient_id
+
+Relationship
+
+Many → 1
+
+------------------------------------------------------------
+TABLE : telegram_links
+------------------------------------------------------------
+
+Purpose
+
+Stores the permanent connection between the patient profile and Telegram account.
+
+One patient should only have one active Telegram account.
+
+Primary Key
+
+telegram_link_id
+
+Columns
+
+telegram_link_id
+
+Primary Key
+
+patient_id
+
+Foreign Key
+
+references
+
+patients.patient_id
+
+telegram_user_id
+
+Telegram User ID.
+
+telegram_username
+
+Telegram username.
+
+first_name
+
+last_name
+
+photo_url
+
+link_status
+
+Possible values
+
+Active
+
+Unlinked
+
+Suspended
+
+linked_at
+
+last_login_at
+
+------------------------------------------------------------
+Relationship
+------------------------------------------------------------
+
+One Patient
+
+has
+
+One Telegram Link
+
+patients.patient_id
+        |
+        |
+        +--------<
+                 telegram_links.patient_id
+
+Relationship
+
+1 → 1
+
+------------------------------------------------------------
+RELATIONSHIPS
+------------------------------------------------------------
+
+patients (1)
+        |
+        +------<
+               patient_invites
+
+One patient
+
+Many invite records
+
+------------------------------------------------------------
+
+patients (1)
+        |
+        +------|
+               telegram_links
+
+One patient
+
+One Telegram account
+
+------------------------------------------------------------
+BUSINESS RULES
+------------------------------------------------------------
+
+Rule 1
+
+Every Telegram account must belong to exactly one patient.
+
+------------------------------------------------------------
+
+Rule 2
+
+One patient can only have one active Telegram link.
+
+------------------------------------------------------------
+
+Rule 3
+
+A patient may receive multiple invite tokens over time.
+
+Old invite tokens should become Expired after use or expiration.
+
+------------------------------------------------------------
+
+Rule 4
+
+Invite tokens must be unique.
+
+------------------------------------------------------------
+
+Rule 5
+
+QR Codes should contain only the invite token.
+
+Never expose patient information inside the QR code.
+
+------------------------------------------------------------
+
+Rule 6
+
+If a patient loses access to Telegram, the old link should be marked Unlinked before creating a new one.
+
+------------------------------------------------------------
+
+Rule 7
+
+Patients cannot self-register directly.
+
+Reception staff create the patient profile first.
+
+Then a QR Code or invite token is generated.
+
+------------------------------------------------------------
+
+Rule 8
+
+Successful linking creates one record in telegram_links.
+
+The invite record becomes Used.
+
+------------------------------------------------------------
+
+Rule 9
+
+Expired or cancelled invitations cannot be reused.
+
+------------------------------------------------------------
+
+Rule 10
+
+This module extends ERD 1.
+
+Future modules use telegram_links to send:
+
+• Appointment reminders
+
+• Recall reminders
+
+• Treatment progress
+
+• Payment notifications
+
+• Follow-up messages
+
+------------------------------------------------------------
+MODULE CONNECTIONS
+------------------------------------------------------------
+
+ERD 1
+Patient Management
+        ↓
+patients
+
+ERD 2
+Telegram Integration
+        ↓
+patient_invites
+telegram_links
+
+ERD 3
+Treatment Planning
+        ↓
+Uses patients
+
+ERD 5
+Billing
+        ↓
+Uses patients for payment notifications
+
+ERD 6
+Recall
+        ↓
+Uses telegram_links for automatic reminders
+
+------------------------------------------------------------
+END OF ERD 2
+------------------------------------------------------------

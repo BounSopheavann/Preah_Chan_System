@@ -1,0 +1,199 @@
+DATABASE SCHEMA 04
+TABLE: appointments
+
+Dental Clinic Management System
+Version 1.0
+
+============================================================
+PURPOSE
+============================================================
+
+The appointments table stores every scheduled patient visit.
+
+It is the central table that connects patients, dentists, appointment
+types, treatment, billing and recall.
+
+One appointment belongs to one patient.
+One appointment is assigned to one dentist.
+
+Referenced by:
+- clinical_notes
+- treatment_plans
+- treatment_execution
+- invoices
+- recalls
+
+============================================================
+TABLE NAME
+============================================================
+
+appointments
+
+============================================================
+PRIMARY KEY
+============================================================
+
+appointment_id
+Type: BIGINT UNSIGNED
+Auto Increment: YES
+Nullable: NO
+
+============================================================
+COLUMNS
+============================================================
+
+1. appointment_id
+- BIGINT UNSIGNED
+- Primary Key
+- Auto Increment
+
+2. patient_id
+- BIGINT UNSIGNED
+- Required
+- FK -> patients.patient_id
+
+3. dentist_id
+- BIGINT UNSIGNED
+- Required
+- FK -> users.user_id
+
+4. created_by
+- BIGINT UNSIGNED
+- Required
+- FK -> users.user_id
+
+5. appointment_type_id
+- BIGINT UNSIGNED
+- Required
+- FK -> appointment_types.appointment_type_id
+
+6. appointment_date
+- DATE
+- Required
+
+7. start_time
+- TIME
+- Required
+
+8. end_time
+- TIME
+- Required
+
+9. status
+- ENUM('Booked','Confirmed','Checked-in','In Chair','Completed','Cancelled','No-show')
+- Default: Booked
+
+10. reason_for_visit
+- VARCHAR(255)
+- Nullable
+
+11. appointment_notes
+- TEXT
+- Nullable
+
+12. created_at
+- TIMESTAMP
+
+13. updated_at
+- TIMESTAMP
+
+============================================================
+FOREIGN KEYS
+============================================================
+
+patient_id -> patients(patient_id)
+dentist_id -> users(user_id)
+created_by -> users(user_id)
+appointment_type_id -> appointment_types(appointment_type_id)
+
+Recommended:
+ON UPDATE CASCADE
+ON DELETE RESTRICT
+
+============================================================
+INDEXES
+============================================================
+
+PRIMARY KEY (appointment_id)
+
+INDEX (patient_id)
+INDEX (dentist_id)
+INDEX (appointment_date)
+INDEX (status)
+INDEX (appointment_type_id)
+
+Composite Index:
+(dentist_id, appointment_date, start_time)
+
+============================================================
+VALIDATION RULES
+============================================================
+
+- Patient must exist.
+- Dentist must exist and be Active.
+- Appointment type must exist.
+- Appointment date cannot be in the past.
+- End time must be greater than start time.
+- Double booking is not allowed.
+- Cancelled appointments cannot be checked in.
+
+============================================================
+BUSINESS RULES
+============================================================
+
+1. One appointment belongs to one patient.
+2. One appointment is assigned to one dentist.
+3. Status lifecycle:
+Booked -> Confirmed -> Checked-in -> In Chair -> Completed
+Alternative:
+Booked -> Cancelled
+Booked -> No-show
+4. Historical appointments are never deleted.
+5. Returning patients create new appointments, not new patient records.
+
+============================================================
+RELATED MODULES
+============================================================
+
+Business Flow:
+1-6
+
+System Flow:
+1-6
+
+ERD:
+1,3,4,5,6
+
+============================================================
+LARAVEL MIGRATION REFERENCE
+============================================================
+
+id()
+foreignId('patient_id')->constrained('patients')
+foreignId('dentist_id')->constrained('users')
+foreignId('created_by')->constrained('users')
+foreignId('appointment_type_id')->constrained('appointment_types')
+date('appointment_date')
+time('start_time')
+time('end_time')
+enum('status',['Booked','Confirmed','Checked-in','In Chair','Completed','Cancelled','No-show'])->default('Booked')
+string('reason_for_visit',255)->nullable()
+text('appointment_notes')->nullable()
+timestamps()
+
+============================================================
+EXAMPLE RECORD
+============================================================
+
+appointment_id: 1001
+patient_id: 15
+dentist_id: 3
+created_by: 2
+appointment_type_id: 1
+appointment_date: 2026-08-15
+start_time: 09:00
+end_time: 09:30
+status: Booked
+
+============================================================
+END OF DATABASE SCHEMA 04

@@ -1,0 +1,1143 @@
+<Screen_Navigation_3.txt>
+SCREEN NAVIGATION 3
+Dental Clinic Management System
+
+MODULE
+Clinical Examination, Diagnosis & Treatment Planning
+
+PURPOSE
+
+Defines the navigation used by dentists during examination, diagnosis,
+odontogram charting, image review, and treatment planning.
+
+Related Documents
+- Business Flow 3
+- System Flow 3
+- ERD 3
+
+============================================================
+PRIMARY USERS
+============================================================
+
+Dentist
+Administrator (Read)
+Dental Assistant (Limited)
+
+============================================================
+SCREEN HIERARCHY
+============================================================
+
+Waiting Queue
+    ↓
+Patient Summary
+    ├── Examination
+    │      ├── Odontogram
+    │      ├── X-ray & Images
+    │      ├── Clinical Notes
+    │      └── Diagnosis
+    └── Treatment Plan
+            ├── Estimate
+            └── Treatment Decision
+
+============================================================
+PATIENT SUMMARY
+============================================================
+
+Entry:
+Waiting Queue → Call Patient
+
+Displays:
+- Patient profile
+- Medical alerts
+- Allergies
+- Previous treatments
+- Outstanding balance
+- Last visit
+
+Buttons:
+Start Examination → Examination
+View Files → X-ray & Images
+Back → Waiting Queue
+
+============================================================
+EXAMINATION
+============================================================
+
+Functions:
+- Record chief complaint
+- Pain assessment
+- Clinical findings
+- Tooth selection
+
+Buttons:
+Odontogram
+Clinical Notes
+Diagnosis
+Save Draft
+Next → Treatment Plan
+
+Validation:
+Clinical note required before continuing.
+
+============================================================
+ODONTOGRAM
+============================================================
+
+Functions:
+- Select tooth
+- Select surface
+- Record condition
+- Mark existing restoration
+
+Buttons:
+Save
+Back → Examination
+
+============================================================
+X-RAY & IMAGES
+============================================================
+
+Functions:
+- Upload image
+- View image
+- Zoom
+- Delete (permission required)
+
+Buttons:
+Attach
+Back → Examination
+
+============================================================
+DIAGNOSIS
+============================================================
+
+Fields:
+- Diagnosis
+- Priority
+- Recommendation
+
+Save:
+Return to Examination.
+
+============================================================
+TREATMENT PLAN
+============================================================
+
+Functions:
+- Add procedures
+- Tooth number
+- Estimated price
+- Estimated duration
+- Priority
+
+Buttons:
+Add Procedure
+Remove Procedure
+Calculate Estimate
+Save Plan
+
+Decision:
+Patient accepts?
+
+YES →
+Start Treatment → Navigation 4
+
+NO →
+Mark Postponed or Declined
+Return to Patient Summary
+
+============================================================
+GLOBAL RULES
+============================================================
+
+Save Draft:
+Remain on current screen.
+
+Save Plan:
+Refresh Treatment Plan.
+
+Back:
+Return to previous screen.
+
+Logout:
+Return to Login.
+
+============================================================
+ERROR NAVIGATION
+============================================================
+
+Medical alert:
+Display warning before examination.
+
+Missing diagnosis:
+Remain on Diagnosis screen.
+
+No treatment items:
+Prevent plan approval.
+
+END OF SCREEN NAVIGATION 3
+
+</Screen_Navigation_3.txt>
+
+<Screen_Navigation_4.txt>
+SCREEN NAVIGATION 4
+Dental Clinic Management System
+
+MODULE
+Treatment Execution & Clinical Procedures
+
+PURPOSE
+
+Defines screen navigation while treatment is being performed.
+This module starts after an approved treatment plan and ends when the
+visit is completed and ready for billing.
+
+Related Documents
+- Business Flow 4
+- System Flow 4
+- ERD 4
+
+============================================================
+PRIMARY USERS
+============================================================
+
+Dentist
+Dental Assistant
+Administrator (Read)
+
+============================================================
+SCREEN HIERARCHY
+============================================================
+
+Treatment Plan
+      ↓
+Treatment Execution
+      ├── Procedure Recording
+      ├── Anesthesia
+      ├── Consumables
+      ├── Clinical Images
+      ├── Prescription
+      └── Treatment Summary
+
+============================================================
+TREATMENT EXECUTION
+============================================================
+
+Entry:
+Treatment Plan → Start Treatment
+
+Displays:
+- Planned procedures
+- Tooth numbers
+- Previous notes
+- Images
+- Medical alerts
+
+Buttons:
+Start Procedure
+View Images
+View Odontogram
+Finish Visit
+Back
+
+============================================================
+PROCEDURE RECORDING
+============================================================
+
+Functions:
+- Select procedure
+- Tooth number
+- Tooth surface
+- Duration
+- Clinical notes
+
+Buttons:
+Save Procedure
+Next Procedure
+Cancel
+
+Validation:
+Responsible dentist required.
+Clinical notes required before completion.
+
+============================================================
+ANESTHESIA
+============================================================
+
+Fields:
+- Drug
+- Dosage
+- Quantity
+- Injection site
+
+Buttons:
+Save
+Skip
+Back
+
+============================================================
+CONSUMABLES
+============================================================
+
+Functions:
+- Add material
+- Quantity used
+- Optional batch number
+
+Buttons:
+Add
+Remove
+Save
+
+============================================================
+CLINICAL IMAGES
+============================================================
+
+Functions:
+- Capture image
+- Upload X-ray
+- View attachments
+
+Buttons:
+Attach
+Delete (permission)
+Back
+
+============================================================
+PRESCRIPTION
+============================================================
+
+Fields:
+- Medicine
+- Dosage
+- Frequency
+- Duration
+- Instructions
+
+Buttons:
+Save Prescription
+Skip
+
+============================================================
+TREATMENT SUMMARY
+============================================================
+
+Displays:
+- Completed procedures
+- Remaining procedures
+- Recommendations
+- Post-operative instructions
+
+Buttons:
+Complete Visit
+Return to Treatment
+Print Summary
+
+Complete Visit:
+Navigate to Billing (Navigation 5)
+
+============================================================
+GLOBAL RULES
+============================================================
+
+Save:
+Remain on current screen.
+
+Finish Visit:
+Update appointment status.
+Navigate to Billing.
+
+Back:
+Return to previous screen.
+
+Logout:
+Return to Login.
+
+============================================================
+ERROR NAVIGATION
+============================================================
+
+Missing clinical note:
+Remain on Procedure Recording.
+
+Treatment interrupted:
+Save progress.
+Return to Treatment Summary.
+
+Missing procedure:
+Prevent visit completion.
+
+END OF SCREEN NAVIGATION 4
+
+</Screen_Navigation_4.txt>
+
+<Screen_Navigation_5.txt>
+SCREEN NAVIGATION 5
+Dental Clinic Management System
+
+MODULE
+Billing, Payment & Invoice Processing
+
+PURPOSE
+
+Defines the navigation for billing, invoice generation, payment collection,
+receipt generation and outstanding balance management.
+
+Related Documents
+- Business Flow 5
+- System Flow 5
+- ERD 5
+
+============================================================
+PRIMARY USERS
+============================================================
+
+Receptionist
+Administrator
+
+============================================================
+SCREEN HIERARCHY
+============================================================
+
+Treatment Summary
+      ↓
+Billing
+      ├── Invoice
+      ├── Discount Approval
+      ├── Payment
+      ├── Receipt
+      └── Transaction History
+
+============================================================
+BILLING
+============================================================
+
+Entry:
+Treatment Summary → Finish Visit
+
+Displays:
+- Patient
+- Completed procedures
+- Charges
+- Outstanding balance
+
+Buttons:
+Generate Invoice
+View Invoice
+Back
+
+============================================================
+INVOICE
+============================================================
+
+Displays:
+- Invoice number
+- Procedures
+- Tooth numbers
+- Unit prices
+- Discounts
+- Tax
+- Grand total
+
+Buttons:
+Apply Discount
+Receive Payment
+Print Invoice
+Back
+
+Validation:
+Invoice must contain at least one completed procedure.
+
+============================================================
+DISCOUNT APPROVAL
+============================================================
+
+Entry:
+Invoice → Apply Discount
+
+Fields:
+- Discount type
+- Value
+- Reason
+
+Decision:
+Authorization required?
+
+YES:
+Request Admin Approval
+
+NO:
+Apply discount immediately
+
+Buttons:
+Approve
+Reject
+Cancel
+
+============================================================
+PAYMENT
+============================================================
+
+Methods:
+- Cash
+- Card
+- Bank Transfer
+- KHQR
+- Mixed Payment
+
+Fields:
+- Amount
+- Reference
+- Notes
+
+Buttons:
+Complete Payment
+Save Partial Payment
+Cancel
+
+Success:
+Open Receipt Screen
+
+============================================================
+RECEIPT
+============================================================
+
+Displays:
+- Receipt number
+- Payment summary
+- Remaining balance
+
+Buttons:
+Print
+Send Telegram
+Send Email
+Finish
+
+Finish:
+Navigate to Follow-up (Navigation 6)
+
+============================================================
+TRANSACTION HISTORY
+============================================================
+
+Displays:
+- Previous payments
+- Refunds
+- Adjustments
+
+Buttons:
+View Detail
+Back
+
+============================================================
+GLOBAL RULES
+============================================================
+
+Save:
+Remain on current screen.
+
+Complete Payment:
+Update invoice status.
+Refresh patient balance.
+
+Back:
+Return to previous screen.
+
+Logout:
+Return to Login.
+
+============================================================
+ERROR NAVIGATION
+============================================================
+
+Payment exceeds balance:
+Remain on Payment screen.
+
+Authorization rejected:
+Return to Invoice.
+
+Invoice missing items:
+Prevent payment processing.
+
+END OF SCREEN NAVIGATION 5
+
+</Screen_Navigation_5.txt>
+
+<Screen_Navigation_6.txt>
+SCREEN NAVIGATION 6
+Dental Clinic Management System
+
+MODULE
+Follow-up, Recall & Telegram Patient Portal
+
+PURPOSE
+
+Defines the navigation after billing is completed. This module manages
+patient discharge, follow-up appointments, recall scheduling, reminder
+management, and the Telegram Mini App.
+
+Related Documents
+- Business Flow 6
+- System Flow 6
+- ERD 6
+
+============================================================
+PRIMARY USERS
+============================================================
+
+Receptionist
+Dentist
+Administrator
+
+Patient (Telegram Mini App)
+
+============================================================
+SCREEN HIERARCHY
+============================================================
+
+Receipt
+    ↓
+Visit Completion
+    ├── Follow-up Appointment
+    ├── Recall Scheduling
+    ├── Reminder Center
+    ├── Telegram Linking
+    ├── Telegram Patient Portal
+    └── Recall Dashboard
+
+============================================================
+VISIT COMPLETION
+============================================================
+
+Entry:
+Receipt → Finish
+
+Displays:
+- Treatment completed
+- Outstanding balance
+- Dentist recommendations
+- Home care instructions
+
+Buttons:
+Create Follow-up
+Create Recall
+Finish Visit
+Back
+
+============================================================
+FOLLOW-UP APPOINTMENT
+============================================================
+
+Functions:
+- Select dentist
+- Select date
+- Select time
+- Select appointment type
+
+Buttons:
+Save
+Cancel
+
+Save:
+Return to Visit Completion.
+
+============================================================
+RECALL SCHEDULING
+============================================================
+
+Functions:
+- Select recall type
+- Select due date
+- Select reminder method
+
+Buttons:
+Create Recall
+Cancel
+
+Success:
+Open Reminder Center.
+
+============================================================
+REMINDER CENTER
+============================================================
+
+Displays:
+- Upcoming reminders
+- Sent reminders
+- Failed reminders
+
+Buttons:
+Send Now
+Retry Failed
+View History
+Back
+
+============================================================
+TELEGRAM LINKING
+============================================================
+
+Functions:
+- Generate QR Code
+- Generate Invite Token
+- Link Telegram Account
+- Unlink Account
+
+Buttons:
+Generate QR
+Copy Token
+Link
+Unlink
+Back
+
+Success:
+Open Telegram Patient Portal.
+
+============================================================
+TELEGRAM PATIENT PORTAL
+============================================================
+
+Patient can view:
+- Upcoming appointments
+- Treatment progress
+- Outstanding balance
+- Treatment history
+- Recall reminders
+
+Staff Buttons:
+Refresh Portal
+View Linked Account
+Back
+
+============================================================
+RECALL DASHBOARD
+============================================================
+
+Displays:
+- Patients due today
+- Patients overdue
+- Reminder success rate
+
+Buttons:
+Open Patient
+Send Reminder
+Back
+
+============================================================
+GLOBAL RULES
+============================================================
+
+Save:
+Remain on current screen.
+
+Finish Visit:
+Close current visit.
+Return to Dashboard.
+
+Back:
+Return to previous screen.
+
+Logout:
+Return to Login.
+
+============================================================
+ERROR NAVIGATION
+============================================================
+
+Telegram link failed:
+Remain on Telegram Linking.
+
+Invalid recall date:
+Remain on Recall Scheduling.
+
+Reminder failed:
+Open Reminder Center with failed status highlighted.
+
+============================================================
+END OF SCREEN NAVIGATION 6
+
+</Screen_Navigation_6.txt>
+
+<Screen_Navigation_1.txt>
+SCREEN NAVIGATION 1
+Dental Clinic Management System
+
+MODULE
+Patient Registration & Appointment Booking
+
+PURPOSE
+
+This document defines the navigation between all screens used during
+patient registration and appointment booking.
+
+It complements:
+- Business Flow 1
+- System Flow 1
+- ERD 1
+
+============================================================
+PRIMARY USERS
+============================================================
+
+Receptionist
+Administrator
+
+============================================================
+SCREEN HIERARCHY
+============================================================
+
+Login
+  ↓
+Dashboard
+  ├── Patient List
+  │      ├── New Patient
+  │      ├── Patient Profile
+  │      └── Edit Patient
+  ├── Appointment Calendar
+  │      ├── Appointment Booking
+  │      └── Appointment Detail
+  └── Global Search
+         └── Patient Profile
+
+============================================================
+LOGIN
+============================================================
+
+Entry:
+Application starts.
+
+Buttons:
+- Login -> Dashboard
+- Exit -> Close application
+
+Failed login:
+Remain on Login screen.
+
+============================================================
+DASHBOARD
+============================================================
+
+Entry:
+Successful login.
+
+Menus:
+- Dashboard
+- Patients
+- Calendar
+- Appointments
+- Billing
+- Recall
+- Inventory
+- Reports
+- Settings
+- Logout
+
+Quick Actions:
+- Register Patient
+- Book Appointment
+- Today's Schedule
+
+============================================================
+PATIENT LIST
+============================================================
+
+Entry:
+Dashboard -> Patients
+
+Functions:
+- Search by phone
+- Search by patient code
+- Search by name
+- Filter active patients
+
+Buttons:
++ New Patient -> New Patient Screen
+Patient Row -> Patient Profile
+Back -> Dashboard
+
+============================================================
+NEW PATIENT
+============================================================
+
+Required:
+- Name
+- Phone
+
+Optional:
+- Gender
+- DOB
+- Address
+- Medical Information
+
+Save:
+Create patient
+Return to Patient Profile
+
+Cancel:
+Return to Patient List
+
+Validation:
+Duplicate phone -> Display warning
+Missing required field -> Stay on page
+
+============================================================
+PATIENT PROFILE
+============================================================
+
+Tabs:
+- Overview
+- Medical
+- Appointments
+- Billing
+- Files
+
+Buttons:
+Book Appointment -> Appointment Booking
+Edit -> Edit Patient
+Back -> Patient List
+
+============================================================
+APPOINTMENT BOOKING
+============================================================
+
+Entry:
+Patient Profile
+OR
+Dashboard Quick Action
+
+Fields:
+- Dentist
+- Date
+- Time
+- Appointment Type
+- Reason
+
+Save:
+Validate slot
+Create appointment
+Open Appointment Detail
+
+Cancel:
+Return to previous screen
+
+Conflict:
+Display available slots.
+
+============================================================
+APPOINTMENT DETAIL
+============================================================
+
+Display:
+- Patient
+- Dentist
+- Date
+- Time
+- Status
+
+Buttons:
+Edit
+Cancel Appointment
+Check-in (when appointment day arrives)
+Back
+
+============================================================
+CALENDAR
+============================================================
+
+Views:
+- Day
+- Week
+- Month
+
+Selecting a slot:
+Open Appointment Booking with date/time pre-filled.
+
+Selecting an appointment:
+Open Appointment Detail.
+
+============================================================
+GLOBAL RULES
+============================================================
+
+Save:
+Remain on current screen unless a new record is created.
+
+Cancel:
+Return to previous screen.
+
+Delete:
+Show confirmation dialog.
+
+Back:
+Return to previous screen.
+
+Logout:
+Return to Login.
+
+END OF SCREEN NAVIGATION 1
+
+</Screen_Navigation_1.txt>
+
+<Screen_Navigation_2.txt>
+SCREEN NAVIGATION 2
+Dental Clinic Management System
+
+MODULE
+Patient Arrival, Check-in & Waiting Queue
+
+PURPOSE
+
+Defines all navigation related to patient arrival, check-in, queue management,
+and preparing the patient for the dentist.
+
+Related Documents
+- Business Flow 2
+- System Flow 2
+- ERD 1
+
+============================================================
+PRIMARY USERS
+============================================================
+
+Receptionist
+Administrator
+Dentist (Queue View)
+
+============================================================
+SCREEN HIERARCHY
+============================================================
+
+Dashboard
+   ├── Today's Appointments
+   │        ├── Appointment Detail
+   │        ├── Check-in
+   │        └── Walk-in Appointment
+   ├── Waiting Queue
+   │        └── Queue Detail
+   └── Patient Profile
+
+============================================================
+TODAY'S APPOINTMENTS
+============================================================
+
+Entry:
+Dashboard → Today's Appointments
+
+Functions:
+- Search today's bookings
+- Filter by dentist
+- Filter by status
+
+Buttons:
+Appointment Row → Appointment Detail
+Check-in → Check-in Screen
+Walk-in → Walk-in Appointment
+Back → Dashboard
+
+============================================================
+CHECK-IN SCREEN
+============================================================
+
+Displays:
+- Patient identity
+- Contact information
+- Medical alerts
+- Consent status
+- Appointment details
+
+Buttons:
+Check-in → Waiting Queue
+Edit Patient → Patient Profile
+Cancel → Appointment Detail
+
+Validation:
+- Appointment must be today
+- Appointment not Cancelled
+- Patient record exists
+
+============================================================
+WALK-IN APPOINTMENT
+============================================================
+
+Entry:
+Today's Appointments → Walk-in
+
+Steps:
+- Search existing patient
+- Register if new
+- Assign dentist
+- Select available slot
+
+Save:
+Create same-day appointment
+Open Check-in Screen
+
+Cancel:
+Return to Today's Appointments
+
+============================================================
+WAITING QUEUE
+============================================================
+
+Displays:
+- Queue number
+- Patient
+- Dentist
+- Appointment time
+- Priority
+- Status
+
+Buttons:
+Call Patient → Queue Detail
+Refresh
+Back → Dashboard
+
+============================================================
+QUEUE DETAIL
+============================================================
+
+Displays:
+- Patient summary
+- Medical alerts
+- Queue information
+
+Buttons:
+Send to Chair → Examination Screen (Navigation 3)
+Return to Queue
+View Patient Profile
+
+============================================================
+GLOBAL RULES
+============================================================
+
+Save:
+Stay on current screen unless status changes.
+
+Check-in Success:
+Automatically navigate to Waiting Queue.
+
+Back:
+Return to previous screen.
+
+Cancel:
+Discard changes and return.
+
+Logout:
+Return to Login.
+
+============================================================
+ERROR NAVIGATION
+============================================================
+
+Appointment not found:
+Return to Today's Appointments.
+
+No dentist available:
+Remain on Walk-in screen.
+
+Consent missing:
+Open Consent dialog before allowing Check-in.
+
+END OF SCREEN NAVIGATION 2
+
+</Screen_Navigation_2.txt>
+

@@ -1,0 +1,188 @@
+SCREEN NAVIGATION 5
+Dental Clinic Management System
+
+MODULE
+Billing, Payment & Invoice Processing
+
+PURPOSE
+
+Defines the navigation for billing, invoice generation, payment collection,
+receipt generation and outstanding balance management.
+
+Related Documents
+- Business Flow 5
+- System Flow 5
+- ERD 5
+
+============================================================
+PRIMARY USERS
+============================================================
+
+Receptionist
+Administrator
+
+============================================================
+SCREEN HIERARCHY
+============================================================
+
+Treatment Summary
+      ↓
+Billing
+      ├── Invoice
+      ├── Discount Approval
+      ├── Payment
+      ├── Receipt
+      └── Transaction History
+
+============================================================
+BILLING
+============================================================
+
+Entry:
+Treatment Summary → Finish Visit
+
+Displays:
+- Patient
+- Completed procedures
+- Charges
+- Outstanding balance
+
+Buttons:
+Generate Invoice
+View Invoice
+Back
+
+============================================================
+INVOICE
+============================================================
+
+Displays:
+- Invoice number
+- Procedures
+- Tooth numbers
+- Unit prices
+- Discounts
+- Tax
+- Grand total
+
+Buttons:
+Apply Discount
+Receive Payment
+Print Invoice
+Back
+
+Validation:
+Invoice must contain at least one completed procedure.
+
+============================================================
+DISCOUNT APPROVAL
+============================================================
+
+Entry:
+Invoice → Apply Discount
+
+Fields:
+- Discount type
+- Value
+- Reason
+
+Decision:
+Authorization required?
+
+YES:
+Request Admin Approval
+
+NO:
+Apply discount immediately
+
+Buttons:
+Approve
+Reject
+Cancel
+
+============================================================
+PAYMENT
+============================================================
+
+Methods:
+- Cash
+- Card
+- Bank Transfer
+- KHQR
+- Mixed Payment
+
+Fields:
+- Amount
+- Reference
+- Notes
+
+Buttons:
+Complete Payment
+Save Partial Payment
+Cancel
+
+Success:
+Open Receipt Screen
+
+============================================================
+RECEIPT
+============================================================
+
+Displays:
+- Receipt number
+- Payment summary
+- Remaining balance
+
+Buttons:
+Print
+Send Telegram
+Send Email
+Finish
+
+Finish:
+Navigate to Follow-up (Navigation 6)
+
+============================================================
+TRANSACTION HISTORY
+============================================================
+
+Displays:
+- Previous payments
+- Refunds
+- Adjustments
+
+Buttons:
+View Detail
+Back
+
+============================================================
+GLOBAL RULES
+============================================================
+
+Save:
+Remain on current screen.
+
+Complete Payment:
+Update invoice status.
+Refresh patient balance.
+
+Back:
+Return to previous screen.
+
+Logout:
+Return to Login.
+
+============================================================
+ERROR NAVIGATION
+============================================================
+
+Payment exceeds balance:
+Remain on Payment screen.
+
+Authorization rejected:
+Return to Invoice.
+
+Invoice missing items:
+Prevent payment processing.
+
+END OF SCREEN NAVIGATION 5

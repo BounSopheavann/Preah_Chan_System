@@ -1,0 +1,170 @@
+DATABASE SCHEMA 12
+TABLE: treatment_files
+
+Dental Clinic Management System
+Version 1.0
+
+============================================================
+PURPOSE
+============================================================
+
+The treatment_files table stores digital files related to a treatment
+execution.
+
+These files become part of the patient's permanent clinical record.
+
+Examples:
+- X-ray
+- Intraoral Photo
+- Consent Form
+- PDF Report
+- Treatment Image
+
+Referenced by:
+- Patient History
+- Clinical Review
+
+============================================================
+TABLE NAME
+============================================================
+
+treatment_files
+
+============================================================
+PRIMARY KEY
+============================================================
+
+file_id
+Type: BIGINT UNSIGNED
+Auto Increment: YES
+Nullable: NO
+
+============================================================
+COLUMNS
+============================================================
+
+1. file_id
+- BIGINT UNSIGNED
+- Primary Key
+- Auto Increment
+
+2. treatment_execution_id
+- BIGINT UNSIGNED
+- Required
+- FK -> treatment_execution.treatment_execution_id
+
+3. file_type
+- ENUM('X-ray','Image','PDF','Document')
+- Required
+
+4. file_name
+- VARCHAR(255)
+- Required
+
+5. file_path
+- VARCHAR(500)
+- Required
+
+6. uploaded_by
+- BIGINT UNSIGNED
+- Required
+- FK -> users.user_id
+
+7. uploaded_at
+- TIMESTAMP
+- Required
+
+8. created_at
+- TIMESTAMP
+
+9. updated_at
+- TIMESTAMP
+
+============================================================
+FOREIGN KEYS
+============================================================
+
+treatment_execution_id ->
+treatment_execution(treatment_execution_id)
+
+uploaded_by ->
+users(user_id)
+
+Recommended:
+ON UPDATE CASCADE
+ON DELETE RESTRICT
+
+============================================================
+INDEXES
+============================================================
+
+PRIMARY KEY (file_id)
+
+INDEX (treatment_execution_id)
+
+INDEX (file_type)
+
+INDEX (uploaded_by)
+
+INDEX (uploaded_at)
+
+============================================================
+VALIDATION RULES
+============================================================
+
+- Treatment execution must exist.
+- File type is required.
+- File path cannot be empty.
+- Only authorized staff may upload or delete files.
+- Unsupported file types must be rejected.
+
+============================================================
+BUSINESS RULES
+============================================================
+
+1. One treatment execution may have many files.
+2. Files belong to treatment executions, not directly to appointments.
+3. Original files should not be overwritten.
+4. Files become part of the permanent medical record.
+5. Deleted files should be soft deleted or archived when possible.
+
+============================================================
+RELATED MODULES
+============================================================
+
+Business Flow:
+4
+
+System Flow:
+4
+
+ERD:
+4
+
+============================================================
+LARAVEL MIGRATION REFERENCE
+============================================================
+
+id()
+foreignId('treatment_execution_id')->constrained('treatment_execution')
+enum('file_type',['X-ray','Image','PDF','Document'])
+string('file_name',255)
+string('file_path',500)
+foreignId('uploaded_by')->constrained('users')
+timestamp('uploaded_at')
+timestamps()
+
+============================================================
+EXAMPLE RECORD
+============================================================
+
+file_id: 901
+treatment_execution_id: 501
+file_type: X-ray
+file_name: xray_20260815.png
+file_path: uploads/xrays/xray_20260815.png
+uploaded_by: 3
+uploaded_at: 2026-08-15 10:30:00
+
+============================================================
+END OF DATABASE SCHEMA 12

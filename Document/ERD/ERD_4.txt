@@ -1,0 +1,532 @@
+# ERD 4 – Treatment Execution & Clinical Records
+
+You are working on a Dental Clinic Management System.
+
+This document is the official explanation of ERD 4.
+
+Treat this document as the source of truth.
+
+------------------------------------------------------------
+MODULE PURPOSE
+------------------------------------------------------------
+
+This module manages the actual dental treatment after the treatment plan has been approved.
+
+Workflow
+
+Treatment Plan Item
+        ↓
+Treatment Execution
+        ↓
+Treatment Files
+        ↓
+Prescription
+
+The purpose of this module is to record every completed dental procedure, attach supporting clinical files, and issue prescriptions when necessary.
+
+------------------------------------------------------------
+TABLES
+------------------------------------------------------------
+
+This ERD contains four tables.
+
+1. procedures
+2. treatment_execution
+3. treatment_files
+4. prescriptions
+
+------------------------------------------------------------
+TABLE : procedures
+------------------------------------------------------------
+
+Purpose
+
+Stores the master list of procedures offered by the clinic.
+
+This table is managed by the administrator.
+
+Primary Key
+
+procedure_id
+
+Columns
+
+procedure_id
+
+Primary Key
+
+procedure_name
+
+Examples
+
+Consultation
+
+Scaling
+
+Filling
+
+Extraction
+
+Root Canal
+
+Crown
+
+Whitening
+
+description
+
+default_price
+
+estimated_duration
+
+Minutes
+
+status
+
+Possible values
+
+Active
+
+Inactive
+
+created_at
+
+updated_at
+
+------------------------------------------------------------
+Relationship
+------------------------------------------------------------
+
+One Procedure
+
+can be used in
+
+many Treatment Executions
+
+procedures.procedure_id
+        |
+        |
+        +--------<
+                 treatment_execution.procedure_id
+
+Relationship
+
+1 → Many
+
+------------------------------------------------------------
+TABLE : treatment_execution
+------------------------------------------------------------
+
+Purpose
+
+Stores every completed treatment performed by the dentist.
+
+Every record represents one completed procedure.
+
+Primary Key
+
+treatment_execution_id
+
+Columns
+
+treatment_execution_id
+
+Primary Key
+
+appointment_id
+
+Foreign Key
+
+references
+
+appointments.appointment_id
+
+treatment_plan_item_id
+
+Foreign Key
+
+references
+
+treatment_plan_items.treatment_plan_item_id
+
+procedure_id
+
+Foreign Key
+
+references
+
+procedures.procedure_id
+
+performed_by
+
+Foreign Key
+
+references
+
+users.user_id
+
+tooth_number
+
+tooth_surface
+
+quantity
+
+unit_price
+
+total_price
+
+treatment_status
+
+Possible values
+
+Completed
+
+Incomplete
+
+Cancelled
+
+clinical_notes
+
+performed_at
+
+created_at
+
+updated_at
+
+------------------------------------------------------------
+Relationship
+------------------------------------------------------------
+
+One Treatment Plan Item
+
+creates
+
+One Treatment Execution
+
+treatment_plan_items.treatment_plan_item_id
+        |
+        |
+        +--------<
+                 treatment_execution.treatment_plan_item_id
+
+Relationship
+
+1 → 1
+
+------------------------------------------------------------
+
+One Appointment
+
+can contain
+
+Many Treatment Executions
+
+appointments.appointment_id
+        |
+        |
+        +--------<
+                 treatment_execution.appointment_id
+
+Relationship
+
+1 → Many
+
+------------------------------------------------------------
+TABLE : treatment_files
+------------------------------------------------------------
+
+Purpose
+
+Stores files related to completed treatment.
+
+Examples
+
+X-ray
+
+Intraoral Photo
+
+Consent Form
+
+Treatment Image
+
+Primary Key
+
+file_id
+
+Columns
+
+file_id
+
+Primary Key
+
+treatment_execution_id
+
+Foreign Key
+
+references
+
+treatment_execution.treatment_execution_id
+
+file_type
+
+Possible values
+
+X-ray
+
+Image
+
+PDF
+
+Document
+
+file_name
+
+file_path
+
+uploaded_by
+
+Foreign Key
+
+references
+
+users.user_id
+
+uploaded_at
+
+------------------------------------------------------------
+Relationship
+------------------------------------------------------------
+
+One Treatment Execution
+
+can have
+
+Many Files
+
+treatment_execution.treatment_execution_id
+        |
+        |
+        +--------<
+                 treatment_files.treatment_execution_id
+
+Relationship
+
+1 → Many
+
+------------------------------------------------------------
+TABLE : prescriptions
+------------------------------------------------------------
+
+Purpose
+
+Stores medication prescribed after treatment.
+
+Primary Key
+
+prescription_id
+
+Columns
+
+prescription_id
+
+Primary Key
+
+treatment_execution_id
+
+Foreign Key
+
+references
+
+treatment_execution.treatment_execution_id
+
+medicine_name
+
+dosage
+
+frequency
+
+duration
+
+instructions
+
+prescribed_by
+
+Foreign Key
+
+references
+
+users.user_id
+
+created_at
+
+------------------------------------------------------------
+Relationship
+------------------------------------------------------------
+
+One Treatment Execution
+
+can have
+
+Many Prescriptions
+
+treatment_execution.treatment_execution_id
+        |
+        |
+        +--------<
+                 prescriptions.treatment_execution_id
+
+Relationship
+
+1 → Many
+
+------------------------------------------------------------
+RELATIONSHIPS
+------------------------------------------------------------
+
+procedures (1)
+        |
+        +------<
+               treatment_execution
+
+One procedure
+
+Many treatment executions
+
+------------------------------------------------------------
+
+appointments (1)
+        |
+        +------<
+               treatment_execution
+
+One appointment
+
+Many treatment executions
+
+------------------------------------------------------------
+
+treatment_plan_items (1)
+        |
+        +------|
+               treatment_execution
+
+One treatment plan item
+
+One treatment execution
+
+------------------------------------------------------------
+
+treatment_execution (1)
+        |
+        +------<
+               treatment_files
+
+One treatment execution
+
+Many treatment files
+
+------------------------------------------------------------
+
+treatment_execution (1)
+        |
+        +------<
+               prescriptions
+
+One treatment execution
+
+Many prescriptions
+
+------------------------------------------------------------
+BUSINESS RULES
+------------------------------------------------------------
+
+Rule 1
+
+Treatment cannot begin without an appointment.
+
+------------------------------------------------------------
+
+Rule 2
+
+Every treatment execution must belong to one appointment.
+
+------------------------------------------------------------
+
+Rule 3
+
+Every treatment execution should originate from one treatment plan item.
+
+------------------------------------------------------------
+
+Rule 4
+
+Only dentists can perform treatment executions.
+
+------------------------------------------------------------
+
+Rule 5
+
+Each treatment execution records the actual procedure performed, even if it differs from the original treatment plan.
+
+------------------------------------------------------------
+
+Rule 6
+
+Clinical files belong to treatment executions, not directly to appointments.
+
+------------------------------------------------------------
+
+Rule 7
+
+Multiple files may be attached to one treatment execution.
+
+------------------------------------------------------------
+
+Rule 8
+
+One treatment execution may generate zero, one, or multiple prescriptions.
+
+------------------------------------------------------------
+
+Rule 9
+
+Completed treatment executions become invoice items in ERD 5.
+
+------------------------------------------------------------
+
+Rule 10
+
+Treatment execution records should never be deleted after billing.
+
+If corrections are needed, create adjustment records instead of removing historical data.
+
+------------------------------------------------------------
+MODULE CONNECTIONS
+------------------------------------------------------------
+
+ERD 1
+Patient Management
+        ↓
+appointments
+
+ERD 3
+Treatment Planning
+        ↓
+treatment_plan_items
+
+ERD 4
+Treatment Execution
+        ↓
+procedures
+treatment_execution
+treatment_files
+prescriptions
+
+ERD 5
+Billing & Payments
+        ↓
+Invoice Items are generated from completed treatment executions.
+
+------------------------------------------------------------
+END OF ERD 4
+------------------------------------------------------------

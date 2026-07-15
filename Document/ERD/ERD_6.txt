@@ -1,0 +1,734 @@
+# ERD 6 – Inventory Management & Patient Recall
+
+You are working on a Dental Clinic Management System.
+
+This document is the official explanation of ERD 6.
+
+Treat this document as the source of truth.
+
+------------------------------------------------------------
+MODULE PURPOSE
+------------------------------------------------------------
+
+This module manages clinic inventory and patient follow-up.
+
+It has two independent functions.
+
+Inventory Workflow
+
+Supplier
+        ↓
+Purchase Order
+        ↓
+Purchase Order Items
+        ↓
+Products
+        ↓
+Stock Movement
+
+Recall Workflow
+
+Patient
+        ↓
+Recall Schedule
+        ↓
+Reminder
+        ↓
+Patient Response
+
+The purpose of this module is to ensure the clinic always has enough supplies while automatically reminding patients about future visits.
+
+------------------------------------------------------------
+TABLES
+------------------------------------------------------------
+
+This ERD contains six tables.
+
+1. suppliers
+2. products
+3. purchase_orders
+4. purchase_order_items
+5. stock_movements
+6. recalls
+
+------------------------------------------------------------
+TABLE : suppliers
+------------------------------------------------------------
+
+Purpose
+
+Stores supplier information for purchasing clinic supplies.
+
+Primary Key
+
+supplier_id
+
+Columns
+
+supplier_id
+
+Primary Key
+
+supplier_name
+
+contact_person
+
+phone
+
+email
+
+address
+
+status
+
+Possible values
+
+Active
+
+Inactive
+
+created_at
+
+updated_at
+
+------------------------------------------------------------
+Relationship
+------------------------------------------------------------
+
+One Supplier
+
+can receive
+
+Many Purchase Orders
+
+suppliers.supplier_id
+        |
+        |
+        +--------<
+                 purchase_orders.supplier_id
+
+Relationship
+
+1 → Many
+
+------------------------------------------------------------
+TABLE : products
+------------------------------------------------------------
+
+Purpose
+
+Stores every inventory item used in the clinic.
+
+Examples
+
+Gloves
+
+Composite Resin
+
+Anesthetic
+
+Needles
+
+Cotton Roll
+
+Dental Cement
+
+Primary Key
+
+product_id
+
+Columns
+
+product_id
+
+Primary Key
+
+product_name
+
+category
+
+unit
+
+Example
+
+Box
+
+Piece
+
+Bottle
+
+Tube
+
+purchase_price
+
+selling_price
+
+current_stock
+
+minimum_stock
+
+status
+
+Possible values
+
+Active
+
+Inactive
+
+created_at
+
+updated_at
+
+------------------------------------------------------------
+Relationship
+------------------------------------------------------------
+
+One Product
+
+can appear in
+
+Many Purchase Order Items
+
+products.product_id
+        |
+        |
+        +--------<
+                 purchase_order_items.product_id
+
+Relationship
+
+1 → Many
+
+------------------------------------------------------------
+
+One Product
+
+can have
+
+Many Stock Movements
+
+products.product_id
+        |
+        |
+        +--------<
+                 stock_movements.product_id
+
+Relationship
+
+1 → Many
+
+------------------------------------------------------------
+TABLE : purchase_orders
+------------------------------------------------------------
+
+Purpose
+
+Stores purchase orders created when buying products from suppliers.
+
+Primary Key
+
+purchase_order_id
+
+Columns
+
+purchase_order_id
+
+Primary Key
+
+supplier_id
+
+Foreign Key
+
+references
+
+suppliers.supplier_id
+
+order_date
+
+expected_delivery
+
+status
+
+Possible values
+
+Draft
+
+Ordered
+
+Received
+
+Cancelled
+
+created_by
+
+Foreign Key
+
+references
+
+users.user_id
+
+created_at
+
+------------------------------------------------------------
+Relationship
+------------------------------------------------------------
+
+One Purchase Order
+
+contains
+
+Many Purchase Order Items
+
+purchase_orders.purchase_order_id
+        |
+        |
+        +--------<
+                 purchase_order_items.purchase_order_id
+
+Relationship
+
+1 → Many
+
+------------------------------------------------------------
+TABLE : purchase_order_items
+------------------------------------------------------------
+
+Purpose
+
+Stores every product included in one purchase order.
+
+Primary Key
+
+purchase_order_item_id
+
+Columns
+
+purchase_order_item_id
+
+Primary Key
+
+purchase_order_id
+
+Foreign Key
+
+references
+
+purchase_orders.purchase_order_id
+
+product_id
+
+Foreign Key
+
+references
+
+products.product_id
+
+quantity
+
+unit_price
+
+total_price
+
+received_quantity
+
+------------------------------------------------------------
+Relationship
+------------------------------------------------------------
+
+Many Purchase Order Items
+
+belong to
+
+One Purchase Order
+
+Relationship
+
+Many → 1
+
+------------------------------------------------------------
+
+Many Purchase Order Items
+
+reference
+
+One Product
+
+Relationship
+
+Many → 1
+
+------------------------------------------------------------
+TABLE : stock_movements
+------------------------------------------------------------
+
+Purpose
+
+Records every inventory movement.
+
+Examples
+
+Purchase
+
+Treatment Usage
+
+Stock Adjustment
+
+Expired Item
+
+Return
+
+Primary Key
+
+stock_movement_id
+
+Columns
+
+stock_movement_id
+
+Primary Key
+
+product_id
+
+Foreign Key
+
+references
+
+products.product_id
+
+movement_type
+
+Possible values
+
+Stock In
+
+Stock Out
+
+Adjustment
+
+Expired
+
+Return
+
+quantity
+
+balance_after
+
+reference_type
+
+Possible values
+
+Purchase Order
+
+Treatment
+
+Manual Adjustment
+
+reference_id
+
+created_by
+
+Foreign Key
+
+references
+
+users.user_id
+
+created_at
+
+------------------------------------------------------------
+Relationship
+------------------------------------------------------------
+
+One Product
+
+can have
+
+Many Stock Movements
+
+Relationship
+
+1 → Many
+
+------------------------------------------------------------
+TABLE : recalls
+------------------------------------------------------------
+
+Purpose
+
+Stores patient follow-up appointments and routine recall reminders.
+
+Primary Key
+
+recall_id
+
+Columns
+
+recall_id
+
+Primary Key
+
+patient_id
+
+Foreign Key
+
+references
+
+patients.patient_id
+
+appointment_id
+
+Foreign Key
+
+references
+
+appointments.appointment_id
+
+recall_type
+
+Examples
+
+Cleaning
+
+Review
+
+Root Canal Follow-up
+
+Crown Delivery
+
+Orthodontic Review
+
+Custom
+
+due_date
+
+status
+
+Possible values
+
+Pending
+
+Reminder Sent
+
+Booked
+
+Completed
+
+Cancelled
+
+reminder_method
+
+Possible values
+
+Telegram
+
+SMS
+
+Phone
+
+Email
+
+last_reminder_at
+
+response
+
+Possible values
+
+Accepted
+
+Declined
+
+No Response
+
+notes
+
+created_at
+
+updated_at
+
+------------------------------------------------------------
+Relationship
+------------------------------------------------------------
+
+One Patient
+
+can have
+
+Many Recall Records
+
+patients.patient_id
+        |
+        |
+        +--------<
+                 recalls.patient_id
+
+Relationship
+
+1 → Many
+
+------------------------------------------------------------
+
+One Appointment
+
+may create
+
+Many Recall Records
+
+appointments.appointment_id
+        |
+        |
+        +--------<
+                 recalls.appointment_id
+
+Relationship
+
+1 → Many
+
+------------------------------------------------------------
+RELATIONSHIPS
+------------------------------------------------------------
+
+suppliers (1)
+        |
+        +------<
+               purchase_orders
+
+------------------------------------------------------------
+
+purchase_orders (1)
+        |
+        +------<
+               purchase_order_items
+
+------------------------------------------------------------
+
+products (1)
+        |
+        +------<
+               purchase_order_items
+
+------------------------------------------------------------
+
+products (1)
+        |
+        +------<
+               stock_movements
+
+------------------------------------------------------------
+
+patients (1)
+        |
+        +------<
+               recalls
+
+------------------------------------------------------------
+
+appointments (1)
+        |
+        +------<
+               recalls
+
+------------------------------------------------------------
+BUSINESS RULES
+------------------------------------------------------------
+
+Rule 1
+
+Every product belongs to the inventory master list.
+
+------------------------------------------------------------
+
+Rule 2
+
+Products should never be deleted once they have stock history.
+
+Mark them Inactive instead.
+
+------------------------------------------------------------
+
+Rule 3
+
+Receiving a purchase order automatically creates Stock In movements.
+
+------------------------------------------------------------
+
+Rule 4
+
+Completing a treatment may automatically create Stock Out movements if inventory tracking is enabled.
+
+------------------------------------------------------------
+
+Rule 5
+
+Current stock is calculated from stock movements.
+
+It should not rely only on manual updates.
+
+------------------------------------------------------------
+
+Rule 6
+
+When current stock reaches the minimum stock level, the system should notify administrators.
+
+------------------------------------------------------------
+
+Rule 7
+
+One patient may have multiple recalls throughout their lifetime.
+
+------------------------------------------------------------
+
+Rule 8
+
+A recall may generate multiple reminder attempts before the patient responds.
+
+------------------------------------------------------------
+
+Rule 9
+
+Completing a recall usually results in creating a new appointment.
+
+------------------------------------------------------------
+
+Rule 10
+
+Telegram reminders should use the patient's linked Telegram account from ERD 2 whenever available.
+
+------------------------------------------------------------
+MODULE CONNECTIONS
+------------------------------------------------------------
+
+ERD 1
+Patient Management
+        ↓
+patients
+appointments
+
+ERD 2
+Telegram Integration
+        ↓
+telegram_links
+Used for recall notifications.
+
+ERD 4
+Treatment Execution
+        ↓
+Treatment may consume inventory.
+
+ERD 5
+Billing
+        ↓
+Completed treatment may trigger recall creation.
+
+ERD 6
+Inventory & Recall
+        ↓
+suppliers
+products
+purchase_orders
+purchase_order_items
+stock_movements
+recalls
+
+------------------------------------------------------------
+END OF ERD 6
+------------------------------------------------------------

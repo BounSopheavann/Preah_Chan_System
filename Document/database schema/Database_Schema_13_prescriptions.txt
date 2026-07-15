@@ -1,0 +1,163 @@
+DATABASE SCHEMA 13
+TABLE: prescriptions
+
+Dental Clinic Management System
+Version 1.0
+
+============================================================
+PURPOSE
+============================================================
+
+The prescriptions table stores medications prescribed after a treatment
+execution.
+
+A treatment may produce zero, one, or multiple prescriptions.
+
+Referenced by:
+- Patient History
+- Prescription Printing
+- Telegram Patient Portal (future)
+
+============================================================
+TABLE NAME
+============================================================
+
+prescriptions
+
+============================================================
+PRIMARY KEY
+============================================================
+
+prescription_id
+Type: BIGINT UNSIGNED
+Auto Increment: YES
+Nullable: NO
+
+============================================================
+COLUMNS
+============================================================
+
+1. prescription_id
+- BIGINT UNSIGNED
+- Primary Key
+- Auto Increment
+
+2. treatment_execution_id
+- BIGINT UNSIGNED
+- Required
+- FK -> treatment_execution.treatment_execution_id
+
+3. medicine_name
+- VARCHAR(150)
+- Required
+
+4. dosage
+- VARCHAR(100)
+- Required
+
+5. frequency
+- VARCHAR(100)
+- Required
+
+6. duration
+- VARCHAR(100)
+- Required
+
+7. instructions
+- TEXT
+- Nullable
+
+8. prescribed_by
+- BIGINT UNSIGNED
+- Required
+- FK -> users.user_id
+
+9. created_at
+- TIMESTAMP
+
+10. updated_at
+- TIMESTAMP
+
+============================================================
+FOREIGN KEYS
+============================================================
+
+treatment_execution_id ->
+treatment_execution(treatment_execution_id)
+
+prescribed_by ->
+users(user_id)
+
+Recommended:
+ON UPDATE CASCADE
+ON DELETE RESTRICT
+
+============================================================
+INDEXES
+============================================================
+
+PRIMARY KEY (prescription_id)
+
+INDEX (treatment_execution_id)
+INDEX (prescribed_by)
+INDEX (medicine_name)
+
+============================================================
+VALIDATION RULES
+============================================================
+
+- Treatment execution must exist.
+- Medicine name is required.
+- Dosage, frequency and duration are required.
+- Only dentists may prescribe medication.
+
+============================================================
+BUSINESS RULES
+============================================================
+
+1. One treatment execution may have multiple prescriptions.
+2. Prescriptions belong to treatment executions, not appointments.
+3. Prescription history should never be deleted.
+4. Corrections should create new records or revisions rather than overwrite history.
+
+============================================================
+RELATED MODULES
+============================================================
+
+Business Flow:
+4
+
+System Flow:
+4
+
+ERD:
+4
+
+============================================================
+LARAVEL MIGRATION REFERENCE
+============================================================
+
+id()
+foreignId('treatment_execution_id')->constrained('treatment_execution')
+string('medicine_name',150)
+string('dosage',100)
+string('frequency',100)
+string('duration',100)
+text('instructions')->nullable()
+foreignId('prescribed_by')->constrained('users')
+timestamps()
+
+============================================================
+EXAMPLE RECORD
+============================================================
+
+prescription_id: 1201
+treatment_execution_id: 501
+medicine_name: Amoxicillin 500mg
+dosage: 1 capsule
+frequency: Three times daily
+duration: 5 days
+prescribed_by: 3
+
+============================================================
+END OF DATABASE SCHEMA 13

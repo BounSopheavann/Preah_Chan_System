@@ -1,0 +1,190 @@
+SCREEN NAVIGATION 6
+Dental Clinic Management System
+
+MODULE
+Follow-up, Recall & Telegram Patient Portal
+
+PURPOSE
+
+Defines the navigation after billing is completed. This module manages
+patient discharge, follow-up appointments, recall scheduling, reminder
+management, and the Telegram Mini App.
+
+Related Documents
+- Business Flow 6
+- System Flow 6
+- ERD 6
+
+============================================================
+PRIMARY USERS
+============================================================
+
+Receptionist
+Dentist
+Administrator
+
+Patient (Telegram Mini App)
+
+============================================================
+SCREEN HIERARCHY
+============================================================
+
+Receipt
+    ↓
+Visit Completion
+    ├── Follow-up Appointment
+    ├── Recall Scheduling
+    ├── Reminder Center
+    ├── Telegram Linking
+    ├── Telegram Patient Portal
+    └── Recall Dashboard
+
+============================================================
+VISIT COMPLETION
+============================================================
+
+Entry:
+Receipt → Finish
+
+Displays:
+- Treatment completed
+- Outstanding balance
+- Dentist recommendations
+- Home care instructions
+
+Buttons:
+Create Follow-up
+Create Recall
+Finish Visit
+Back
+
+============================================================
+FOLLOW-UP APPOINTMENT
+============================================================
+
+Functions:
+- Select dentist
+- Select date
+- Select time
+- Select appointment type
+
+Buttons:
+Save
+Cancel
+
+Save:
+Return to Visit Completion.
+
+============================================================
+RECALL SCHEDULING
+============================================================
+
+Functions:
+- Select recall type
+- Select due date
+- Select reminder method
+
+Buttons:
+Create Recall
+Cancel
+
+Success:
+Open Reminder Center.
+
+============================================================
+REMINDER CENTER
+============================================================
+
+Displays:
+- Upcoming reminders
+- Sent reminders
+- Failed reminders
+
+Buttons:
+Send Now
+Retry Failed
+View History
+Back
+
+============================================================
+TELEGRAM LINKING
+============================================================
+
+Functions:
+- Generate QR Code
+- Generate Invite Token
+- Link Telegram Account
+- Unlink Account
+
+Buttons:
+Generate QR
+Copy Token
+Link
+Unlink
+Back
+
+Success:
+Open Telegram Patient Portal.
+
+============================================================
+TELEGRAM PATIENT PORTAL
+============================================================
+
+Patient can view:
+- Upcoming appointments
+- Treatment progress
+- Outstanding balance
+- Treatment history
+- Recall reminders
+
+Staff Buttons:
+Refresh Portal
+View Linked Account
+Back
+
+============================================================
+RECALL DASHBOARD
+============================================================
+
+Displays:
+- Patients due today
+- Patients overdue
+- Reminder success rate
+
+Buttons:
+Open Patient
+Send Reminder
+Back
+
+============================================================
+GLOBAL RULES
+============================================================
+
+Save:
+Remain on current screen.
+
+Finish Visit:
+Close current visit.
+Return to Dashboard.
+
+Back:
+Return to previous screen.
+
+Logout:
+Return to Login.
+
+============================================================
+ERROR NAVIGATION
+============================================================
+
+Telegram link failed:
+Remain on Telegram Linking.
+
+Invalid recall date:
+Remain on Recall Scheduling.
+
+Reminder failed:
+Open Reminder Center with failed status highlighted.
+
+============================================================
+END OF SCREEN NAVIGATION 6

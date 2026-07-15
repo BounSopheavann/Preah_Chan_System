@@ -1,0 +1,356 @@
+System Flow 1 Specification (Patient Registration & Appointment Booking)
+
+This document is intended as a complete reference for another AI to
+recreate System Flow 1 of the Dental Clinic Management System. The AI
+should treat this as the system logic behind the Business Flow, not a UI
+mockup.
+
+Objective
+
+System Flow 1 covers everything from the moment a patient contacts the
+clinic until an appointment is successfully booked or the process ends.
+
+Primary actor: - Receptionist (Front Desk)
+
+Supporting actor: - Patient
+
+System: - Dental Clinic Management System
+
+------------------------------------------------------------------------
+
+Scope
+
+The flow begins when a patient requests an appointment.
+
+The flow ends when one of the following occurs:
+
+1.  Appointment successfully booked.
+2.  Booking cancelled by patient.
+3.  No available slot and patient declines alternatives.
+4.  Validation fails and receptionist corrects the information.
+
+Do NOT include: - Check-in - Clinical examination - Billing -
+Treatment - Follow-up
+
+Those belong to later system flows.
+
+------------------------------------------------------------------------
+
+Overall Business Logic
+
+The receptionist is responsible for talking with the patient.
+
+The system is responsible for:
+
+-   Searching patients
+-   Creating new patient records
+-   Validating data
+-   Checking dentist schedules
+-   Preventing double bookings
+-   Displaying available slots
+-   Saving appointments
+-   Sending confirmation
+-   Updating appointment status
+
+Every decision is made by the receptionist after information is
+displayed by the system.
+
+------------------------------------------------------------------------
+
+Flow
+
+START
+
+Patient requests an appointment.
+
+↓
+
+Receptionist opens Appointment Booking.
+
+↓
+
+System displays:
+
+-   Search patient
+-   Register new patient
+
+Decision: Existing patient?
+
+YES → Search existing patient
+
+NO → Register new patient
+
+------------------------------------------------------------------------
+
+Existing Patient
+
+Receptionist searches using:
+
+-   Phone number (highest priority)
+-   Patient ID
+-   Name
+
+System searches database.
+
+Decision:
+
+Patient found?
+
+YES
+
+System displays patient summary:
+
+-   Name
+-   Phone
+-   Age
+-   Medical alerts
+-   Allergy flag
+-   Outstanding balance
+-   Last visit
+-   Next appointment
+
+Receptionist confirms identity.
+
+Continue.
+
+NO
+
+Receptionist selects Register New Patient.
+
+------------------------------------------------------------------------
+
+New Patient Registration
+
+Receptionist enters minimum information:
+
+Required:
+
+-   Full name
+-   Phone number
+-   Gender
+-   Date of Birth (optional if unknown)
+-   Visit reason
+
+Optional:
+
+-   Address
+-   Email
+-   Referral source
+-   Notes
+
+System validates:
+
+-   Required fields
+-   Phone format
+-   Duplicate phone
+-   Duplicate patient
+
+Decision
+
+Duplicate found?
+
+YES
+
+System displays duplicate warning.
+
+Receptionist chooses:
+
+-   Use existing patient
+-   Continue anyway (admin permission if allowed)
+
+NO
+
+Create patient record.
+
+Generate Patient ID.
+
+Save patient.
+
+Continue.
+
+------------------------------------------------------------------------
+
+Appointment Booking
+
+Receptionist chooses:
+
+-   Dentist
+-   Appointment type
+-   Date
+-   Preferred time
+
+System loads schedule.
+
+Checks:
+
+-   Dentist availability
+-   Chair availability
+-   Clinic hours
+-   Holidays
+-   Existing booking conflict
+
+Decision
+
+Slot available?
+
+YES
+
+Display slot.
+
+NO
+
+Display alternative slots.
+
+Decision
+
+Patient accepts?
+
+YES
+
+Continue.
+
+NO
+
+End booking.
+
+------------------------------------------------------------------------
+
+Appointment Confirmation
+
+Receptionist confirms details.
+
+System validates again.
+
+Validation includes:
+
+-   Patient exists
+-   Dentist assigned
+-   Date valid
+-   Time valid
+-   Slot still free
+
+If validation fails
+
+Display error.
+
+Receptionist edits information.
+
+Return to confirmation.
+
+If validation succeeds
+
+Create appointment.
+
+Save database.
+
+Default status:
+
+Booked
+
+Generate Appointment Number.
+
+------------------------------------------------------------------------
+
+Notification
+
+System sends:
+
+-   SMS
+-   Telegram
+-   WhatsApp
+-   Email
+
+(depending on clinic configuration)
+
+Notification contains:
+
+-   Patient name
+-   Dentist
+-   Date
+-   Time
+-   Clinic
+
+If notification fails
+
+Log failure only.
+
+Appointment remains booked.
+
+------------------------------------------------------------------------
+
+Finish
+
+Display:
+
+Appointment booked successfully.
+
+Receptionist may:
+
+-   Print appointment card
+-   View patient profile
+-   Book another appointment
+
+END
+
+------------------------------------------------------------------------
+
+Decisions
+
+1.  Existing patient?
+2.  Patient found?
+3.  Duplicate patient?
+4.  Slot available?
+5.  Patient accepts alternative?
+6.  Validation successful?
+7.  Notification success? (logging only)
+
+------------------------------------------------------------------------
+
+Database Operations
+
+Read: - patients - appointments - dentists - schedules
+
+Create: - patient (if new) - appointment
+
+Update: - patient (optional) - schedule occupancy
+
+------------------------------------------------------------------------
+
+Status Changes
+
+Appointment: None → Booked
+
+Patient: New → Active (after first registration)
+
+------------------------------------------------------------------------
+
+Validation Rules
+
+-   Name cannot be empty.
+-   Phone cannot be empty.
+-   Appointment date cannot be in the past.
+-   Dentist must exist.
+-   Double booking not allowed.
+-   Appointment must be inside clinic working hours.
+-   Existing appointment conflict must be rejected.
+
+------------------------------------------------------------------------
+
+Diagram Rules
+
+Use standard flowchart symbols:
+
+Oval: Start / End
+
+Rectangle: System process
+
+Diamond: Decision
+
+Arrows: Normal flow
+
+Every decision has YES and NO branches.
+
+NO branches either return to the previous step or terminate cleanly.
+
+The diagram should remain readable from top to bottom with minimal
+crossing lines.

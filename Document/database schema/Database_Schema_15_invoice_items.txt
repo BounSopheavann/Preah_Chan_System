@@ -1,0 +1,170 @@
+DATABASE SCHEMA 15
+TABLE: invoice_items
+
+Dental Clinic Management System
+Version 1.0
+
+============================================================
+PURPOSE
+============================================================
+
+The invoice_items table stores every billable treatment included on an
+invoice.
+
+Each completed treatment execution creates one invoice item. This table
+provides a detailed breakdown of procedures, quantities and prices for
+the patient's invoice.
+
+Referenced by:
+- Invoice printing
+- Financial reports
+- Revenue analysis
+
+============================================================
+TABLE NAME
+============================================================
+
+invoice_items
+
+============================================================
+PRIMARY KEY
+============================================================
+
+invoice_item_id
+Type: BIGINT UNSIGNED
+Auto Increment: YES
+Nullable: NO
+
+============================================================
+COLUMNS
+============================================================
+
+1. invoice_item_id
+- BIGINT UNSIGNED
+- Primary Key
+- Auto Increment
+
+2. invoice_id
+- BIGINT UNSIGNED
+- Required
+- FK -> invoices.invoice_id
+
+3. treatment_execution_id
+- BIGINT UNSIGNED
+- Required
+- FK -> treatment_execution.treatment_execution_id
+- UNIQUE
+
+4. procedure_name
+- VARCHAR(150)
+- Required
+
+5. quantity
+- UNSIGNED INTEGER
+- Required
+- Default: 1
+
+6. unit_price
+- DECIMAL(12,2)
+- Required
+
+7. total_price
+- DECIMAL(12,2)
+- Required
+
+8. notes
+- TEXT
+- Nullable
+
+9. created_at
+- TIMESTAMP
+
+10. updated_at
+- TIMESTAMP
+
+============================================================
+FOREIGN KEYS
+============================================================
+
+invoice_id -> invoices(invoice_id)
+
+treatment_execution_id ->
+treatment_execution(treatment_execution_id)
+
+Recommended:
+ON UPDATE CASCADE
+ON DELETE RESTRICT
+
+============================================================
+INDEXES
+============================================================
+
+PRIMARY KEY (invoice_item_id)
+
+INDEX (invoice_id)
+
+UNIQUE (treatment_execution_id)
+
+INDEX (procedure_name)
+
+============================================================
+VALIDATION RULES
+============================================================
+
+- Invoice must exist.
+- Treatment execution must exist.
+- Quantity must be greater than zero.
+- Unit price cannot be negative.
+- Total price must equal quantity × unit price.
+
+============================================================
+BUSINESS RULES
+============================================================
+
+1. One invoice contains many invoice items.
+2. One treatment execution creates one invoice item.
+3. Invoice items should never be edited after payment unless an authorized adjustment is performed.
+4. Invoice items are permanent financial records.
+
+============================================================
+RELATED MODULES
+============================================================
+
+Business Flow:
+5
+
+System Flow:
+5
+
+ERD:
+4
+5
+
+============================================================
+LARAVEL MIGRATION REFERENCE
+============================================================
+
+id()
+foreignId('invoice_id')->constrained('invoices')
+foreignId('treatment_execution_id')->unique()->constrained('treatment_execution')
+string('procedure_name',150)
+unsignedInteger('quantity')->default(1)
+decimal('unit_price',12,2)
+decimal('total_price',12,2)
+text('notes')->nullable()
+timestamps()
+
+============================================================
+EXAMPLE RECORD
+============================================================
+
+invoice_item_id: 5001
+invoice_id: 3001
+treatment_execution_id: 501
+procedure_name: Root Canal
+quantity: 1
+unit_price: 250.00
+total_price: 250.00
+
+============================================================
+END OF DATABASE SCHEMA 15

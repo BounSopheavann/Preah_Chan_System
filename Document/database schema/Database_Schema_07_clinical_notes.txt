@@ -1,0 +1,164 @@
+DATABASE SCHEMA 07
+TABLE: clinical_notes
+
+Dental Clinic Management System
+Version 1.0
+
+============================================================
+PURPOSE
+============================================================
+
+The clinical_notes table stores the dentist's examination findings for
+each appointment.
+
+Each appointment should have one clinical note before treatment begins.
+Clinical notes record the patient's complaint, examination findings,
+diagnosis and recommendations.
+
+Referenced by:
+- Treatment Planning
+- Patient History
+- Dentist Review
+
+============================================================
+TABLE NAME
+============================================================
+
+clinical_notes
+
+============================================================
+PRIMARY KEY
+============================================================
+
+clinical_note_id
+Type: BIGINT UNSIGNED
+Auto Increment: YES
+Nullable: NO
+
+============================================================
+COLUMNS
+============================================================
+
+1. clinical_note_id
+- BIGINT UNSIGNED
+- Primary Key
+- Auto Increment
+
+2. appointment_id
+- BIGINT UNSIGNED
+- Required
+- FK -> appointments.appointment_id
+- UNIQUE (one note per appointment)
+
+3. chief_complaint
+- TEXT
+- Required
+
+4. clinical_findings
+- TEXT
+- Required
+
+5. diagnosis
+- TEXT
+- Required
+
+6. recommendation
+- TEXT
+- Nullable
+
+7. notes
+- TEXT
+- Nullable
+
+8. created_by
+- BIGINT UNSIGNED
+- Required
+- FK -> users.user_id
+
+9. created_at
+- TIMESTAMP
+
+10. updated_at
+- TIMESTAMP
+
+============================================================
+FOREIGN KEYS
+============================================================
+
+appointment_id -> appointments(appointment_id)
+created_by -> users(user_id)
+
+Recommended:
+ON UPDATE CASCADE
+ON DELETE RESTRICT
+
+============================================================
+INDEXES
+============================================================
+
+PRIMARY KEY (clinical_note_id)
+
+UNIQUE (appointment_id)
+
+INDEX (created_by)
+
+============================================================
+VALIDATION RULES
+============================================================
+
+- Appointment must exist.
+- Only dentists can create or modify notes.
+- Chief complaint is required.
+- Diagnosis is required.
+- One appointment can have only one clinical note.
+
+============================================================
+BUSINESS RULES
+============================================================
+
+1. Clinical notes must be completed before treatment planning.
+2. Clinical notes become part of the permanent medical record.
+3. Clinical notes should never be deleted.
+4. Historical edits should be tracked if audit logging is enabled.
+
+============================================================
+RELATED MODULES
+============================================================
+
+Business Flow:
+3
+
+System Flow:
+3
+
+ERD:
+3
+
+============================================================
+LARAVEL MIGRATION REFERENCE
+============================================================
+
+id()
+foreignId('appointment_id')->unique()->constrained('appointments')
+text('chief_complaint')
+text('clinical_findings')
+text('diagnosis')
+text('recommendation')->nullable()
+text('notes')->nullable()
+foreignId('created_by')->constrained('users')
+timestamps()
+
+============================================================
+EXAMPLE RECORD
+============================================================
+
+clinical_note_id: 15
+appointment_id: 1001
+chief_complaint: Tooth pain
+clinical_findings: Deep caries on tooth 36
+diagnosis: Irreversible pulpitis
+recommendation: Root canal treatment
+created_by: 3
+
+============================================================
+END OF DATABASE SCHEMA 07

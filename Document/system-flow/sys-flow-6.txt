@@ -1,0 +1,340 @@
+System Flow 6 Specification
+
+Follow-up, Recall & Patient Discharge
+
+This document defines System Flow 6 for the Dental Clinic Management
+System.
+
+System Flow 6 begins after the patient’s invoice has been finalized in
+System Flow 5.
+
+This is the final workflow in the patient’s visit cycle.
+
+The flow ends when the patient leaves the clinic with all required
+future actions recorded.
+
+------------------------------------------------------------------------
+
+Primary Actors
+
+-   Receptionist
+-   Dentist
+
+Supporting Actor
+
+-   Patient
+
+System
+
+-   Dental Clinic Management System
+
+------------------------------------------------------------------------
+
+Scope
+
+Included
+
+-   Post-treatment instructions
+-   Follow-up appointment
+-   Recall scheduling
+-   Reminder creation
+-   Patient discharge
+-   Telegram patient portal update
+-   Visit completion
+
+Excluded
+
+-   Registration
+-   Check-in
+-   Treatment
+-   Billing
+
+These belong to previous system flows.
+
+------------------------------------------------------------------------
+
+Overall Business Logic
+
+Every patient should leave the clinic with one of the following
+outcomes:
+
+• No further treatment required. • Follow-up appointment booked. •
+Recall reminder created. • Remaining treatment scheduled.
+
+No patient should leave without a final appointment status.
+
+------------------------------------------------------------------------
+
+Flow
+
+START
+
+Invoice completed.
+
+↓
+
+System opens Visit Completion.
+
+↓
+
+Dentist enters:
+
+-   Final clinical notes
+-   Post-operative instructions
+-   Medication instructions
+-   Home care advice
+
+Save notes.
+
+------------------------------------------------------------------------
+
+Follow-up Decision
+
+Decision
+
+Follow-up required?
+
+YES
+
+Receptionist schedules follow-up appointment.
+
+Select:
+
+-   Date
+-   Time
+-   Dentist
+-   Appointment type
+
+Save appointment.
+
+NO
+
+Continue.
+
+------------------------------------------------------------------------
+
+Recall Decision
+
+Decision
+
+Recall required?
+
+YES
+
+Select recall type:
+
+-   6-month cleaning
+-   Regular check-up
+-   Orthodontic review
+-   Crown review
+-   Implant review
+-   Other
+
+Enter recall date.
+
+System creates recall task.
+
+NO
+
+Continue.
+
+------------------------------------------------------------------------
+
+Reminder Creation
+
+System automatically prepares reminders.
+
+Possible channels:
+
+-   Telegram
+-   SMS
+-   WhatsApp
+-   Email
+
+Reminder schedule may include:
+
+-   Before follow-up appointment
+-   Recall due date
+-   Missed recall notification
+
+Save reminder schedule.
+
+------------------------------------------------------------------------
+
+Telegram Patient Portal
+
+Decision
+
+Patient linked to Telegram?
+
+YES
+
+Update portal:
+
+-   Treatment completed
+-   Next appointment
+-   Outstanding balance
+-   Recall date
+-   Clinical progress
+
+NO
+
+Continue.
+
+------------------------------------------------------------------------
+
+Visit Completion
+
+System updates:
+
+Appointment Status
+
+Completed
+
+Visit Status
+
+Closed
+
+Treatment Plan
+
+Decision
+
+Remaining planned treatment?
+
+YES
+
+Treatment Plan Status
+
+Partially Completed
+
+Patient receives future appointment.
+
+NO
+
+Treatment Plan Status
+
+Completed
+
+------------------------------------------------------------------------
+
+Patient Discharge
+
+Receptionist confirms:
+
+-   Receipt delivered
+-   Instructions provided
+-   Medication explained
+-   Next visit confirmed (if applicable)
+
+Patient leaves clinic.
+
+END
+
+------------------------------------------------------------------------
+
+Database Operations
+
+Read
+
+-   appointments
+-   recalls
+-   treatment plans
+-   telegram_links
+
+Create
+
+-   follow-up appointment
+-   recall task
+-   reminder schedule
+
+Update
+
+-   appointment status
+-   visit status
+-   treatment plan
+-   patient portal
+-   reminder history
+
+------------------------------------------------------------------------
+
+Status Changes
+
+Appointment
+
+Completed
+
+Visit
+
+Open
+
+↓
+
+Closed
+
+Recall
+
+None
+
+↓
+
+Scheduled
+
+Reminder
+
+Pending
+
+↓
+
+Scheduled
+
+Treatment Plan
+
+Completed
+
+or
+
+Partially Completed
+
+------------------------------------------------------------------------
+
+Validation Rules
+
+-   Appointment must be completed before discharge.
+-   Follow-up appointment requires date and provider.
+-   Recall date cannot be earlier than today.
+-   Reminder cannot exist without follow-up or recall.
+-   Patient portal updates only if Telegram account is linked.
+-   Visit cannot close while billing remains unpaid if clinic policy
+    requires payment first.
+
+------------------------------------------------------------------------
+
+Decisions
+
+1.  Follow-up required?
+2.  Recall required?
+3.  Telegram linked?
+4.  Remaining planned treatment?
+
+------------------------------------------------------------------------
+
+Diagram Rules
+
+Use standard flowchart notation.
+
+Oval: Start / End
+
+Rectangle: System process
+
+Diamond: Decision
+
+Arrows: Normal workflow.
+
+Every decision must include YES and NO branches.
+
+The diagram should flow from top to bottom.
+
+This is the final system flow of the Dental Clinic Management System.
+
+After completion, the patient lifecycle returns to future appointment
+booking or recall when the patient visits again.

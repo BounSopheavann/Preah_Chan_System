@@ -1,0 +1,257 @@
+BUSINESS FLOW 1 – PATIENT REGISTRATION & APPOINTMENT BOOKING
+
+You are working on a Dental Clinic Management System.
+
+This document is the official explanation of Business Flow 1.
+
+Treat this document as the source of truth.
+
+This document explains WHAT the clinic does, WHY it does it, WHO
+performs each action, HOW the system responds, and WHICH database
+records are affected.
+
+Future ERDs, APIs, UI screens, business logic, and automation should
+follow this document.
+
+============================================================ MODULE
+PURPOSE ============================================================
+
+Business Flow 1 is the entry point of the entire clinic.
+
+Every patient starts here.
+
+Workflow
+
+Patient Contact ↓ Patient Search ↓ Existing Patient? ↓ YES ————————–→
+Open Existing Profile NO ↓ Register Patient ↓ Book Appointment ↓ Assign
+Dentist ↓ Confirm Appointment ↓ Appointment Created
+
+Goal
+
+• Prevent duplicate patients. • Register new patients quickly. • Book
+appointments accurately. • Assign the correct dentist. • Create the
+first official clinic record.
+
+============================================================ ACTORS
+============================================================
+
+Patient Receptionist System Dentist (schedule assignment only)
+
+============================================================
+PRE-CONDITIONS
+============================================================
+
+• Receptionist is logged into the system. • Appointment calendar is
+available. • Dentist schedules are available.
+
+============================================================ WORKFLOW
+============================================================
+
+STEP 1 PATIENT CONTACTS THE CLINIC
+
+Possible channels
+
+• Walk-in • Phone • Telegram • Facebook • Referral • Website (future)
+
+Business Action
+
+Receptionist asks:
+
+• Full name • Phone number • Reason for visit • Preferred date •
+Preferred time
+
+System Response
+
+No database record is created yet.
+
+============================================================
+
+STEP 2 SEARCH EXISTING PATIENT
+
+Business Action
+
+Receptionist searches using:
+
+1.  Phone number (highest priority)
+2.  Patient code
+3.  Full name
+
+System Response
+
+Search patients table.
+
+Decision
+
+Patient Found?
+
+YES → Open patient profile.
+
+NO → Continue to registration.
+
+Validation
+
+Never create a new patient before completing the search.
+
+============================================================
+
+STEP 3 REGISTER NEW PATIENT (ONLY IF NOT FOUND)
+
+Business Action
+
+Receptionist records:
+
+Required • Full name • Phone number
+
+Optional • Gender • Date of birth • Email • Address • Emergency contact
+• Emergency phone • Allergies • Medical conditions • Current medication
+• Consent status • Preferred contact method
+
+System Response
+
+Create patient record.
+
+Generate unique patient code.
+
+Example
+
+PT000001
+
+Store creator (created_by).
+
+Save created_at and updated_at timestamps.
+
+============================================================
+
+STEP 4 SELECT APPOINTMENT TYPE
+
+Business Action
+
+Receptionist selects one appointment type.
+
+Examples
+
+• Consultation • Cleaning • Filling • Extraction • Root Canal • Crown •
+Emergency • Review
+
+System Response
+
+Load default duration from appointment_types.
+
+============================================================
+
+STEP 5 CHECK DENTIST AVAILABILITY
+
+Business Action
+
+Receptionist selects preferred dentist or first available dentist.
+
+System validates:
+
+• Dentist is Active. • Time slot is free. • No overlapping appointment.
+
+Decision
+
+Available?
+
+YES → Continue.
+
+NO → Display available alternatives.
+
+============================================================
+
+STEP 6 BOOK APPOINTMENT
+
+Business Action
+
+Receptionist confirms:
+
+• Date • Start time • End time • Dentist • Appointment type • Reason for
+visit
+
+System Response
+
+Create appointment.
+
+Default status
+
+Booked
+
+Record:
+
+• patient_id • dentist_id • created_by • appointment_type_id •
+appointment_date • start_time • end_time • reason_for_visit
+
+============================================================
+
+STEP 7 CONFIRM BOOKING
+
+Business Action
+
+Receptionist repeats appointment details to the patient.
+
+System Response
+
+Optional notifications:
+
+• Telegram • SMS • Email
+
+============================================================ VALIDATION
+RULES ============================================================
+
+• Phone number should be unique whenever possible. • Dentist cannot have
+overlapping appointments. • Appointment must belong to exactly one
+patient. • Appointment type is mandatory. • Dentist assignment is
+mandatory. • Appointment date cannot be in the past. • Receptionist
+cannot create appointments for inactive dentists.
+
+============================================================ DATABASE
+IMPACT ============================================================
+
+Tables Read
+
+users patients appointment_types appointments
+
+Tables Created
+
+patients (new patients only)
+
+appointments
+
+Tables Updated
+
+None (or patient information if corrected)
+
+============================================================ STATUS
+CHANGES ============================================================
+
+Appointment
+
+Created ↓
+
+Booked
+
+============================================================ BUSINESS
+RULES ============================================================
+
+1.  Search before registration.
+2.  One patient profile for life.
+3.  Returning patients reuse existing profile.
+4.  Receptionists own registration and booking.
+5.  Dentists normally do not create appointments.
+6.  Deleted appointments are discouraged. Use Cancelled instead.
+
+============================================================ OUTPUTS
+============================================================
+
+• Patient profile • Appointment record • Assigned dentist • Booked
+appointment • Confirmation sent (optional)
+
+============================================================ NEXT
+BUSINESS FLOW
+============================================================
+
+Business Flow 2 Patient Arrival & Check-in
+
+============================================================ END OF
+BUSINESS FLOW 1
+============================================================

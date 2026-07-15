@@ -1,0 +1,194 @@
+DATABASE SCHEMA 22
+TABLE: recalls
+
+Dental Clinic Management System
+Version 1.0
+
+============================================================
+PURPOSE
+============================================================
+
+The recalls table stores follow-up and recall schedules for patients
+after treatment.
+
+It is used to remind patients about future visits such as routine
+check-ups, orthodontic reviews, periodontal maintenance, and treatment
+follow-ups. The Recall module integrates with the Telegram Mini App and
+notification system.
+
+Referenced by:
+- Reminder Center
+- Telegram Notification Service
+- Recall Dashboard
+
+============================================================
+TABLE NAME
+============================================================
+
+recalls
+
+============================================================
+PRIMARY KEY
+============================================================
+
+recall_id
+Type: BIGINT UNSIGNED
+Auto Increment: YES
+Nullable: NO
+
+============================================================
+COLUMNS
+============================================================
+
+1. recall_id
+- BIGINT UNSIGNED
+- Primary Key
+- Auto Increment
+
+2. patient_id
+- BIGINT UNSIGNED
+- Required
+- FK -> patients.patient_id
+
+3. appointment_id
+- BIGINT UNSIGNED
+- Nullable
+- FK -> appointments.appointment_id
+
+4. recall_type
+- ENUM('Routine Check-up','Treatment Follow-up','Orthodontic Review','Periodontal Maintenance','Other')
+- Required
+
+5. due_date
+- DATE
+- Required
+
+6. reminder_method
+- ENUM('Telegram','SMS','Phone','Email')
+- Default: Telegram
+
+7. recall_status
+- ENUM('Pending','Sent','Completed','Cancelled','Expired')
+- Default: Pending
+
+8. reminder_sent_at
+- DATETIME
+- Nullable
+
+9. completed_at
+- DATETIME
+- Nullable
+
+10. notes
+- TEXT
+- Nullable
+
+11. created_by
+- BIGINT UNSIGNED
+- Required
+- FK -> users.user_id
+
+12. created_at
+- TIMESTAMP
+
+13. updated_at
+- TIMESTAMP
+
+============================================================
+FOREIGN KEYS
+============================================================
+
+patient_id -> patients(patient_id)
+
+appointment_id -> appointments(appointment_id)
+
+created_by -> users(user_id)
+
+Recommended:
+ON UPDATE CASCADE
+ON DELETE RESTRICT
+
+============================================================
+INDEXES
+============================================================
+
+PRIMARY KEY (recall_id)
+
+INDEX (patient_id)
+
+INDEX (appointment_id)
+
+INDEX (due_date)
+
+INDEX (recall_status)
+
+INDEX (reminder_method)
+
+INDEX (created_by)
+
+============================================================
+VALIDATION RULES
+============================================================
+
+- Patient must exist.
+- Due date is required.
+- Due date cannot be earlier than the current date when creating a new recall.
+- Reminder method must be valid.
+- Completed recalls cannot return to Pending status.
+
+============================================================
+BUSINESS RULES
+============================================================
+
+1. One patient may have many recalls.
+2. Every recall belongs to one patient.
+3. Reminder notifications are sent automatically based on the due date.
+4. Completed and cancelled recalls remain for historical reporting.
+5. Recall history should never be deleted.
+6. Telegram reminders are sent only when the patient has an active Telegram link.
+
+============================================================
+RELATED MODULES
+============================================================
+
+Business Flow:
+6
+
+System Flow:
+6
+
+ERD:
+6
+
+============================================================
+LARAVEL MIGRATION REFERENCE
+============================================================
+
+id()
+foreignId('patient_id')->constrained('patients')
+foreignId('appointment_id')->nullable()->constrained('appointments')
+enum('recall_type',['Routine Check-up','Treatment Follow-up','Orthodontic Review','Periodontal Maintenance','Other'])
+date('due_date')
+enum('reminder_method',['Telegram','SMS','Phone','Email'])->default('Telegram')
+enum('recall_status',['Pending','Sent','Completed','Cancelled','Expired'])->default('Pending')
+dateTime('reminder_sent_at')->nullable()
+dateTime('completed_at')->nullable()
+text('notes')->nullable()
+foreignId('created_by')->constrained('users')
+timestamps()
+
+============================================================
+EXAMPLE RECORD
+============================================================
+
+recall_id: 1501
+patient_id: 15
+appointment_id: 1001
+recall_type: Routine Check-up
+due_date: 2027-02-15
+reminder_method: Telegram
+recall_status: Pending
+created_by: 2
+
+============================================================
+END OF DATABASE SCHEMA 22

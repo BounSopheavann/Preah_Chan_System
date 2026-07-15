@@ -1,0 +1,173 @@
+DATABASE SCHEMA 20
+TABLE: purchase_order_items
+
+Dental Clinic Management System
+Version 1.0
+
+============================================================
+PURPOSE
+============================================================
+
+The purchase_order_items table stores every product included in a
+purchase order.
+
+Each record represents one product line within a purchase order and is
+used to calculate order totals and update inventory when stock is
+received.
+
+Referenced by:
+- stock_movements
+
+============================================================
+TABLE NAME
+============================================================
+
+purchase_order_items
+
+============================================================
+PRIMARY KEY
+============================================================
+
+purchase_order_item_id
+Type: BIGINT UNSIGNED
+Auto Increment: YES
+Nullable: NO
+
+============================================================
+COLUMNS
+============================================================
+
+1. purchase_order_item_id
+- BIGINT UNSIGNED
+- Primary Key
+- Auto Increment
+
+2. purchase_order_id
+- BIGINT UNSIGNED
+- Required
+- FK -> purchase_orders.purchase_order_id
+
+3. product_id
+- BIGINT UNSIGNED
+- Required
+- FK -> products.product_id
+
+4. quantity_ordered
+- DECIMAL(12,2)
+- Required
+
+5. quantity_received
+- DECIMAL(12,2)
+- Required
+- Default: 0.00
+
+6. unit_cost
+- DECIMAL(12,2)
+- Required
+
+7. line_total
+- DECIMAL(12,2)
+- Required
+
+8. item_status
+- ENUM('Pending','Partially Received','Received','Cancelled')
+- Default: Pending
+
+9. notes
+- TEXT
+- Nullable
+
+10. created_at
+- TIMESTAMP
+
+11. updated_at
+- TIMESTAMP
+
+============================================================
+FOREIGN KEYS
+============================================================
+
+purchase_order_id -> purchase_orders(purchase_order_id)
+
+product_id -> products(product_id)
+
+Recommended:
+ON UPDATE CASCADE
+ON DELETE RESTRICT
+
+============================================================
+INDEXES
+============================================================
+
+PRIMARY KEY (purchase_order_item_id)
+
+INDEX (purchase_order_id)
+
+INDEX (product_id)
+
+INDEX (item_status)
+
+============================================================
+VALIDATION RULES
+============================================================
+
+- Purchase order must exist.
+- Product must exist.
+- Quantity ordered must be greater than zero.
+- Quantity received cannot exceed quantity ordered.
+- Unit cost cannot be negative.
+- Line total = quantity ordered × unit cost.
+
+============================================================
+BUSINESS RULES
+============================================================
+
+1. One purchase order contains many purchase order items.
+2. Each item represents one product.
+3. Receiving stock updates quantity_received.
+4. Fully received items cannot receive additional stock.
+5. Inventory updates are recorded through stock movements.
+
+============================================================
+RELATED MODULES
+============================================================
+
+Business Flow:
+6
+
+System Flow:
+6
+
+ERD:
+6
+
+============================================================
+LARAVEL MIGRATION REFERENCE
+============================================================
+
+id()
+foreignId('purchase_order_id')->constrained('purchase_orders')
+foreignId('product_id')->constrained('products')
+decimal('quantity_ordered',12,2)
+decimal('quantity_received',12,2)->default(0)
+decimal('unit_cost',12,2)
+decimal('line_total',12,2)
+enum('item_status',['Pending','Partially Received','Received','Cancelled'])->default('Pending')
+text('notes')->nullable()
+timestamps()
+
+============================================================
+EXAMPLE RECORD
+============================================================
+
+purchase_order_item_id: 500
+purchase_order_id: 100
+product_id: 101
+quantity_ordered: 20
+quantity_received: 10
+unit_cost: 18.50
+line_total: 370.00
+item_status: Partially Received
+
+============================================================
+END OF DATABASE SCHEMA 20

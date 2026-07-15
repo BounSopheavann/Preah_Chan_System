@@ -1,0 +1,176 @@
+DATABASE SCHEMA 19
+TABLE: purchase_orders
+
+Dental Clinic Management System
+Version 1.0
+
+============================================================
+PURPOSE
+============================================================
+
+The purchase_orders table stores purchase orders issued to suppliers for
+inventory replenishment.
+
+Each purchase order may contain multiple purchase order items and
+represents one procurement transaction.
+
+Referenced by:
+- purchase_order_items
+
+============================================================
+TABLE NAME
+============================================================
+
+purchase_orders
+
+============================================================
+PRIMARY KEY
+============================================================
+
+purchase_order_id
+Type: BIGINT UNSIGNED
+Auto Increment: YES
+Nullable: NO
+
+============================================================
+COLUMNS
+============================================================
+
+1. purchase_order_id
+- BIGINT UNSIGNED
+- Primary Key
+- Auto Increment
+
+2. supplier_id
+- BIGINT UNSIGNED
+- Required
+- FK -> suppliers.supplier_id
+
+3. po_number
+- VARCHAR(30)
+- Required
+- UNIQUE
+
+4. order_date
+- DATE
+- Required
+
+5. expected_delivery_date
+- DATE
+- Nullable
+
+6. total_amount
+- DECIMAL(12,2)
+- Required
+- Default: 0.00
+
+7. status
+- ENUM('Draft','Ordered','Partially Received','Completed','Cancelled')
+- Default: Draft
+
+8. created_by
+- BIGINT UNSIGNED
+- Required
+- FK -> users.user_id
+
+9. notes
+- TEXT
+- Nullable
+
+10. created_at
+- TIMESTAMP
+
+11. updated_at
+- TIMESTAMP
+
+============================================================
+FOREIGN KEYS
+============================================================
+
+supplier_id -> suppliers(supplier_id)
+
+created_by -> users(user_id)
+
+Recommended:
+ON UPDATE CASCADE
+ON DELETE RESTRICT
+
+============================================================
+INDEXES
+============================================================
+
+PRIMARY KEY (purchase_order_id)
+
+UNIQUE (po_number)
+
+INDEX (supplier_id)
+
+INDEX (status)
+
+INDEX (order_date)
+
+INDEX (created_by)
+
+============================================================
+VALIDATION RULES
+============================================================
+
+- Supplier must exist.
+- Purchase order number must be unique.
+- Order date is required.
+- Total amount cannot be negative.
+- Cancelled purchase orders cannot receive stock.
+
+============================================================
+BUSINESS RULES
+============================================================
+
+1. One supplier can have many purchase orders.
+2. One purchase order contains many purchase order items.
+3. Completed purchase orders cannot be edited.
+4. Receiving stock updates inventory through stock movements.
+5. Purchase order history must never be deleted.
+
+============================================================
+RELATED MODULES
+============================================================
+
+Business Flow:
+6
+
+System Flow:
+6
+
+ERD:
+6
+
+============================================================
+LARAVEL MIGRATION REFERENCE
+============================================================
+
+id()
+foreignId('supplier_id')->constrained('suppliers')
+string('po_number',30)->unique()
+date('order_date')
+date('expected_delivery_date')->nullable()
+decimal('total_amount',12,2)->default(0)
+enum('status',['Draft','Ordered','Partially Received','Completed','Cancelled'])->default('Draft')
+foreignId('created_by')->constrained('users')
+text('notes')->nullable()
+timestamps()
+
+============================================================
+EXAMPLE RECORD
+============================================================
+
+purchase_order_id: 100
+supplier_id: 1
+po_number: PO-2026-0001
+order_date: 2026-08-15
+expected_delivery_date: 2026-08-20
+total_amount: 1250.00
+status: Ordered
+created_by: 2
+
+============================================================
+END OF DATABASE SCHEMA 19

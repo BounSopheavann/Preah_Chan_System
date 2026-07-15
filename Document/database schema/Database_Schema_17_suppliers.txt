@@ -1,0 +1,143 @@
+DATABASE SCHEMA 17
+TABLE: suppliers
+
+Dental Clinic Management System
+Version 1.0
+
+============================================================
+PURPOSE
+============================================================
+
+The suppliers table stores all vendors that supply products and
+materials to the clinic.
+
+Suppliers are referenced by purchase orders and support inventory
+management.
+
+Referenced by:
+- purchase_orders
+
+============================================================
+TABLE NAME
+============================================================
+
+suppliers
+
+============================================================
+PRIMARY KEY
+============================================================
+
+supplier_id
+Type: BIGINT UNSIGNED
+Auto Increment: YES
+Nullable: NO
+
+============================================================
+COLUMNS
+============================================================
+
+1. supplier_id
+- BIGINT UNSIGNED
+- Primary Key
+- Auto Increment
+
+2. supplier_name
+- VARCHAR(150)
+- Required
+- UNIQUE
+
+3. contact_person
+- VARCHAR(150)
+- Nullable
+
+4. phone
+- VARCHAR(20)
+- Nullable
+
+5. email
+- VARCHAR(150)
+- Nullable
+
+6. address
+- TEXT
+- Nullable
+
+7. status
+- ENUM('Active','Inactive')
+- Default: Active
+
+8. created_at
+- TIMESTAMP
+
+9. updated_at
+- TIMESTAMP
+
+============================================================
+INDEXES
+============================================================
+
+PRIMARY KEY (supplier_id)
+
+UNIQUE (supplier_name)
+
+INDEX (status)
+
+INDEX (phone)
+
+============================================================
+VALIDATION RULES
+============================================================
+
+- Supplier name is required.
+- Supplier name must be unique.
+- Inactive suppliers cannot be selected for new purchase orders.
+- Email format must be valid when provided.
+
+============================================================
+BUSINESS RULES
+============================================================
+
+1. One supplier may receive many purchase orders.
+2. Suppliers should not be deleted after transactions exist.
+3. Inactive suppliers remain available for historical reporting.
+4. Purchasing history must always remain intact.
+
+============================================================
+RELATED MODULES
+============================================================
+
+Business Flow:
+6
+
+System Flow:
+6
+
+ERD:
+6
+
+============================================================
+LARAVEL MIGRATION REFERENCE
+============================================================
+
+id()
+string('supplier_name',150)->unique()
+string('contact_person',150)->nullable()
+string('phone',20)->nullable()
+string('email',150)->nullable()
+text('address')->nullable()
+enum('status',['Active','Inactive'])->default('Active')
+timestamps()
+
+============================================================
+EXAMPLE RECORD
+============================================================
+
+supplier_id: 1
+supplier_name: Dental Supply Co.
+contact_person: Jane Lee
+phone: 012345678
+email: sales@dentalsupply.com
+status: Active
+
+============================================================
+END OF DATABASE SCHEMA 17

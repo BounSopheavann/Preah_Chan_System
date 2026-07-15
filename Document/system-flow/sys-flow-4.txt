@@ -1,0 +1,387 @@
+System Flow 4 Specification
+
+Treatment Execution & Clinical Procedure
+
+This document defines System Flow 4 for the Dental Clinic Management
+System.
+
+System Flow 4 begins immediately after the dentist and patient agree to
+start treatment.
+
+The patient is already in the dental chair and a treatment plan already
+exists.
+
+This flow ends when all procedures for the current visit are completed
+or temporarily stopped.
+
+------------------------------------------------------------------------
+
+Primary Actors
+
+-   Dentist
+-   Dental Assistant
+
+Supporting Actor
+
+-   Patient
+
+System
+
+-   Dental Clinic Management System
+
+------------------------------------------------------------------------
+
+Scope
+
+Included
+
+-   Begin treatment
+-   Execute procedures
+-   Record procedure details
+-   Update odontogram
+-   Record anesthesia
+-   Record materials and consumables
+-   Attach photos/X-rays
+-   Clinical notes
+-   Procedure completion
+-   Partial treatment
+-   Emergency interruption
+
+Excluded
+
+-   Invoice generation
+-   Payment
+-   Recall
+-   Follow-up scheduling
+
+Those belong to later system flows.
+
+------------------------------------------------------------------------
+
+Overall Business Logic
+
+The dentist performs clinical work while the system records everything
+performed during the visit.
+
+Every completed procedure must become part of the permanent patient
+history.
+
+The system should automatically prepare billing items from completed
+procedures.
+
+------------------------------------------------------------------------
+
+Flow
+
+START
+
+Patient status
+
+In Chair
+
+↓
+
+Dentist opens today’s treatment plan.
+
+System displays:
+
+-   Planned procedures
+-   Tooth numbers
+-   Previous notes
+-   Images
+-   X-rays
+
+Decision
+
+Treatment plan exists?
+
+YES
+
+Continue.
+
+NO
+
+Return to System Flow 3.
+
+------------------------------------------------------------------------
+
+Begin Procedure
+
+Dentist selects procedure.
+
+System starts treatment session.
+
+Record:
+
+-   Start time
+-   Dentist
+-   Assistant
+-   Chair
+
+------------------------------------------------------------------------
+
+Procedure Recording
+
+For each procedure record:
+
+-   Tooth number
+-   Tooth surface
+-   Procedure performed
+-   Procedure code
+-   Clinical notes
+-   Duration
+
+Decision
+
+Local anesthesia used?
+
+YES
+
+Record:
+
+-   Drug
+-   Dosage
+-   Quantity
+-   Injection site
+
+NO
+
+Continue.
+
+------------------------------------------------------------------------
+
+Consumables
+
+Decision
+
+Consumables used?
+
+YES
+
+Record:
+
+-   Material
+-   Quantity
+-   Batch/Lot (optional)
+-   Notes
+
+(Optional: deduct inventory if stock module exists.)
+
+NO
+
+Continue.
+
+------------------------------------------------------------------------
+
+Images
+
+Decision
+
+Need treatment photos or X-rays?
+
+YES
+
+Capture/upload files.
+
+Attach to current visit.
+
+NO
+
+Continue.
+
+------------------------------------------------------------------------
+
+Procedure Completion
+
+Decision
+
+Procedure completed?
+
+YES
+
+Procedure status
+
+Completed
+
+Save.
+
+NO
+
+Decision
+
+Treatment interrupted?
+
+YES
+
+Procedure status
+
+In Progress
+
+Reason:
+
+-   Pain
+-   Emergency
+-   Time limit
+-   Equipment issue
+-   Other
+
+Save.
+
+End current visit.
+
+NO
+
+Continue treatment.
+
+------------------------------------------------------------------------
+
+Multiple Procedures
+
+Decision
+
+More planned procedures today?
+
+YES
+
+Return to Begin Procedure.
+
+NO
+
+Continue.
+
+------------------------------------------------------------------------
+
+Visit Completion
+
+Dentist completes clinical notes.
+
+System records:
+
+-   Final notes
+-   Recommendations
+-   Post-operative instructions
+
+Appointment Status
+
+In Chair
+
+↓
+
+Treatment Completed
+
+System prepares completed procedures for billing.
+
+System Flow 5 begins.
+
+------------------------------------------------------------------------
+
+Database Operations
+
+Read
+
+-   treatment_plans
+-   procedures
+-   patients
+-   appointments
+-   files
+
+Create
+
+-   completed procedure
+-   clinical note
+-   anesthesia record
+-   consumable usage
+-   image attachment
+
+Update
+
+-   odontogram
+-   treatment plan status
+-   appointment status
+-   patient history
+
+------------------------------------------------------------------------
+
+Status Changes
+
+Appointment
+
+In Chair
+
+↓
+
+Treatment Completed
+
+Procedure
+
+Planned
+
+↓
+
+In Progress
+
+↓
+
+Completed
+
+or
+
+In Progress (unfinished)
+
+Treatment Plan
+
+Planned
+
+↓
+
+Completed
+
+or
+
+Partially Completed
+
+------------------------------------------------------------------------
+
+Validation Rules
+
+-   Treatment cannot start without an approved treatment plan.
+-   Every completed procedure must be linked to a tooth (if applicable).
+-   Clinical notes required before finishing visit.
+-   Procedure must have a responsible dentist.
+-   Images belong to the current visit only.
+-   Completed procedures become billable items.
+
+------------------------------------------------------------------------
+
+Decisions
+
+1.  Treatment plan exists?
+2.  Anesthesia used?
+3.  Consumables used?
+4.  Need treatment images?
+5.  Procedure completed?
+6.  Treatment interrupted?
+7.  More procedures today?
+
+------------------------------------------------------------------------
+
+Diagram Rules
+
+Use standard flowchart notation.
+
+Oval: Start / End
+
+Rectangle: System process
+
+Diamond: Decision
+
+Arrows: Normal workflow.
+
+Every decision contains YES and NO branches.
+
+The diagram should flow vertically with minimal crossing lines.
+
+System Flow 4 ends after clinical treatment is finished and before
+invoice generation begins.
+
+System Flow 5 starts with billing and payment.

@@ -1,0 +1,345 @@
+System Flow 2 Specification (Patient Arrival, Check-in & Queue Management)
+
+This document defines System Flow 2 for the Dental Clinic Management
+System.
+
+This flow starts when a patient arrives at the clinic and ends when the
+patient is successfully checked in and marked ready for the dentist.
+
+Primary actor: - Receptionist
+
+Supporting actors: - Patient - Dentist (notification only)
+
+System: - Dental Clinic Management System
+
+------------------------------------------------------------------------
+
+Scope
+
+Included: - Patient arrival - Appointment lookup - Walk-in handling -
+Contact verification - Medical alert verification - Consent
+verification - Queue management - Status update - Dentist notification
+
+Excluded: - Examination - Treatment - Billing - Follow-up
+
+------------------------------------------------------------------------
+
+Overall Business Logic
+
+The receptionist controls the check-in process.
+
+The system validates the appointment, updates patient information,
+verifies required documents, and changes appointment status.
+
+------------------------------------------------------------------------
+
+Flow
+
+START
+
+Patient arrives at the clinic.
+
+↓
+
+Receptionist opens Check-in module.
+
+↓
+
+Receptionist searches patient by:
+
+-   Phone number
+-   Patient ID
+-   Name
+-   Today’s appointment list
+
+Decision
+
+Appointment found?
+
+YES
+
+Continue.
+
+NO
+
+Decision
+
+Walk-in patient?
+
+YES
+
+Receptionist creates walk-in appointment.
+
+System checks available dentist.
+
+If available
+
+Continue.
+
+If unavailable
+
+Display no available provider.
+
+End.
+
+NO
+
+Display appointment not found.
+
+End.
+
+------------------------------------------------------------------------
+
+Appointment Validation
+
+System verifies:
+
+-   Appointment date
+-   Appointment time
+-   Appointment status
+
+Decision
+
+Appointment valid?
+
+YES
+
+Continue.
+
+NO
+
+Display error.
+
+Receptionist corrects or reschedules.
+
+End.
+
+------------------------------------------------------------------------
+
+Verify Patient Information
+
+Receptionist asks patient to verify:
+
+-   Phone
+-   Address
+-   Emergency contact
+-   Preferred communication method
+
+Decision
+
+Information changed?
+
+YES
+
+Update patient record.
+
+Save changes.
+
+NO
+
+Continue.
+
+------------------------------------------------------------------------
+
+Medical Verification
+
+System displays:
+
+-   Allergies
+-   Medical conditions
+-   Current medications
+-   Medical alerts
+
+Receptionist confirms with patient.
+
+Decision
+
+Medical information changed?
+
+YES
+
+Update medical profile.
+
+Save changes.
+
+NO
+
+Continue.
+
+------------------------------------------------------------------------
+
+Consent Verification
+
+System checks:
+
+Consent completed?
+
+YES
+
+Continue.
+
+NO
+
+Display consent form.
+
+Patient signs.
+
+System stores consent.
+
+Continue.
+
+------------------------------------------------------------------------
+
+Queue Processing
+
+Receptionist presses Check-in.
+
+System performs:
+
+-   Update appointment status
+-   Record check-in time
+-   Assign queue number
+-   Place patient into waiting queue
+
+Appointment Status:
+
+Booked ↓
+
+Checked-in
+
+------------------------------------------------------------------------
+
+Dentist Notification
+
+System notifies assigned dentist:
+
+-   Patient arrived
+-   Queue number
+-   Appointment type
+
+Assistant may also receive notification.
+
+------------------------------------------------------------------------
+
+Waiting Queue
+
+System displays patient on waiting list.
+
+Decision
+
+Dentist chair available?
+
+YES
+
+Status changes:
+
+Checked-in
+
+↓
+
+Waiting
+
+↓
+
+In Chair (handled in System Flow 3)
+
+NO
+
+Remain in waiting queue.
+
+------------------------------------------------------------------------
+
+Finish
+
+Receptionist confirms:
+
+Check-in completed successfully.
+
+END
+
+------------------------------------------------------------------------
+
+Decisions
+
+1.  Appointment found?
+2.  Walk-in patient?
+3.  Provider available?
+4.  Appointment valid?
+5.  Contact information changed?
+6.  Medical information changed?
+7.  Consent completed?
+8.  Chair available?
+
+------------------------------------------------------------------------
+
+Database Operations
+
+Read
+
+-   patients
+-   appointments
+-   medical_history
+-   consent
+-   dentists
+-   queues
+
+Create
+
+-   walk-in appointment (if necessary)
+-   consent record (if signed)
+
+Update
+
+-   patient profile
+-   medical history
+-   appointment status
+-   queue
+-   check-in time
+
+------------------------------------------------------------------------
+
+Status Changes
+
+Appointment
+
+Booked
+
+↓
+
+Checked-in
+
+↓
+
+Waiting
+
+(In Chair is handled in System Flow 3.)
+
+------------------------------------------------------------------------
+
+Validation Rules
+
+-   Appointment must belong to today unless walk-in.
+-   Cancelled appointments cannot check in.
+-   Completed appointments cannot check in.
+-   Patient must have a valid record.
+-   Consent required when clinic policy requires it.
+-   Queue number must be unique for the day.
+
+------------------------------------------------------------------------
+
+Diagram Rules
+
+Use standard flowchart symbols.
+
+Oval: Start / End
+
+Rectangle: System process
+
+Diamond: Decision
+
+Every decision has YES and NO branches.
+
+The flow should move from top to bottom with minimal crossing arrows.
+
+System Flow 2 ends immediately before the dentist starts the clinical
+examination.

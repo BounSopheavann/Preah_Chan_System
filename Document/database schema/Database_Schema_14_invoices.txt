@@ -1,0 +1,198 @@
+DATABASE SCHEMA 14
+TABLE: invoices
+
+Dental Clinic Management System
+Version 1.0
+
+============================================================
+PURPOSE
+============================================================
+
+The invoices table stores one invoice for each completed appointment.
+
+Invoices summarize all completed treatment executions, calculate the
+patient's total charges, track payments and remaining balance.
+
+Referenced by:
+- invoice_items
+- payments
+
+============================================================
+TABLE NAME
+============================================================
+
+invoices
+
+============================================================
+PRIMARY KEY
+============================================================
+
+invoice_id
+Type: BIGINT UNSIGNED
+Auto Increment: YES
+Nullable: NO
+
+============================================================
+COLUMNS
+============================================================
+
+1. invoice_id
+- BIGINT UNSIGNED
+- Primary Key
+- Auto Increment
+
+2. patient_id
+- BIGINT UNSIGNED
+- Required
+- FK -> patients.patient_id
+
+3. appointment_id
+- BIGINT UNSIGNED
+- Required
+- FK -> appointments.appointment_id
+- UNIQUE
+
+4. invoice_number
+- VARCHAR(30)
+- Required
+- UNIQUE
+
+5. subtotal
+- DECIMAL(12,2)
+- Required
+- Default: 0.00
+
+6. discount_type
+- ENUM('Percentage','Fixed Amount')
+- Nullable
+
+7. discount_value
+- DECIMAL(12,2)
+- Default: 0.00
+
+8. tax_amount
+- DECIMAL(12,2)
+- Default: 0.00
+
+9. grand_total
+- DECIMAL(12,2)
+- Required
+
+10. amount_paid
+- DECIMAL(12,2)
+- Default: 0.00
+
+11. balance_amount
+- DECIMAL(12,2)
+- Required
+
+12. invoice_status
+- ENUM('Pending','Partially Paid','Paid','Cancelled')
+- Default: Pending
+
+13. issued_by
+- BIGINT UNSIGNED
+- Required
+- FK -> users.user_id
+
+14. issued_at
+- TIMESTAMP
+- Required
+
+15. updated_at
+- TIMESTAMP
+
+============================================================
+FOREIGN KEYS
+============================================================
+
+patient_id -> patients(patient_id)
+appointment_id -> appointments(appointment_id)
+issued_by -> users(user_id)
+
+Recommended:
+ON UPDATE CASCADE
+ON DELETE RESTRICT
+
+============================================================
+INDEXES
+============================================================
+
+PRIMARY KEY (invoice_id)
+
+UNIQUE (invoice_number)
+UNIQUE (appointment_id)
+
+INDEX (patient_id)
+INDEX (invoice_status)
+INDEX (issued_by)
+INDEX (issued_at)
+
+============================================================
+VALIDATION RULES
+============================================================
+
+- Appointment must exist.
+- Patient must exist.
+- One appointment generates only one invoice.
+- Grand total cannot be negative.
+- Amount paid cannot exceed grand total.
+
+============================================================
+BUSINESS RULES
+============================================================
+
+1. Invoices are generated from completed treatment executions.
+2. One appointment has one invoice.
+3. Invoice status updates automatically as payments are received.
+4. Paid invoices must never be deleted.
+5. Corrections should use adjustments or credit notes.
+
+============================================================
+RELATED MODULES
+============================================================
+
+Business Flow:
+5
+
+System Flow:
+5
+
+ERD:
+5
+
+============================================================
+LARAVEL MIGRATION REFERENCE
+============================================================
+
+id()
+foreignId('patient_id')->constrained('patients')
+foreignId('appointment_id')->unique()->constrained('appointments')
+string('invoice_number',30)->unique()
+decimal('subtotal',12,2)->default(0)
+enum('discount_type',['Percentage','Fixed Amount'])->nullable()
+decimal('discount_value',12,2)->default(0)
+decimal('tax_amount',12,2)->default(0)
+decimal('grand_total',12,2)
+decimal('amount_paid',12,2)->default(0)
+decimal('balance_amount',12,2)
+enum('invoice_status',['Pending','Partially Paid','Paid','Cancelled'])->default('Pending')
+foreignId('issued_by')->constrained('users')
+timestamp('issued_at')
+timestamps()
+
+============================================================
+EXAMPLE RECORD
+============================================================
+
+invoice_id: 3001
+invoice_number: INV-2026-0001
+patient_id: 15
+appointment_id: 1001
+grand_total: 350.00
+amount_paid: 200.00
+balance_amount: 150.00
+invoice_status: Partially Paid
+
+============================================================
+END OF DATABASE SCHEMA 14
