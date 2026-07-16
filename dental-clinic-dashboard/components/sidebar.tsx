@@ -24,7 +24,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const menuItems = [
     { icon: Calendar, label: 'Dashboard', href: '/' },
     { icon: Users, label: 'Patients', href: '/patients' },
-    { icon: Stethoscope, label: 'Appointments', href: '#' },
+    { icon: Stethoscope, label: 'Appointments', href: '/appointments' },
     { icon: BarChart3, label: 'Reports', href: '#' },
     { icon: Pill, label: 'Treatments', href: '#' },
     { icon: Settings, label: 'Settings', href: '#' },

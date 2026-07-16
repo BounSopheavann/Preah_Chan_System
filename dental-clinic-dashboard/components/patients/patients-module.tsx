@@ -1,9 +1,9 @@
 'use client';
 
-import { Plus, QrCode, Sparkles, Users } from 'lucide-react';
+import { QrCode, Sparkles, Users } from 'lucide-react';
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 
-import { PatientFilters, type PatientFilterState } from './patient-filters';
+import type { PatientFilterState } from './patient-filters';
 import {
   PatientModal,
   type PatientFormValues,
@@ -161,7 +161,6 @@ export function PatientsModule() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [qrPatient, setQrPatient] = useState<Patient | null>(null);
-  const [notice, setNotice] = useState('Ready to manage patient records.');
 
   useEffect(() => {
     const timer = window.setTimeout(() => setIsLoading(false), 450);
@@ -233,7 +232,6 @@ export function PatientsModule() {
         current.map((item) => (item.id === patient.id ? updatedPatient : item)),
       );
       setSelectedPatient((current) => (current?.id === patient.id ? updatedPatient : current));
-      setNotice(`${updatedPatient.fullName} updated.`);
     } else {
       const maxCode = patients.reduce((max, item) => {
         const numericCode = Number(item.patientCode.replace('PC-', ''));
@@ -243,7 +241,6 @@ export function PatientsModule() {
       setPatients((current) => [newPatient, ...current]);
       setSelectedPatient(newPatient);
       setDrawerTab('Overview');
-      setNotice(`${newPatient.fullName} created.`);
     }
 
     setModalOpen(false);
@@ -256,25 +253,20 @@ export function PatientsModule() {
       current.map((item) => (item.id === patient.id ? { ...item, status: nextStatus } : item)),
     );
     setSelectedPatient((current) => (current?.id === patient.id ? { ...current, status: nextStatus } : current));
-    setNotice(`${patient.fullName} marked ${nextStatus.toLowerCase()}.`);
   };
 
   const bookAppointment = (patient: Patient) => {
     openPatient(patient, 'Appointments');
-    setNotice(`Appointment workspace opened for ${patient.fullName}.`);
   };
 
   const generateQr = (patient: Patient) => {
     setQrPatient(patient);
-    setNotice(`Telegram QR generated for ${patient.patientCode}.`);
   };
 
   const copyCode = (patient: Patient) => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       void navigator.clipboard.writeText(patient.patientCode);
     }
-
-    setNotice(`${patient.patientCode} copied.`);
   };
 
   return (
@@ -284,14 +276,6 @@ export function PatientsModule() {
           <h1 className="text-3xl font-bold text-foreground">Patients</h1>
           <p className="text-muted-foreground">Manage patient records and medical information.</p>
         </div>
-        <button
-          type="button"
-          onClick={openNewPatient}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:-translate-y-0.5 hover:bg-primary/90"
-        >
-          <Plus className="size-4" />
-          New Patient
-        </button>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -331,18 +315,6 @@ export function PatientsModule() {
       </div>
 
       <PatientSearchBar value={search} onChange={setSearch} />
-      <PatientFilters
-        filters={filters}
-        onChange={setFilters}
-        onReset={() => {
-          setFilters(initialFilters);
-          setSearch('');
-        }}
-      />
-
-      <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-medium text-foreground">
-        {notice}
-      </div>
 
       <div className="overflow-hidden rounded-2xl">
         <PatientTable
@@ -351,6 +323,12 @@ export function PatientsModule() {
           sortKey={sortKey}
           sortDirection={sortDirection}
           onSort={handleSort}
+          filters={filters}
+          onFiltersChange={setFilters}
+          onFiltersReset={() => {
+            setFilters(initialFilters);
+            setSearch('');
+          }}
           onView={(patient) => openPatient(patient)}
           onEdit={openEditPatient}
           onBookAppointment={bookAppointment}

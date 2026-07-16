@@ -9,6 +9,8 @@ import {
   Eye,
   MoreHorizontal,
   QrCode,
+  Plus,
+  RotateCcw,
   SearchX,
   UserPlus,
   UserX,
@@ -16,8 +18,9 @@ import {
 import { useState } from 'react';
 
 import { PatientAvatar } from './patient-avatar';
-import { BalanceBadge, ConsentBadge, PatientStatusBadge, TelegramBadge } from './status-badge';
-import type { Patient } from './patient-data';
+import { BalanceBadge, ConsentBadge, TelegramBadge } from './status-badge';
+import type { ConsentStatus, Patient, PatientGender, PatientStatus } from './patient-data';
+import type { PatientFilterState } from './patient-filters';
 
 export type PatientSortKey =
   | 'patientCode'
@@ -45,6 +48,9 @@ interface PatientTableProps {
   onDeactivate: (patient: Patient) => void;
   onCreatePatient: () => void;
   onCopyCode: (patient: Patient) => void;
+  filters: PatientFilterState;
+  onFiltersChange: (filters: PatientFilterState) => void;
+  onFiltersReset: () => void;
 }
 
 interface HeaderCellProps {
@@ -61,6 +67,35 @@ const alignClasses = {
   right: 'text-right',
   center: 'text-center',
 };
+
+function FilterSelect<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: T;
+  options: T[];
+  onChange: (value: T) => void;
+}) {
+  return (
+    <label className="flex w-full min-w-0 flex-col gap-1.5 text-xs font-semibold text-muted-foreground sm:w-44">
+      {label}
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value as T)}
+        className="h-10 rounded-xl border border-border bg-background/70 px-3 text-sm font-semibold text-foreground outline-none transition-all hover:bg-muted/60 focus:border-primary/50 focus:ring-2 focus:ring-ring/20 dark:bg-background/30"
+      >
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
 
 function HeaderCell({
   label,
@@ -232,6 +267,9 @@ export function PatientTable(props: PatientTableProps) {
     onDeactivate,
     onCreatePatient,
     onCopyCode,
+    filters,
+    onFiltersChange,
+    onFiltersReset,
   } = props;
 
   return (
@@ -239,12 +277,49 @@ export function PatientTable(props: PatientTableProps) {
       className="overflow-hidden rounded-2xl border border-border bg-card/80 backdrop-blur-xl theme-surface-shadow"
       style={{ backdropFilter: 'blur(10px)' }}
     >
-      <div className="flex flex-col gap-2 border-b border-border/70 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6">
-        <div>
-          <h2 className="text-lg font-bold text-foreground">Patient Records</h2>
-          <p className="text-sm text-muted-foreground">Sortable, paginated clinical directory</p>
+      <div className="flex flex-col gap-4 border-b border-border/70 px-4 py-4 md:px-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0">
+            <h2 className="text-lg font-bold text-foreground">Patient Records</h2>
+            <p className="text-sm text-muted-foreground">Sortable, paginated clinical directory</p>
+          </div>
+          <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center lg:w-auto lg:justify-end">
+            <button
+              type="button"
+              onClick={onCreatePatient}
+              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:bg-primary/90 sm:w-auto"
+            >
+              <Plus className="size-4" />
+              New Patient
+            </button>
+            <FilterSelect
+              label="Status"
+              value={filters.status}
+              options={['All', 'Active', 'Inactive']}
+              onChange={(status) => onFiltersChange({ ...filters, status: status as PatientStatus | 'All' })}
+            />
+            <FilterSelect
+              label="Gender"
+              value={filters.gender}
+              options={['All', 'Male', 'Female', 'Other']}
+              onChange={(gender) => onFiltersChange({ ...filters, gender: gender as PatientGender | 'All' })}
+            />
+            <FilterSelect
+              label="Consent"
+              value={filters.consent}
+              options={['All', 'Accepted', 'Pending', 'Declined']}
+              onChange={(consent) => onFiltersChange({ ...filters, consent: consent as ConsentStatus | 'All' })}
+            />
+            <button
+              type="button"
+              onClick={onFiltersReset}
+              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-border bg-background/70 px-4 text-sm font-semibold text-foreground transition-all hover:bg-muted hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-ring/30 dark:bg-background/30 md:w-auto"
+            >
+              <RotateCcw className="size-4" />
+              Reset Filters
+            </button>
+          </div>
         </div>
-        <PatientStatusBadge status="Active" />
       </div>
 
       <div className="max-h-[660px] overflow-auto">
