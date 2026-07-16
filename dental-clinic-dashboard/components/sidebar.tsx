@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -19,9 +20,10 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
+  const pathname = usePathname();
   const menuItems = [
-    { icon: Calendar, label: 'Dashboard', href: '#', active: true },
-    { icon: Users, label: 'Patients', href: '#' },
+    { icon: Calendar, label: 'Dashboard', href: '/' },
+    { icon: Users, label: 'Patients', href: '/patients' },
     { icon: Stethoscope, label: 'Appointments', href: '#' },
     { icon: BarChart3, label: 'Reports', href: '#' },
     { icon: Pill, label: 'Treatments', href: '#' },
@@ -75,12 +77,17 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           <nav className="flex-1 space-y-2">
             {menuItems.map((item) => {
               const Icon = item.icon;
+              const active =
+                item.href === '/'
+                  ? pathname === '/'
+                  : item.href !== '#' && pathname.startsWith(item.href);
+
               return (
                 <Link
                   key={item.label}
                   href={item.href}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                    item.active
+                    active
                       ? 'bg-primary text-white shadow-lg shadow-primary/30'
                       : 'text-foreground hover:bg-muted'
                   }`}
