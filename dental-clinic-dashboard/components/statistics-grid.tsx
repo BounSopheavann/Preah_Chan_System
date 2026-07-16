@@ -1,6 +1,6 @@
 'use client';
 
-import { Users, Calendar, Clock, TrendingUp } from 'lucide-react';
+import { Users, Calendar, DollarSign, AlertTriangle } from 'lucide-react';
 
 export function StatisticsGrid() {
   const stats = [
@@ -21,18 +21,18 @@ export function StatisticsGrid() {
       bgColor: 'bg-cyan-50 dark:bg-cyan-950/30',
     },
     {
-      title: 'Avg. Wait Time',
-      value: '8 min',
-      change: '-2 min',
-      icon: Clock,
+      title: "Today's Revenue",
+      value: '$4,820',
+      change: '+8%',
+      icon: DollarSign,
       color: 'from-teal-400 to-green-400',
       bgColor: 'bg-teal-50 dark:bg-teal-950/30',
     },
     {
-      title: 'Satisfaction Rate',
-      value: '96%',
-      change: '+4%',
-      icon: TrendingUp,
+      title: 'Outstanding Balance',
+      value: '$1,260',
+      change: '4 overdue',
+      icon: AlertTriangle,
       color: 'from-green-400 to-emerald-400',
       bgColor: 'bg-green-50 dark:bg-green-950/30',
     },

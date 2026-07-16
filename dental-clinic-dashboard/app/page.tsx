@@ -27,10 +27,9 @@ export default function Home() {
           <div className="space-y-6">
             <QuickActions />
             <RecallsList />
+            <ActivityTimeline />
           </div>
         </div>
-
-        <ActivityTimeline />
       </div>
     </DashboardLayout>
   );

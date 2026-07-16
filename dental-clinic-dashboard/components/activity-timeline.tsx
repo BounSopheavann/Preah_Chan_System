@@ -1,5 +1,6 @@
 'use client';
 
+import { useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   CalendarClock,
@@ -82,18 +83,46 @@ const activities = [
 ] as const;
 
 export function ActivityTimeline() {
+  const [expanded, setExpanded] = useState(false);
+  const visibleActivities = activities.slice(0, expanded ? 7 : 3);
+  const listRef = useRef<HTMLUListElement>(null);
+  const [listHeight, setListHeight] = useState('0px');
+
+  useLayoutEffect(() => {
+    const element = listRef.current;
+
+    if (!element) {
+      return;
+    }
+
+    const updateHeight = () => {
+      setListHeight(expanded ? `${element.scrollHeight}px` : '0px');
+    };
+
+    updateHeight();
+
+    if (!expanded || typeof ResizeObserver === 'undefined') {
+      return;
+    }
+
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, [expanded, visibleActivities.length]);
+
   return (
     <section
-      className="rounded-2xl border border-border bg-card/80 p-4 shadow-sm backdrop-blur-xl md:p-5 theme-surface-shadow"
+      className="bg-card border border-border rounded-2xl p-6 backdrop-blur-sm theme-surface-shadow"
       style={{ backdropFilter: 'blur(10px)' }}
       aria-labelledby="recent-activity-title"
     >
-      <div className="mb-4 flex items-start justify-between gap-3">
+      <div className="mb-6 flex items-start justify-between gap-3">
         <div>
-          <h2 id="recent-activity-title" className="text-lg font-bold text-foreground">
+          <h2 id="recent-activity-title" className="text-xl font-bold text-foreground">
             Recent Activity
           </h2>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-sm text-muted-foreground">
             Latest updates from the front desk and clinical team
           </p>
         </div>
@@ -102,42 +131,57 @@ export function ActivityTimeline() {
         </span>
       </div>
 
-      <ul className="space-y-2.5">
-        {activities.slice(0, 8).map((activity) => {
-          const Icon = activity.icon;
+      <div
+        id="recent-activity-list"
+        className="overflow-hidden transition-[height,opacity] duration-300 ease-out"
+        style={{ height: listHeight, opacity: expanded ? 1 : 0.98 }}
+      >
+        <ul ref={listRef} className="space-y-2.5">
+          {visibleActivities.map((activity) => {
+            const Icon = activity.icon;
 
-          return (
-            <li
-              key={activity.id}
-              className="grid grid-cols-[auto,minmax(0,1fr),auto] items-start gap-3 rounded-xl border border-border/60 bg-background/40 px-3 py-2.5 transition-colors hover:bg-background/70 dark:bg-background/20 dark:hover:bg-background/30"
-            >
-              <div
-                className={cn(
-                  'flex size-9 items-center justify-center rounded-full border',
-                  activity.tone,
-                )}
+            return (
+              <li
+                key={activity.id}
+                className="grid grid-cols-[auto,minmax(0,1fr),auto] items-start gap-3 rounded-xl border border-border/60 bg-background/40 px-3 py-2.5 transition-colors hover:bg-background/70 dark:bg-background/20 dark:hover:bg-background/30"
               >
-                <Icon className="size-4" aria-hidden="true" />
-              </div>
+                <div
+                  className={cn(
+                    'flex size-9 items-center justify-center rounded-full border',
+                    activity.tone,
+                  )}
+                >
+                  <Icon className="size-4" aria-hidden="true" />
+                </div>
 
-              <div className="min-w-0">
-                <h3 className="truncate text-sm font-semibold text-foreground">
-                  {activity.title}
-                </h3>
-                <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                  {activity.description}
-                </p>
-              </div>
+                <div className="min-w-0">
+                  <h3 className="truncate text-sm font-semibold text-foreground">
+                    {activity.title}
+                  </h3>
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                    {activity.description}
+                  </p>
+                </div>
 
-              <time className="whitespace-nowrap pt-0.5 text-[11px] font-medium text-muted-foreground">
-                {activity.timestamp}
-              </time>
-            </li>
-          );
-        })}
-      </ul>
+                <time className="whitespace-nowrap pt-0.5 text-[11px] font-medium text-muted-foreground">
+                  {activity.timestamp}
+                </time>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
 
-      <div className="mt-4 flex justify-end">
+      <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+        <button
+          type="button"
+          onClick={() => setExpanded((current) => !current)}
+          className="inline-flex h-8 items-center rounded-lg border border-border bg-background/60 px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring/40 dark:bg-background/30 dark:hover:bg-muted/40"
+          aria-expanded={expanded}
+          aria-controls="recent-activity-list"
+        >
+          {expanded ? 'View Less' : 'View More'}
+        </button>
         <Link
           href="/activity-log"
           className="inline-flex h-8 items-center rounded-lg border border-border bg-background/60 px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring/40 dark:bg-background/30 dark:hover:bg-muted/40"
