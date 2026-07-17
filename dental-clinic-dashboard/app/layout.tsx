@@ -28,7 +28,7 @@ export default function RootLayout({
       <head>
         <meta name="theme-color" content="#f5f7fa" />
       </head>
-      <body className="antialiased bg-background">
+      <body className="antialiased bg-background" suppressHydrationWarning>
         <Script id="theme-init" strategy="beforeInteractive">{`
           (function () {
             try {
