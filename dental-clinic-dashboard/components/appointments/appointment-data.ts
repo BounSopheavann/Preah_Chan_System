@@ -33,6 +33,8 @@ export const dentistOptions = ['Dr. Sarah', 'Dr. Maya', 'Dr. Chen'] as const;
 
 export type DentistName = (typeof dentistOptions)[number];
 
+export type QueuePriority = 'Normal' | 'High' | 'Emergency';
+
 export interface AppointmentRecord {
   id: string;
   appointmentId: string;
@@ -46,6 +48,10 @@ export interface AppointmentRecord {
   timeLabel: string;
   status: AppointmentStatus;
   checkInLabel: string;
+  checkInAt?: string | null;
+  priority?: QueuePriority;
+  medicalAlert?: string | null;
+  medicalAlertTooltip?: string | null;
   balance: number;
   avatarTone: string;
 }
@@ -96,6 +102,10 @@ export const appointmentRecords: AppointmentRecord[] = [
     timeLabel: '09:20 AM',
     status: 'Checked-in',
     checkInLabel: '09:08 AM',
+    checkInAt: '2026-07-16T09:08:00',
+    priority: 'Emergency',
+    medicalAlert: 'Allergy',
+    medicalAlertTooltip: 'Penicillin Allergy',
     balance: 90,
     avatarTone: 'from-violet-400 to-fuchsia-400',
   },
@@ -112,6 +122,10 @@ export const appointmentRecords: AppointmentRecord[] = [
     timeLabel: '09:50 AM',
     status: 'In Chair',
     checkInLabel: '09:36 AM',
+    checkInAt: '2026-07-16T09:36:00',
+    priority: 'High',
+    medicalAlert: 'Medical Condition',
+    medicalAlertTooltip: 'Diabetes',
     balance: 480,
     avatarTone: 'from-orange-400 to-amber-400',
   },

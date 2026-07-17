@@ -15,6 +15,7 @@ import {
   Printer,
   RotateCcw,
   Table2,
+  TriangleAlert,
   UserCheck,
   Users,
   XCircle,
@@ -245,7 +246,35 @@ function EmptyState() {
   );
 }
 
-function RowActions({ appointment }: { appointment: AppointmentRecord }) {
+function formatCheckInLabel(date: Date) {
+  return date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function formatWaitingTime(checkInAt: string | null | undefined, currentTime: Date) {
+  if (!checkInAt) {
+    return 'Pending';
+  }
+
+  const elapsedMinutes = Math.max(0, Math.floor((currentTime.getTime() - new Date(checkInAt).getTime()) / 60000));
+
+  if (elapsedMinutes < 60) {
+    return `${elapsedMinutes} min`;
+  }
+
+  const hours = Math.floor(elapsedMinutes / 60);
+  const minutes = elapsedMinutes % 60;
+
+  if (minutes === 0) {
+    return `${hours} hr`;
+  }
+
+  return `${hours} hr ${minutes} min`;
+}
+
+function RowActions({ appointment, onCheckIn }: { appointment: AppointmentRecord; onCheckIn: (appointmentId: string) => void }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const canCheckIn = appointment.status === 'Booked' || appointment.status === 'Confirmed';
 
@@ -268,6 +297,7 @@ function RowActions({ appointment }: { appointment: AppointmentRecord }) {
       {canCheckIn && (
         <button
           type="button"
+          onClick={() => onCheckIn(appointment.id)}
           className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 text-xs font-semibold text-emerald-700 transition-all hover:border-emerald-300 hover:bg-emerald-100 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:bg-emerald-500/20"
           title="Check in appointment"
         >
@@ -494,18 +524,233 @@ function AppointmentCalendarPlaceholder({
   );
 }
 
+function WaitingQueueTable({
+  appointments,
+  currentTime,
+  onCallPatient,
+}: {
+  appointments: AppointmentRecord[];
+  currentTime: Date;
+  onCallPatient: (appointmentId: string) => void;
+}) {
+  const priorityTone: Record<NonNullable<AppointmentRecord['priority']>, string> = {
+    Normal: 'border-border bg-muted/70 text-muted-foreground dark:bg-muted/30',
+    High: 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300',
+    Emergency: 'border-red-200 bg-red-50 text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300',
+  };
+
+  const waitingAppointments = useMemo(() => {
+    return [...appointments]
+      .filter((appointment) => appointment.status === 'Checked-in')
+      .sort((a, b) => {
+        const priorityOrder = { Emergency: 0, High: 1, Normal: 2 };
+        const priorityDiff = (priorityOrder[a.priority ?? 'Normal'] ?? 2) - (priorityOrder[b.priority ?? 'Normal'] ?? 2);
+        if (priorityDiff !== 0) {
+          return priorityDiff;
+        }
+
+        const appointmentTimeDiff = new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime();
+        if (appointmentTimeDiff !== 0) {
+          return appointmentTimeDiff;
+        }
+
+        const checkInTimeA = a.checkInAt ? new Date(a.checkInAt).getTime() : new Date(a.scheduledAt).getTime();
+        const checkInTimeB = b.checkInAt ? new Date(b.checkInAt).getTime() : new Date(b.scheduledAt).getTime();
+        return checkInTimeA - checkInTimeB;
+      });
+  }, [appointments]);
+
+  return (
+    <section className="overflow-hidden rounded-2xl border border-border bg-card/80 backdrop-blur-xl theme-surface-shadow">
+      <div className="flex flex-col gap-3 border-b border-border/70 px-4 py-4 md:px-6 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-foreground">Waiting Queue</h2>
+          <p className="text-sm text-muted-foreground">Patients waiting for treatment.</p>
+        </div>
+        <span className="inline-flex w-fit items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+          Waiting Queue ({waitingAppointments.length})
+        </span>
+      </div>
+
+      {waitingAppointments.length === 0 ? (
+        <div className="flex min-h-72 flex-col items-center justify-center px-6 py-14 text-center">
+          <div className="relative mb-5 flex size-24 items-center justify-center rounded-2xl border border-border bg-muted/60 text-primary theme-strong-shadow">
+            <Users className="size-10" aria-hidden="true" />
+            <span className="absolute -right-2 -top-2 flex size-9 items-center justify-center rounded-xl bg-amber-500 text-amber-50 shadow-lg shadow-amber-500/20">
+              <Clock3 className="size-4" aria-hidden="true" />
+            </span>
+          </div>
+          <h3 className="text-xl font-bold text-foreground">No patients are currently waiting.</h3>
+        </div>
+      ) : (
+        <>
+          <div className="hidden overflow-auto lg:block">
+            <table className="min-w-[1650px] w-full border-collapse">
+              <thead className="sticky top-0 z-10 bg-card/95 backdrop-blur-xl">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-normal text-muted-foreground">Queue No.</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-normal text-muted-foreground">Patient</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-normal text-muted-foreground">Patient Code</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-normal text-muted-foreground">Dentist</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-normal text-muted-foreground">Appointment Time</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-normal text-muted-foreground">Check-in Time</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-normal text-muted-foreground">Waiting Time</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-normal text-muted-foreground">Priority</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-normal text-muted-foreground">Medical Alert</th>
+                  <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-normal text-muted-foreground">Status</th>
+                  <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-normal text-muted-foreground">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {waitingAppointments.map((appointment, index) => (
+                  <tr key={appointment.id} className="border-t border-border/60 transition-all hover:bg-primary/5">
+                    <td className="px-4 py-4 text-sm font-bold text-foreground">{index + 1}</td>
+                    <td className="px-4 py-4">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <PatientAvatar
+                          patient={{
+                            fullName: appointment.patientName,
+                            avatarTone: appointment.avatarTone,
+                          }}
+                          size="sm"
+                        />
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-foreground">{appointment.patientName}</p>
+                          <p className="truncate text-xs text-muted-foreground">{appointment.phone}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 text-sm font-semibold text-foreground">{appointment.patientCode}</td>
+                    <td className="px-4 py-4 text-sm text-foreground">{appointment.dentist}</td>
+                    <td className="px-4 py-4 text-sm font-semibold text-foreground">{appointment.timeLabel}</td>
+                    <td className="px-4 py-4 text-sm text-foreground">{appointment.checkInLabel}</td>
+                    <td className="px-4 py-4 text-sm font-semibold text-foreground">{formatWaitingTime(appointment.checkInAt, currentTime)}</td>
+                    <td className="px-4 py-4">
+                      <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${priorityTone[appointment.priority ?? 'Normal']}`}>
+                        {appointment.priority ?? 'Normal'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4">
+                      {appointment.medicalAlert ? (
+                        <span
+                          className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
+                          title={appointment.medicalAlertTooltip ?? appointment.medicalAlert}
+                        >
+                          <TriangleAlert className="size-3.5" />
+                          {appointment.medicalAlert}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <AppointmentStatusBadge status={appointment.status} />
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="flex flex-wrap items-center justify-end gap-1.5">
+                        <button type="button" className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-background/70 px-2.5 text-xs font-semibold text-foreground transition-all hover:border-primary/40 hover:bg-primary/10 hover:text-primary dark:bg-background/30">
+                          <Eye className="size-3.5" />
+                          View
+                        </button>
+                        <button type="button" className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-background/70 px-2.5 text-xs font-semibold text-foreground transition-all hover:border-primary/40 hover:bg-primary/10 hover:text-primary dark:bg-background/30">
+                          <Edit3 className="size-3.5" />
+                          Edit Patient
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onCallPatient(appointment.id)}
+                          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-2.5 text-xs font-semibold text-violet-700 transition-all hover:border-violet-300 hover:bg-violet-100 dark:border-violet-500/30 dark:bg-violet-500/10 dark:text-violet-300 dark:hover:bg-violet-500/20"
+                        >
+                          <UserCheck className="size-3.5" />
+                          Call Patient
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="grid gap-3 p-4 lg:hidden">
+            {waitingAppointments.map((appointment, index) => (
+              <div key={appointment.id} className="rounded-2xl border border-border bg-background/50 p-4 dark:bg-background/20">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="mb-2 flex items-center gap-2">
+                      <span className="inline-flex size-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+                        {index + 1}
+                      </span>
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{appointment.patientName}</p>
+                        <p className="text-xs text-muted-foreground">{appointment.patientCode}</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{appointment.dentist} • {appointment.timeLabel}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Check-in {appointment.checkInLabel}</p>
+                  </div>
+                  <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${priorityTone[appointment.priority ?? 'Normal']}`}>
+                    {appointment.priority ?? 'Normal'}
+                  </span>
+                </div>
+
+                <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                  <div className="rounded-xl border border-border bg-muted/50 px-2.5 py-2">
+                    <p className="text-muted-foreground">Waiting</p>
+                    <p className="font-semibold text-foreground">{formatWaitingTime(appointment.checkInAt, currentTime)}</p>
+                  </div>
+                  <div className="rounded-xl border border-border bg-muted/50 px-2.5 py-2">
+                    <p className="text-muted-foreground">Status</p>
+                    <div className="mt-1">
+                      <AppointmentStatusBadge status={appointment.status} />
+                    </div>
+                  </div>
+                </div>
+
+                {appointment.medicalAlert && (
+                  <div className="mt-3 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300" title={appointment.medicalAlertTooltip ?? appointment.medicalAlert}>
+                    <TriangleAlert className="size-3.5" />
+                    {appointment.medicalAlert}
+                  </div>
+                )}
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button type="button" className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-background/70 px-2.5 text-xs font-semibold text-foreground transition-all hover:border-primary/40 hover:bg-primary/10 hover:text-primary dark:bg-background/30">
+                    <Eye className="size-3.5" />
+                    View
+                  </button>
+                  <button type="button" className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-background/70 px-2.5 text-xs font-semibold text-foreground transition-all hover:border-primary/40 hover:bg-primary/10 hover:text-primary dark:bg-background/30">
+                    <Edit3 className="size-3.5" />
+                    Edit Patient
+                  </button>
+                  <button type="button" onClick={() => onCallPatient(appointment.id)} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-2.5 text-xs font-semibold text-violet-700 transition-all hover:border-violet-300 hover:bg-violet-100 dark:border-violet-500/30 dark:bg-violet-500/10 dark:text-violet-300 dark:hover:bg-violet-500/20">
+                    <UserCheck className="size-3.5" />
+                    Call Patient
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
 function AppointmentTable({
   appointments,
   isLoading,
   sortKey,
   sortDirection,
   onSort,
+  onCheckIn,
 }: {
   appointments: AppointmentRecord[];
   isLoading: boolean;
   sortKey: SortKey;
   sortDirection: SortDirection;
   onSort: (key: SortKey) => void;
+  onCheckIn: (appointmentId: string) => void;
 }) {
   return (
     <div className="max-h-[660px] overflow-auto">
@@ -571,7 +816,7 @@ function AppointmentTable({
                   <BalanceBadge amount={appointment.balance} />
                 </td>
                 <td className="px-4 py-4">
-                  <RowActions appointment={appointment} />
+                  <RowActions appointment={appointment} onCheckIn={onCheckIn} />
                 </td>
               </tr>
             ))}
@@ -585,7 +830,7 @@ function AppointmentTable({
 }
 
 export function AppointmentsModule() {
-  const [appointments] = useState<AppointmentRecord[]>(appointmentRecords);
+  const [appointments, setAppointments] = useState<AppointmentRecord[]>(appointmentRecords);
   const [search, setSearch] = useState('');
   const deferredSearch = useDeferredValue(search);
   const [filters, setFilters] = useState<AppointmentFilterState>(initialFilters);
@@ -595,10 +840,16 @@ export function AppointmentsModule() {
   const [pageSize, setPageSize] = useState(6);
   const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('table');
+  const [currentTime, setCurrentTime] = useState(() => new Date());
 
   useEffect(() => {
     const timer = window.setTimeout(() => setIsLoading(false), 450);
     return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => window.clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -635,9 +886,8 @@ export function AppointmentsModule() {
 
   const todayAppointments = appointments.filter((appointment) => appointment.scheduledAt.slice(0, 10) === todayDateValue);
   const checkedInCount = todayAppointments.filter((appointment) => appointment.status === 'Checked-in').length;
-  const waitingCount = todayAppointments.filter(
-    (appointment) => appointment.status === 'Booked' || appointment.status === 'Confirmed',
-  ).length;
+  const waitingQueue = todayAppointments.filter((appointment) => appointment.status === 'Checked-in');
+  const waitingCount = waitingQueue.length;
   const completedTodayCount = todayAppointments.filter((appointment) => appointment.status === 'Completed').length;
 
   const handleSort = (key: SortKey) => {
@@ -655,6 +905,45 @@ export function AppointmentsModule() {
     setSearch('');
   };
 
+  const handleCheckIn = (appointmentId: string) => {
+    setAppointments((currentAppointments) =>
+      currentAppointments.map((appointment) => {
+        if (appointment.id !== appointmentId) {
+          return appointment;
+        }
+
+        return {
+          ...appointment,
+          status: 'Checked-in',
+          checkInLabel: formatCheckInLabel(new Date()),
+          checkInAt: new Date().toISOString(),
+          priority: appointment.priority ?? 'Normal',
+        };
+      }),
+    );
+  };
+
+  const handleCallPatient = (appointmentId: string) => {
+    const shouldMoveToChair = window.confirm('Send this patient to the treatment chair?');
+
+    if (!shouldMoveToChair) {
+      return;
+    }
+
+    setAppointments((currentAppointments) =>
+      currentAppointments.map((appointment) => {
+        if (appointment.id !== appointmentId) {
+          return appointment;
+        }
+
+        return {
+          ...appointment,
+          status: 'In Chair',
+        };
+      }),
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
@@ -664,13 +953,6 @@ export function AppointmentsModule() {
             Manage bookings, schedules, check-ins, and appointment status.
           </p>
         </div>
-        <button
-          type="button"
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:bg-primary/90"
-        >
-          <Plus className="size-4" />
-          New Appointment
-        </button>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -824,6 +1106,7 @@ export function AppointmentsModule() {
               sortKey={sortKey}
               sortDirection={sortDirection}
               onSort={handleSort}
+              onCheckIn={handleCheckIn}
             />
             {!isLoading && (
               <AppointmentPagination
@@ -835,6 +1118,12 @@ export function AppointmentsModule() {
                 onPageSizeChange={setPageSize}
               />
             )}
+
+            <WaitingQueueTable
+              appointments={appointments}
+              currentTime={currentTime}
+              onCallPatient={handleCallPatient}
+            />
           </>
         )}
       </section>
