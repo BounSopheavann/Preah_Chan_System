@@ -21,6 +21,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { PatientAvatar } from '../patients/patient-avatar';
 import {
@@ -841,6 +842,7 @@ export function AppointmentsModule() {
   const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [currentTime, setCurrentTime] = useState(() => new Date());
+  const router = useRouter();
 
   useEffect(() => {
     const timer = window.setTimeout(() => setIsLoading(false), 450);
@@ -942,6 +944,8 @@ export function AppointmentsModule() {
         };
       }),
     );
+
+    router.push('/clinical-examination');
   };
 
   return (
