@@ -9,6 +9,7 @@ import {
   LogOut,
   Stethoscope,
   X,
+  Activity,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -25,6 +26,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { icon: Calendar, label: 'Dashboard', href: '/' },
     { icon: Users, label: 'Patients', href: '/patients' },
     { icon: Stethoscope, label: 'Appointments', href: '/appointments' },
+    { icon: Activity, label: 'Treatment Execution', href: '/treatment-execution' },
     { icon: BarChart3, label: 'Reports', href: '#' },
     { icon: Pill, label: 'Treatments', href: '#' },
     { icon: Settings, label: 'Settings', href: '#' },
@@ -63,7 +65,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   priority
                 />
               </div>
-              <span className="font-bold text-lg text-foreground">DentalCare</span>
+              <span className="font-bold text-lg text-foreground">PreahChan Dental</span>
             </div>
             <button
               onClick={onClose}

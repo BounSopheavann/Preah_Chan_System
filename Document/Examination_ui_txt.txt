@@ -369,51 +369,195 @@ Treatment plan approval
 - Patient can approve or request modifications.
 - Approved plans are locked from editing and sent to scheduling and billing.
 
-6.5 Prescription Section
+6.5 Prescription Section (Phase 6 — Expanded)
 
 Purpose
-- Allows the dentist to write and print prescriptions for patients.
-- Integrates with the patient's medication history.
+- Allows the dentist to create, review, print, and manage prescriptions related to the patient's examination or treatment.
+- Prescription is OPTIONAL and should only be created when clinically required.
+- Integrates with the patient's recorded allergy and medication history to surface safety alerts BEFORE medication selection.
 
-Prescription fields
-- Prescription Date (auto-filled with current date).
-- Patient Name (auto-filled from selected patient).
-- Medication Name (searchable drug library).
-- Dosage.
-- Frequency.
-- Route of Administration.
-- Duration.
-- Quantity.
-- Refills.
-- Instructions / Notes.
-- Prescriber Name (auto-filled from logged-in dentist).
+Layout
+- Desktop: Left (70%) Current Prescription / Medication List / Prescription History. Right (30%) Patient Safety Panel + Prescription Summary.
+- Tablet: Stack sections vertically.
+- Mobile: Single-column layout. Medication tables transform into cards.
 
-Drug library
-- Predefined list of common dental medications.
-- Searchable by brand name or generic name.
-- Includes default dosages and instructions.
+Header
+- Title: Prescription.
+- Subtitle: Create and manage medications prescribed during the patient's care.
+- Top-right buttons: + New Prescription, Print Prescription, View History.
 
-Prescription behavior
-- Multiple medications can be prescribed in a single session.
-- Each prescription is saved as part of the examination record.
-- Prescriptions can be printed or sent electronically.
+Patient Safety Panel (right)
+- Highly visible card shown before medication selection.
+- Displays: Patient Name, Age, Medical Conditions, Known Allergies, Current Medications, Important Medical Alerts.
+- If a known drug allergy exists (e.g., Penicillin), displays a prominent WARNING block (icon + text label, not color-only).
+- This is UI-only clinical safety information. No real drug-interaction checking. No automatic medical recommendations.
 
-6.6 Progress Notes Section
+New Prescription
+- Opens a prescription editor (modal/sheet).
+- Auto-filled from local UI state: Patient Name (Sofia Martin), Patient Code (PC-1003), Prescription Date (18 Jul 2026), Prescriber (Dr. Maya).
+- Fields: Prescription Date, Patient Name, Prescriber, Linked Diagnosis, Linked Treatment, Medication Name, Generic Name, Dosage, Strength, Frequency, Route, Duration, Quantity, Refills, Instructions, Clinical Notes.
+
+Medication Selection
+- Searchable medication selector with a dummy drug catalog for dental practice only (Amoxicillin, Azithromycin, Clindamycin, Ibuprofen, Acetaminophen, Chlorhexidine Mouthwash).
+- Supports search, select from catalog, and custom medication entry.
+- All medication data is dummy UI data for demonstration only — not medical advice.
+
+Allergy Warning UI
+- If a selected dummy medication conflicts with a known allergy in the local dummy data (e.g., Amoxicillin vs Penicillin allergy), a warning modal appears: "Medication Safety Warning — This patient has a recorded Penicillin allergy. Selected Medication: Amoxicillin." Buttons: Cancel Selection, Acknowledge Warning.
+- No automatic alternative suggestion is made.
+
+Prescription Fields
+- Dosage: text input.
+- Strength: text input.
+- Frequency: dropdown/custom (Once daily, Twice daily, Three times daily, Four times daily, As needed, Custom).
+- Route: Oral, Topical, Mouth Rinse, Other.
+- Duration: number + unit (e.g., 5 Days, 7 Days).
+- Quantity: numeric input.
+- Refills: numeric input.
+- Instructions: large textarea.
+- Clinical Notes: optional textarea.
+
+Multiple Medications
+- Multiple medications are permitted in one prescription session.
+- Displayed in a Medication List (table on desktop, cards on mobile).
+- Columns: Medication, Strength, Dosage, Frequency, Duration, Quantity, Status, Actions (View, Edit, Remove).
+
+Validation
+- Required: Medication Name, Dosage, Frequency, Duration, Prescriber.
+- Inline validation messages; empty prescriptions cannot be finalized.
+
+Prescription Actions
+- Save Draft: keeps prescription editable.
+- Finalize Prescription: changes status to Finalized.
+- Print Preview: opens print preview.
+- Cancel: discards editor.
+- After Finalized, editing shows a warning and is treated as an amendment (original is preserved).
+
+Prescription Status
+- Supports: Draft, Finalized, Amended, Cancelled.
+- Uses status badges with text + icon (not color-only).
+- Finalized prescriptions remain in patient history and are never permanently deleted.
+
+Prescription History
+- Section listing past prescriptions.
+- Columns: Date, Medication, Prescriber, Linked Diagnosis, Status, Actions (View, Print, View Amendments).
+- Uses realistic dummy data.
+
+Prescription Detail Panel
+- Side panel opened by clicking a prescription.
+- Displays: Prescription ID, Date, Patient, Prescriber, Medication List, Dosage Instructions, Linked Diagnosis, Linked Treatment, Clinical Notes, Status, Amendment History.
+
+Print Prescription Preview
+- Print-friendly view with: Clinic Logo, Clinic Name, Clinic Contact, Patient Name, Patient Code, Date, Prescriber, Medication Details, Instructions, Prescriber Signature Placeholder, Footer/Disclaimer.
+- No actual PDF generation; uses window.print() only.
+
+Empty State
+- "No prescriptions recorded for this examination."
+- Subtext: "Create a prescription only when clinically required."
+- Button: New Prescription.
+
+Loading State
+- Skeleton medication rows.
+
+Dummy Data
+- Patient: Sofia Martin (PC-1003), Dentist: Dr. Maya.
+- Known Allergy: Penicillin. Medical Condition: Diabetes. Current Medication: Metformin.
+- Example finalized prescription: Ibuprofen 400 mg, As needed, 5 Days, Prescriber Dr. Maya.
+
+Design Requirements
+- Use reusable React components.
+- Suggested components: PrescriptionTab, PrescriptionHeader, PatientSafetyPanel, PrescriptionEditor, MedicationSelector, MedicationList, MedicationRow, AllergyWarningModal, PrescriptionHistory, PrescriptionDetailsPanel, PrescriptionPrintPreview, PrescriptionStatusBadge.
+- Do not redesign existing Examination components.
+
+Future Compatibility
+- Designed to later integrate with: Treatment Execution, Follow-up, Recall, Patient Portal, Telegram Notifications, Billing, Audit Logs, Electronic Prescription Services.
+- No backend logic or real medication recommendation logic. All prescription data is dummy UI data only.
+
+6.6 Progress Notes Section (Phase 6 — Expanded)
 
 Purpose
-- Records ongoing clinical notes during the examination and treatment process.
-- Provides a chronological log of the clinical session.
+- Provides a chronological clinical record (timeline) of important events, findings, procedures, discussions, and follow-up information.
+- Progress Notes should remain available throughout the examination and treatment workflow.
 
-Progress note fields
-- Note Date and Time (auto-filled).
-- Note Type (Examination, Procedure, Follow-up, General).
-- Content (free text with rich text support).
-- Attachments (images, documents, lab results).
+Layout
+- Desktop: Main area Clinical Timeline + right side Note Filters and Recent Activity.
+- Tablet: Stack sidebar sections below main content.
+- Mobile: Single-column. Timeline remains vertical.
 
-Note behavior
-- Notes are time-stamped and attributed to the author.
-- Notes cannot be deleted after saving (only amended).
-- Notes are visible in the patient's clinical history.
+Header
+- Title: Progress Notes.
+- Subtitle: Document chronological clinical notes for this patient's care.
+- Top-right button: + Add Note.
+
+Note Types
+- Supports: Examination, Procedure, Treatment, Follow-up, Patient Communication, Consultation, Referral, General.
+- Uses badges + icons (text + icon, not color-only).
+
+Add Note
+- Opens a modal/editor.
+- Fields: Note Type, Date and Time (auto-filled), Author (auto-filled Dr. Maya), Linked Examination, Linked Diagnosis, Linked Treatment, Content (rich text), Attachments.
+- Rich text support: Bold, Italic, Bullets, Numbered List (no complex document editor).
+
+Attachments
+- UI-only attachment selection with chips/cards: Image, X-ray, PDF, Lab Result, Referral Document, Consent Form.
+- No backend upload implementation.
+
+Clinical Timeline
+- Displays notes newest first by default.
+- Each timeline item: Date, Time, Author, Role, Note Type badge, Content Preview, Linked Record, Attachments, Actions (View, Amend, Print).
+- Example: "18 Jul 2026 / 10:32 AM / Dr. Maya / Examination — Patient reports pain while chewing on upper left molar. Deep caries observed on tooth 26. Linked: Examination EX-2026-0082".
+
+Note Actions
+- View, Amend, Print.
+- NO normal Delete for saved clinical notes (preserved in history).
+
+Amend Note
+- Opens an amendment modal showing Original Note, Original Author, Original Date.
+- Fields: Amendment Reason, Amendment Content. Buttons: Cancel, Save Amendment.
+- After saving: original note unchanged; amendment shown below (Amended By, Amendment Date, Reason, Amended Content).
+
+Note Status / Audit
+- Every saved note displays Created By, Created At, Last Amended By, Last Amended At (if applicable).
+- Supports future clinical audit functionality.
+
+Filters
+- Search Notes, Note Type, Author, Date Range, Linked Diagnosis, Linked Treatment, Reset Filters.
+- Quick filter chips: All, Examination, Treatment, Follow-up, Communication.
+
+Progress Note Detail Panel
+- Side panel: Note Type, Date, Time, Author, Role, Full Content, Linked Examination, Linked Diagnosis, Linked Treatment, Attachments, Amendment History.
+
+Recent Clinical Activity
+- Small right-side timeline card showing UI-only activity (e.g., Progress Note Added 10:32 AM, Treatment Plan Updated 10:15 AM, Diagnosis Added 09:58 AM, Odontogram Updated 09:40 AM).
+
+Empty State
+- "No progress notes recorded yet."
+- Subtext: "Add clinical notes to maintain a chronological record of the patient's care."
+- Button: Add First Note.
+
+Loading State
+- Skeleton timeline cards.
+
+Dummy Data
+- Patient: Sofia Martin, Dentist: Dr. Maya.
+- 1) Examination — Patient reports pain while chewing on upper left molar. Deep caries on tooth 26.
+- 2) Patient Communication — Treatment options and estimated costs discussed with patient.
+- 3) Treatment — Treatment plan prepared for root canal treatment followed by crown restoration on tooth 26.
+
+Design Requirements
+- Use reusable React components.
+- Suggested components: ProgressNotesTab, ClinicalTimeline, ProgressNoteCard, AddProgressNoteModal, ProgressNoteDetailsPanel, AmendNoteModal, ProgressNoteFilters, RecentClinicalActivity, AttachmentCard.
+- Do not redesign existing Examination components.
+
+Clinical Record Rules
+- Saved Progress Notes must not be permanently deleted through normal UI actions.
+- Corrections to saved notes use amendments; original notes remain visible.
+- Every note and amendment shows author and timestamp.
+- Progress Notes support links to diagnoses and treatment items (UI-only relationships).
+
+Future Compatibility
+- Designed to later integrate with: Treatment Execution, Follow-up, Recall, Patient Portal, Audit Logs, Billing.
+- No backend logic. All data is dummy UI data only.
 
 6.7 Diagnosis & Problem List Section
 
@@ -641,6 +785,101 @@ Future Compatibility
 - Cost Estimate is NOT an invoice.
 - No backend logic, real billing, or payment processing.
 - Production-quality UI with realistic dummy data and local UI state.
+
+6.10 Final Review & Complete Examination Section (Phase 7)
+
+Purpose
+- Provides a comprehensive review interface before the examination is finalized.
+- Prevents accidental completion by requiring deliberate review and validation.
+- Supports the workflow: Final Review → Validation → Confirmation → Record Locking.
+
+Layout
+- Opens as a large modal when the "Complete Examination" button in the header is clicked.
+- Never immediately completes the examination when the button is clicked — always shows Final Review first.
+
+Header
+- Title: Review & Complete Examination.
+- Subtitle: Review the clinical record before completing this examination.
+- Displays: Patient Name, Patient Code, Examination ID, Dentist, Examination Type (Periodic), Current Status (In Progress).
+
+Examination Completion Summary
+- Grid display at the top showing 7 sections with icons: Clinical Examination, Dental Chart, X-rays & Images, Diagnosis & Problem List, Treatment Plan & Cost Estimate, Prescription, Progress Notes.
+- Each tile shows section name, icon, and status (Complete / Optional / Incomplete).
+- Uses icons + text labels (not color-only).
+
+Review Section Cards
+- One card per major section.
+- Each card displays: Section Name, Completion Status badge (Complete/Optional/Incomplete), Summary of key data (counts, status, details), Warnings (if any), Review button.
+- Review button navigates to the corresponding tab and closes the modal.
+- Clinical Examination card: Chief Complaint, Clinical Findings, Medical History Reviewed.
+- Odontogram card: Teeth Charted (4), Conditions (4), Needs Treatment (2).
+- X-rays card: Total Images (8), X-rays (5), Clinical Photos (3), Requires Review (2). X-rays are optional — "No diagnostic images attached" with status Optional.
+- Diagnosis card: Total (4), Active (3), Urgent (2), Emergency (0), Resolved (0). Supports "No Clinical Problem Found" toggle which marks diagnosis as Complete.
+- Treatment Plan card: Plan Name, Status (Draft), Procedures (4), Estimated Cost ($820), Approved Amount ($520). Supports "No Treatment Required" toggle.
+- Prescription card: Count (1), Status (Finalized). Prescription is always Optional.
+- Progress Notes card: Total (3), Last Updated time, Author.
+
+Validation System
+- Before allowing completion, validates required clinical information.
+- Blocking issues (must fix before completion): Missing Diagnosis and No "No Clinical Problem Found".
+- Recommendations (does not block): Treatment Plan is Draft.
+- Validation panel shows "Ready to Complete" (green) or "Action Required" (red) with list of issues.
+- Each issue has a "Fix" button that navigates directly to the correct tab.
+
+No Clinical Problem Found
+- Checkbox toggle: when checked, sets diagnosis section to Complete with summary "No Clinical Problem Found."
+- Allows examination completion without creating a fake diagnosis.
+
+No Treatment Required
+- Checkbox toggle: when checked, sets treatment section to Optional with "No Treatment Required."
+- Does not require an empty treatment plan.
+
+Unsaved Changes Check
+- Before completing, checks for unsaved changes.
+- If unsaved changes exist: warning modal with buttons "Return and Save", "Discard Unsaved Changes", "Cancel".
+
+Complete Examination Confirmation
+- Enable "Complete Examination" button only when all blocking issues are resolved.
+- Clicking opens a confirmation modal with: Patient, Examination ID, Dentist, Date.
+- Buttons: Cancel, Complete Examination.
+- Requires explicit confirmation.
+
+Completion Result
+- On confirmation: status changes from "In Progress" to "Completed".
+- Success message: "Examination Completed" with subtitle "The clinical examination has been successfully completed."
+
+Record Locking
+- After completion: the "Complete Examination" button is removed from the header.
+- Locked Record banner displays: "Locked Clinical Record" with completion date and user.
+
+Amendment Workflow
+- Completed records may need corrections via "Add Amendment" (never overwrite original).
+- Fields: Amendment Reason (required), Amendment Notes (optional).
+- Each amendment displays: date, author, reason, notes.
+- Amendment History panel lists all amendments with "Add Amendment" button.
+
+Status Log
+- Chronological event list: Examination Created, Started, Clinical Exam Saved, Odontogram Updated, X-rays Uploaded, Diagnosis Added, Treatment Plan Created, Prescription Finalized, Progress Note Added, Examination Completed.
+- Each event: Date, Time, User, Action.
+
+Post-Completion Actions
+- After completion: "Next Steps" section with buttons: View Completed Examination, Print Clinical Summary, Schedule Approved Treatment (if treatment exists), Start Treatment (placeholder), Return to Appointments, View Patient Profile.
+- If "No Treatment Required": additional message "No active treatment required. Routine examination with no significant clinical findings."
+- Schedule Approved Treatment: shows approved/proposed treatment items with procedure, tooth, duration, dentist. "Continue to Scheduling" button (placeholder).
+
+Clinical Summary Print Preview
+- Print-friendly view with: Clinic Information, Patient Information, Examination Date, Dentist, Chief Complaint, Summary of Findings, Diagnoses, Recommended Treatments, Estimated Treatment Cost, Prescription Summary, Follow-up Recommendation.
+- Print button uses window.print(). No PDF generation.
+
+Design Requirements
+- Use reusable React components.
+- Suggested components: ExaminationFinalReview, ExaminationReviewHeader, ExaminationCompletionSummary, ReviewSectionCard, ExaminationValidationPanel, CompletionIssueItem, CompleteExaminationModal, ExaminationCompletedView, LockedRecordBanner, AddAmendmentModal, AmendmentHistory, ExaminationStatusLog, PostCompletionActions, ClinicalSummaryPrintPreview.
+- Do not redesign existing Phase 1–6 components.
+
+Future Compatibility
+- Designed to later integrate with: Treatment Execution, Appointment Scheduling, Billing & Payment, Recall/Follow-up, Referrals, Lab Orders, Insurance, Patient Portal, Telegram Notifications, Audit Logs.
+- No backend implementation in this phase.
+- All data is dummy UI data with local UI state.
 
 6.9 X-rays & Clinical Images Section
 
@@ -1022,3 +1261,50 @@ A well-designed Examination / Treatment Planning module should support:
 - Enhanced continuity of care across multiple visits and providers.
 - Clear audit trail for clinical records and treatment decisions.
 - Increased patient understanding and acceptance of treatment plans.
+
+14. TREATMENT EXECUTION & CLINICAL PROCEDURES (PHASE 8)
+
+The Treatment Execution module allows the dentist to record clinical procedures, anesthesia, materials/consumables, and prescriptions during active treatment.
+
+14.1 Patient Context & Alerts
+- Display patient name, code, age, sex, and appointment details.
+- Highlight allergies (e.g. Penicillin) and medical alerts in prominent high-contrast alerts.
+- Quick links to Patient Profile, Odontogram, X-rays, and Previous Notes.
+
+14.2 Today's Treatment Plan List
+- Lists all planned procedures for the current session.
+- Displays tooth area, surfaces, priority, estimated price, and status.
+- Action to "Start Procedure" or "Resume" active treatment.
+
+14.3 Active Procedure Recording Drawer
+- Real-time procedure tracking (Responsible Dentist, Start Time, Tooth/Surface context).
+- Required fields: Clinical Notes (validation enforced before completion).
+- Supports Quantity and Duration adjustments.
+- Complications field for auditing special clinical incidents.
+
+14.4 Anesthesia Section
+- Optional toggled section.
+- Fields for: Drug (selection list), Dosage, Quantity (cartridges), Injection Site, and clinical Notes.
+
+14.5 Consumables / Materials Section
+- Supports adding multiple consumable materials/products.
+- Select from catalog options (e.g., Composite Resins, Bonding Agent, Sutures).
+- Tracks quantity used and Batch/Lot number for inventory auditing.
+
+14.6 Procedure Attachments Section
+- Supports uploading Clinical Images and X-ray files for the specific procedure.
+- Secure attachment management (each file is associated with the active procedure execution).
+
+14.7 Prescription Section
+- Supports adding multiple medicine prescriptions directly during the procedure.
+- Tracks Medicine Name, Dosage, Frequency, Duration, and custom Instructions.
+
+14.8 Treatment Summary View
+- Detailed session review showing Completed, In Progress, and Remaining planned procedures.
+- Editable fields for: Final Treatment Notes, Recommendations, and Post-Operative Instructions.
+- Consolidated lists of all prescriptions and attachments.
+
+14.9 Complete Visit Validation
+- Multi-state validation before final completion.
+- Flags unfinished or in-progress procedures so they remain available for future appointments.
+- Confirms billable status for all completed procedures to initiate the Billing workflow.

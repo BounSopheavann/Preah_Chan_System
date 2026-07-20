@@ -1,0 +1,673 @@
+PATIENTS MODULE UI SPECIFICATION
+Dental Clinic Management System
+
+====================================================
+1. PAGE OVERVIEW
+====================================================
+
+Purpose
+The Patients page is the central record-management area for the dental clinic. It is used to create, search, review, update, and follow up with patient records across the entire care lifecycle.
+
+Who uses it
+- Receptionists use it to register new patients, find existing patients, and prepare them for appointments.
+- Dentists use it to review medical history, treatment history, notes, and upcoming visits.
+- Assistants use it to check patient details before procedures and assist with documentation.
+- Administrators use it to oversee the patient database, resolve duplicates, and manage access.
+
+Why it exists
+- To keep a single source of truth for every patient.
+- To reduce manual paper handling and duplicated records.
+- To connect registration, appointments, treatment, billing, and recalls in one workflow.
+
+How it fits into clinic workflow
+- A patient is created at reception or imported from a prior system.
+- The record is reviewed in the patient table or profile page.
+- Appointments, treatment plans, invoices, and recall reminders all link back to the same patient record.
+- The page acts as the entry point for almost every downstream clinical and financial action.
+
+====================================================
+2. PAGE LAYOUT
+====================================================
+
+Overall structure
+The page uses a full-width dashboard layout with a fixed application shell, a page header, action controls, a searchable table, and contextual interactions such as modals and side panels.
+
+Header
+- Located at the top of the page content area.
+- Contains the page title, patient count, and primary actions.
+- Keeps important actions visible without forcing users into the table.
+
+Breadcrumb
+- Sits below or near the page title.
+- Shows navigation context such as Dashboard > Patients.
+- Helps users understand where they are within the clinic system.
+
+Search bar
+- Positioned in the header area or directly above the table.
+- Supports quick lookup by multiple patient identifiers.
+
+Filter bar
+- Located next to or below search.
+- Provides structured filtering by patient attributes and status.
+
+Action buttons
+- Positioned to the right of the header or in a compact action group.
+- Includes Add Patient, Import, and Export actions.
+
+Patient table
+- Main content block.
+- Displays patient records in rows with sortable columns and row-level actions.
+
+Pagination
+- Located below the table.
+- Supports navigation through large patient datasets.
+
+Side panels
+- Optional slide-in panel for quick patient preview, action confirmation, or export configuration.
+- Should not block the whole page unless the action is destructive.
+
+Empty state
+- Shown when no patients exist or when filters return no results.
+- Encourages the user to create or import a patient.
+
+Loading state
+- Shown during data fetches, filtering, or table refresh.
+- Uses skeleton rows or shimmer placeholders.
+
+====================================================
+3. HEADER
+====================================================
+
+Page title
+- Label: Patients.
+- Indicates the current module and the main function of the page.
+
+Total patient count
+- Shows the number of visible records or the total count in the system.
+- Updates when search or filters are applied.
+- Helps users understand the size of the current result set.
+
+Add Patient button
+- Primary button.
+- Opens the New Patient form.
+- Used by receptionists and administrators to register a new patient.
+
+Import button
+- Opens an import flow for bulk patient upload.
+- Used when migrating records or loading patient lists from external files.
+
+Export button
+- Opens export options for CSV, Excel, or PDF, depending on system support.
+- Useful for reporting, backups, and administrative review.
+
+Search
+- Quick access search is often placed in the header for immediate lookup.
+- Accepts name, ID, phone, telegram handle, or partial patient details.
+
+====================================================
+4. SEARCH & FILTERS
+====================================================
+
+Search by name
+- Searches the patient first name, last name, and full name.
+- Supports partial matches and case-insensitive input.
+- Results should update as the user types or on Enter, depending on system performance.
+
+Patient ID
+- Finds a patient by their unique patient code or system ID.
+- Useful for fast retrieval from printed slips, phone calls, and referrals.
+
+Phone
+- Searches primary phone number and, if allowed, secondary phone number.
+- Supports partial matching to help users find a patient from memory.
+
+Telegram
+- Searches linked Telegram contact or handle.
+- Can also be used to confirm whether a patient has a communication channel enabled.
+
+Dentist
+- Filters patients by assigned dentist or most recent treating dentist.
+- Useful for clinic scheduling and patient ownership workflows.
+
+Status
+- Filters by record status such as Active, Inactive, Archived, Pending Verification, or New.
+- Helps staff focus on current care records.
+
+Date registered
+- Filters patients by registration date or date range.
+- Useful for new patient tracking and reporting.
+
+Gender
+- Filters by selected gender values supported by the clinic system.
+- Helpful for demographic analysis and operational filtering.
+
+Filter behavior
+- Filters can be combined.
+- Search and filter results should update the table without losing the current page context unless the result set changes significantly.
+- Active filters should be visible as chips or tags that can be cleared individually.
+- A Reset Filters action should restore the default list.
+
+====================================================
+5. PATIENT TABLE
+====================================================
+
+Table behavior
+- The table is the main browsing surface for the Patients module.
+- Columns should be sortable where meaningful.
+- Rows should be clickable or provide a quick view action, but destructive actions should remain explicit.
+
+Patient ID
+- Purpose: Unique identifier for the patient record.
+- Example value: PT-000145
+
+Avatar
+- Purpose: Visual identification aid.
+- Example value: A colored circle with initials or a profile photo if available.
+
+Full Name
+- Purpose: Primary display name for the patient.
+- Example value: Sok Phearith
+
+Phone
+- Purpose: Main contact number for calls and reminders.
+- Example value: +855 12 345 678
+
+Gender
+- Purpose: Demographic detail used for display and filtering.
+- Example value: Female
+
+Age
+- Purpose: Quick age reference for clinical review.
+- Example value: 34
+
+Last Visit
+- Purpose: Shows the most recent appointment or treatment date.
+- Example value: 12 Jul 2026
+
+Next Appointment
+- Purpose: Displays upcoming booking information.
+- Example value: 18 Jul 2026, 10:30 AM
+
+Outstanding Balance
+- Purpose: Indicates unpaid invoices or open billing items.
+- Example value: $120.00
+
+Telegram Status
+- Purpose: Shows whether the patient has Telegram linked, pending, or unavailable.
+- Example value: Connected
+
+Status
+- Purpose: Indicates record state.
+- Example value: Active
+
+Actions
+- Purpose: Offers row-level operations.
+- Example value: View, Edit, Book, Delete
+
+Recommended row presentation
+- Patient name should be visually stronger than secondary metadata.
+- Financial values should be easy to scan and visually distinguishable.
+- Status and Telegram state should use badges for fast recognition.
+
+====================================================
+6. ACTION BUTTONS
+====================================================
+
+View
+- Opens the Patient Profile page.
+- Should be available to all roles with read access.
+- Navigation should preserve the originating search and filter state where possible.
+
+Edit
+- Opens the patient edit form.
+- Available only to users with editing permission.
+- Should preload existing patient data.
+
+Book Appointment
+- Opens a booking modal or redirects to the appointment creation flow with the patient already selected.
+- Used by receptionists, assistants, and authorized administrators.
+
+Treatment History
+- Opens the patient profile at the treatment or history section.
+- Gives quick access to past procedures and care notes.
+
+Billing
+- Opens invoices, payments, or outstanding balance details for the patient.
+- Used by front desk and billing roles.
+
+Files
+- Opens uploaded documents, x-rays, consent forms, and attachments.
+- Used by clinical and administrative users with file access.
+
+Telegram
+- Opens a communication action such as message, link, or sync state.
+- If not connected, the action should show setup or linking guidance.
+
+Delete
+- Opens a confirmation modal before removal.
+- Restricted to users with deletion permission.
+- Should require explicit confirmation because it affects record integrity.
+
+====================================================
+7. PATIENT PROFILE
+====================================================
+
+Page purpose
+The Patient Profile page is the detailed record view for one patient. It consolidates all clinical, administrative, and financial information in a single place.
+
+Layout
+- Top summary area with patient identity and key status badges.
+- Tabbed content sections for different aspects of the patient record.
+- Persistent quick actions for booking, editing, billing, and communication.
+
+Overview tab
+- Shows patient summary, contact information, key alerts, recent appointments, balance, and notes.
+- Designed for fast first review by reception and clinicians.
+
+Medical History tab
+- Contains health conditions, allergies, medications, risks, and prior clinical observations.
+- Supports safe treatment decisions.
+
+Appointments tab
+- Lists upcoming and past appointments with status, provider, date, and visit reason.
+- Helps staff monitor continuity of care.
+
+Treatment Plans tab
+- Displays active and completed treatment plans, progress, and planned procedures.
+- Useful for case management and patient communication.
+
+Clinical Notes tab
+- Stores narrative notes from dentists and assistants.
+- Should be time-stamped and attributed to the author.
+
+Files tab
+- Holds attachments such as scans, x-rays, forms, and consent documents.
+- Supports view, download, and upload actions where permitted.
+
+Invoices tab
+- Shows all billed items, invoice statuses, totals, and payment history summaries.
+- Helps front desk users answer payment questions quickly.
+
+Payments tab
+- Lists payments made, payment method, reference number, and applied invoices.
+- Useful for accounting and reconciliation.
+
+Recalls tab
+- Displays follow-up reminders, recall schedules, and overdue recall items.
+- Supports long-term patient retention.
+
+Telegram tab
+- Shows communication status, linked account details, message history summary, and contact actions.
+- Useful when the clinic uses Telegram for reminders or confirmations.
+
+====================================================
+8. NEW PATIENT FORM
+====================================================
+
+Form purpose
+The New Patient form creates a new record with the minimum data needed for care, communication, and identification.
+
+Patient Code
+- Usually auto-generated.
+- May be editable only for admin or import workflows.
+- Must remain unique.
+
+Name
+- Required.
+- Should support first name and last name, or a single full-name field depending on system design.
+- Must not be blank.
+
+Gender
+- Required or conditionally required depending on clinic policy.
+- Uses a selectable list rather than free text.
+
+DOB
+- Required for accurate age calculation and identity verification.
+- Must not be a future date.
+
+Phone
+- Required in most clinic workflows.
+- Should validate length and format.
+- Must be checked for duplicates.
+
+Email
+- Optional unless the clinic requires digital communication.
+- Should validate standard email format.
+
+Address
+- Optional but recommended for contact and follow-up.
+- Can support multi-line input.
+
+Emergency Contact
+- Name and phone for urgent situations.
+- Should be easy to locate on the form.
+
+Medical Condition
+- Used to record important health risks or chronic conditions.
+- Can be a free-text field or structured list.
+
+Allergies
+- Critical for safe treatment.
+- Should be clear and easy to notice.
+
+Medication
+- Records current medications and supplements.
+- Helps with treatment planning and risk review.
+
+Consent
+- Captures the patient consent state or acknowledgment.
+- May be represented by a checkbox or consent date.
+
+Preferred Contact Method
+- Used to choose phone, Telegram, email, or other supported channels.
+- Should match actual communication tools in the system.
+
+Validation
+- Required fields must be highlighted immediately if missing.
+- Duplicate phone numbers should trigger a warning or block save depending on policy.
+- DOB and contact fields should be validated before submission.
+
+Save process
+- Save creates the patient record and returns the user to the profile or list view.
+- Success should show a confirmation message.
+- If save fails, the form should retain entered data.
+
+====================================================
+9. EDIT PATIENT
+====================================================
+
+How editing works
+- The Edit Patient form opens with the current patient details prefilled.
+- Users can update permitted fields based on role and clinic policy.
+
+Editable fields
+- Common editable fields include name, gender, DOB, contact details, address, emergency contact, medical details, consent, and preferred contact method.
+- Patient ID may be read-only unless a special admin process is allowed.
+
+Audit history
+- Changes should be recorded with timestamp, user, and field-level change history where possible.
+- This is important for accountability and medical record integrity.
+
+Save
+- Updates the existing record instead of creating a new one.
+- Success should confirm that the patient profile has been updated.
+
+Cancel
+- Discards unsaved changes and returns to the previous view.
+- If unsaved changes exist, the system should warn the user before leaving.
+
+====================================================
+10. PATIENT WORKFLOW
+====================================================
+
+New Patient
+-> A new patient is registered at the front desk or from a referral.
+
+Save
+-> The record is validated, stored, and assigned a unique patient code.
+
+Patient Profile
+-> The user reviews profile information, medical history, and contact details.
+
+Book Appointment
+-> The patient is scheduled for a visit with the appropriate dentist or service.
+
+Treatment
+-> The patient receives clinical care, notes, and related documentation.
+
+Billing
+-> Procedures are invoiced, payments are recorded, and balances are tracked.
+
+Recall
+-> Follow-up reminders are created to bring the patient back for review or maintenance.
+
+====================================================
+11. INTERACTIONS
+====================================================
+
+Hover effects
+- Table rows should highlight on hover to show interactivity.
+- Buttons should show subtle visual feedback.
+- Action icons may reveal tooltips.
+
+Click effects
+- Buttons and rows should feel responsive with immediate feedback.
+- Destructive actions should not execute without confirmation.
+
+Loading animations
+- Use skeleton loading for table rows and summary cards.
+- Show a spinner or progress indicator for imports, exports, and saves.
+
+Pagination
+- Supports next, previous, and page number navigation.
+- Should preserve search and filter state.
+
+Sorting
+- Clicking a sortable column header changes order ascending or descending.
+- Visual indicators should show the current direction.
+
+Searching
+- Search should feel fast and support partial input.
+- Results should refresh smoothly without confusing resets.
+
+Filtering
+- Filters should be additive and clearly visible when active.
+- Clearing one filter should not remove unrelated filters.
+
+====================================================
+12. MODALS
+====================================================
+
+Delete Confirmation
+- Confirms that the user wants to remove a patient record.
+- Shows the patient name and a warning about consequences.
+- Requires an explicit confirm action.
+
+Book Appointment
+- Opens quick scheduling for the selected patient.
+- Should prefill patient identity and then let the user choose provider, date, time, and reason.
+
+Patient Details
+- Provides a compact read-only preview from the table.
+- Useful for rapid checks without leaving the list view.
+
+Telegram Link
+- Explains how to connect or verify Telegram communication.
+- May include link setup, QR scan, or status verification instructions.
+
+====================================================
+13. RESPONSIVE DESIGN
+====================================================
+
+Desktop
+- Full table view with multiple visible columns.
+- Header actions remain visible.
+- Side panels can appear without taking over the full screen.
+
+Tablet
+- Some secondary columns may collapse or move into a details drawer.
+- Table spacing should remain comfortable and readable.
+- Action buttons may condense into an overflow menu.
+
+Mobile
+- The table should transform into stacked cards or a simplified list.
+- Primary identifiers, contact info, status, and actions should stay visible.
+- Filters may move into a slide-up panel or drawer.
+- Modals should fill most of the screen while staying easy to close.
+
+====================================================
+14. DESIGN SYSTEM
+====================================================
+
+Colors
+- Use a calm clinical palette with strong contrast.
+- Primary actions should be visually distinct from secondary actions.
+- Status colors should be consistent across the system.
+
+Typography
+- Use a clean, readable sans-serif style.
+- Patient names should be larger and more prominent than metadata.
+- Labels and secondary text should be smaller and muted.
+
+Glassmorphism
+- If used, it should be subtle and not reduce readability.
+- Blur and translucency should never interfere with legibility of table content.
+
+Spacing
+- Spacing should support scanability and avoid clutter.
+- Related information should be grouped clearly.
+
+Cards
+- Summary cards should feel like controlled clinic panels, not decorative widgets.
+- Use cards for overview, counts, or quick actions.
+
+Buttons
+- Primary, secondary, and destructive styles should be clearly separated.
+- Buttons should be large enough for fast front-desk use.
+
+Icons
+- Icons should support scanning but never replace meaningful text alone.
+- Common icons include search, add, edit, view, calendar, file, message, and delete.
+
+Tables
+- Table headers should be distinct.
+- Zebra striping or subtle row separation may be used if it improves readability.
+
+Badges
+- Use badges for status, Telegram connection state, and risk indicators.
+- Badges should be compact and easy to interpret at a glance.
+
+====================================================
+15. USER PERMISSIONS
+====================================================
+
+Administrator
+- Full access to create, edit, view, delete, import, export, and manage all patient data.
+- Can see audit history and resolve duplicates.
+
+Receptionist
+- Can create patients, search records, edit contact details, book appointments, and view profile summaries.
+- May not delete or change sensitive clinical notes unless allowed by clinic policy.
+
+Dentist
+- Can view full patient profiles, medical history, treatment plans, clinical notes, and related documents.
+- May edit clinical records and notes, but not administrative settings.
+
+Assistant
+- Can view patient records relevant to procedures and assist with documentation.
+- Editing may be limited to assigned operational fields.
+
+====================================================
+16. ERROR STATES
+====================================================
+
+Patient not found
+- Show a clear empty or error state with a short explanation.
+- Offer a way to clear search or return to the full list.
+
+Duplicate phone
+- Warn the user that the phone number already exists in another patient record.
+- Offer review or merge guidance if supported.
+
+Missing required fields
+- Highlight missing fields inline.
+- Prevent save until required data is entered.
+
+Failed save
+- Show an error message and keep the form values intact.
+- Allow the user to retry without re-entering data.
+
+Network error
+- Inform the user that the system cannot reach the server.
+- Preserve the current working state when possible.
+
+====================================================
+17. FUTURE FEATURES
+====================================================
+
+QR patient card
+- Allow quick patient lookup and check-in using a QR code.
+
+Advanced filters
+- Add more powerful filters such as balance range, recall status, and assigned provider.
+
+Bulk actions
+- Support multi-select for export, status updates, or communication tasks.
+
+Patient tags
+- Add custom tags such as VIP, High Risk, Recall Due, or Insurance Pending.
+
+Favorite patients
+- Let staff pin frequently used records for faster access.
+
+Archived patients
+- Separate archived records from active patient management.
+
+Patient timeline
+- Show a unified chronological history of visits, notes, billing, and communications.
+
+====================================================
+18. COMPLETE USER JOURNEY
+====================================================
+
+Step 1: Create patient
+- Receptionist opens Add Patient and enters the required personal and contact information.
+
+Step 2: Validate and save
+- The system checks required fields, duplicates, and format rules before saving.
+
+Step 3: Access profile
+- The newly created patient appears in the list and opens into a detailed profile page.
+
+Step 4: Review history
+- Clinicians review medical history, allergies, and existing documents before care begins.
+
+Step 5: Book appointment
+- The patient is scheduled for a consultation or treatment session.
+
+Step 6: Deliver treatment
+- The dentist records notes, procedures, and treatment progress.
+
+Step 7: Bill and collect payment
+- Billing is generated, payments are recorded, and any balance is tracked.
+
+Step 8: Plan follow-up
+- A recall date or reminder is created to bring the patient back for review or maintenance.
+
+Step 9: Ongoing care
+- The patient returns for future visits, and the record becomes the long-term clinic history for that person.
+
+End goal
+- The entire module should support accurate registration, safe treatment, efficient billing, and reliable follow-up while keeping every patient record easy to find and easy to trust.
+
+====================================================
+19. CURRENT IMPLEMENTATION STATUS
+====================================================
+
+The Patients module has been fully implemented with the following components:
+
+- **PatientsModule** (`components/patients/patients-module.tsx`): Main orchestrator with search, filters, sortable table, pagination, patient modal (add/edit), patient profile drawer (tabbed view), Telegram QR modal.
+
+- **Patient Data** (`components/patients/patient-data.ts`): 10+ dummy patient records with realistic data (name, code, contact, medical history, appointments, invoices, payments, files).
+
+- **Patient Table** (`components/patients/patient-table.tsx`): Sortable table with columns — Avatar (initials with gradient), Full Name, Patient Code, Phone, Gender, Age, Last Visit, Next Appointment, Outstanding Balance, Telegram Status (Connected/Pending/Not Linked badges), Status (Active/Inactive), Actions (View, Edit, Book Appointment, Generate QR, Deactivate, Copy Code). Sorting by all meaningful columns. Search + filters (Status, Gender, Consent). Pagination (6 per page). Loading skeleton. Empty state.
+
+- **Patient Profile Drawer** (`components/patients/patient-profile-drawer.tsx`): Slide-in drawer with tabbed navigation — Overview, Medical History, Appointments, Treatment Plans, Clinical Notes, Files, Invoices, Payments, Recalls, Telegram. Shows full patient data including medical conditions, allergies, medications, appointment history, invoices list, payments list, files.
+
+- **Patient Modal (Add/Edit)** (`components/patients/patient-modal.tsx`): Full form with fields — Full Name, Gender, DOB, Phone, Email, Address, Emergency Contact Name/Phone, Allergies, Medical Conditions, Current Medication, Consent Status, Preferred Contact Method. Validation on required fields. Auto-generates patient code. Saves to local UI state.
+
+- **Patient Search Bar** (`components/patients/patient-search-bar.tsx`): Search by name, code, or phone with deferred value.
+
+- **Patient Filters** (`components/patients/patient-filters.tsx`): Status, Gender, Consent filters. Reset filters action.
+
+- **Patient Avatar** (`components/patients/patient-avatar.tsx`): Gradient circle with initials.
+
+- **Telegram QR Modal** (`components/patients/patients-module.tsx`): QR code preview modal for Telegram linking (UI-only).
+
+- **Summary Cards**: 3 cards at top — Total patients, Active records, Open balances.
+
+- **Pagination** (`components/patients/pagination.tsx`): Page navigation with previous/next and page numbers.
+
+====================================================
+END OF PATIENTS UI SPECIFICATION
+====================================================

@@ -8,18 +8,25 @@ import {
   CornerDownLeft,
   CornerDownRight,
   FileText,
+  NotebookPen,
+  Pill,
   Radio,
   RotateCcw,
   Scan,
   Stethoscope,
   Undo2,
   X,
+  CheckCircle2,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { XrayImagesSection } from './xray-images/xray-images-section';
 import { DiagnosisTab } from './diagnosis/diagnosis-tab';
 import { TreatmentPlanTab } from './treatment/treatment-plan-tab';
+import { PrescriptionTab } from './prescription/prescription-tab';
+import { ProgressNotesTab } from './progress-notes/progress-notes-tab';
+import { ExaminationFinalReview } from './final-review/examination-final-review';
+import { AmendmentRecord, StatusLogEvent, createSeedStatusLog } from './final-review/final-review-data';
 
 const SURFACES = ['occlusal', 'mesial', 'distal', 'buccal', 'lingual'] as const;
 type SurfaceKey = (typeof SURFACES)[number];
@@ -278,7 +285,7 @@ const filterForCondition = (condition: ConditionKey, group: string) => {
 };
 
 export function ClinicalExaminationPage() {
-  const [activeTab, setActiveTab] = useState<'odontogram' | 'xrays' | 'diagnosis' | 'treatment'>('odontogram');
+  const [activeTab, setActiveTab] = useState<'odontogram' | 'xrays' | 'diagnosis' | 'treatment' | 'prescription' | 'progress'>('odontogram');
   const [records, setRecords] = useState<ToothMap>(initialRecords);
   const [selectedTooth, setSelectedTooth] = useState<number | null>(26);
   const [selectedSurfaces, setSelectedSurfaces] = useState<SurfaceKey[]>(['occlusal', 'distal']);
@@ -289,6 +296,13 @@ export function ClinicalExaminationPage() {
   const [history, setHistory] = useState<Snapshot[]>([buildSnapshot(initialRecords, 26, ['occlusal', 'distal'], 'Caries', 'Root Canal', 'Deep distal caries with pain during percussion.')]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [examinationStatus, setExaminationStatus] = useState<'In Progress' | 'Completed'>('In Progress');
+  const [noClinicalProblem, setNoClinicalProblem] = useState(false);
+  const [noTreatmentRequired, setNoTreatmentRequired] = useState(false);
+  const [amendments, setAmendments] = useState<AmendmentRecord[]>([]);
+  const [statusLog, setStatusLog] = useState<StatusLogEvent[]>(createSeedStatusLog());
+  const [unsavedChanges, setUnsavedChanges] = useState(false);
 
   const selectedRecord = selectedTooth ? records[selectedTooth] : null;
 
@@ -443,6 +457,12 @@ export function ClinicalExaminationPage() {
           <ToolbarButton label="Redo" icon={<CornerDownRight className="size-4" />} onClick={() => setHistoryIndex((current) => Math.min(history.length - 1, current + 1))} />
           <ToolbarButton label="Clear Selection" icon={<X className="size-4" />} onClick={clearSelection} />
           <ToolbarButton label="Reset All" icon={<RotateCcw className="size-4" />} onClick={resetAll} />
+          {examinationStatus === 'In Progress' && (
+            <Button onClick={() => setReviewOpen(true)}>
+              <CheckCircle2 className="mr-1.5 size-4" />
+              Complete Examination
+            </Button>
+          )}
         </div>
       </div>
 
@@ -490,19 +510,43 @@ export function ClinicalExaminationPage() {
           <Stethoscope className="size-4" />
           Diagnosis
         </button>
-        <button
-          type="button"
-          className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
-            activeTab === 'treatment'
-              ? 'bg-primary text-primary-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
-          }`}
-          onClick={() => setActiveTab('treatment')}
-        >
-          <FileText className="size-4" />
-          Treatment Plan
-        </button>
-      </div>
+          <button
+            type="button"
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
+              activeTab === 'treatment'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+            }`}
+            onClick={() => setActiveTab('treatment')}
+          >
+            <FileText className="size-4" />
+            Treatment Plan
+          </button>
+          <button
+            type="button"
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
+              activeTab === 'prescription'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+            }`}
+            onClick={() => setActiveTab('prescription')}
+          >
+            <Pill className="size-4" />
+            Prescription
+          </button>
+          <button
+            type="button"
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
+              activeTab === 'progress'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+            }`}
+            onClick={() => setActiveTab('progress')}
+          >
+            <NotebookPen className="size-4" />
+            Progress Notes
+          </button>
+        </div>
 
       {activeTab === 'odontogram' && (
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
@@ -638,6 +682,34 @@ export function ClinicalExaminationPage() {
       {activeTab === 'treatment' && (
         <TreatmentPlanTab />
       )}
+
+      {activeTab === 'prescription' && (
+        <PrescriptionTab />
+      )}
+
+      {activeTab === 'progress' && (
+        <ProgressNotesTab />
+      )}
+
+      <ExaminationFinalReview
+        open={reviewOpen}
+        onClose={() => setReviewOpen(false)}
+        onNavigate={(tab) => setActiveTab(tab)}
+        odontogramRecords={records}
+        noClinicalProblem={noClinicalProblem}
+        noTreatmentRequired={noTreatmentRequired}
+        unsavedChanges={unsavedChanges}
+        onComplete={(result) => {
+          setExaminationStatus('Completed');
+          setStatusLog(result.statusLog);
+          setAmendments(result.amendments);
+        }}
+        onAddAmendment={(amendment) => setAmendments((prev) => [...prev, amendment])}
+        existingAmendments={amendments}
+        existingStatusLog={statusLog}
+        onSetNoClinicalProblem={setNoClinicalProblem}
+        onSetNoTreatmentRequired={setNoTreatmentRequired}
+      />
     </div>
   );
 }

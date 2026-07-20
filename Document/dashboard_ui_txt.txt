@@ -1,0 +1,743 @@
+DASHBOARD MODULE UI SPECIFICATION
+Dental Clinic Management System
+
+====================================================
+1. PAGE OVERVIEW
+====================================================
+
+Purpose
+The Dashboard page is the main landing and operational overview hub for the dental clinic. It provides a real-time summary of clinic activity, key performance metrics, today's schedule, waiting patients, quick actions, patient recalls, and recent activity — all in one place.
+
+Who uses it
+- Receptionists use it to monitor daily appointments, check in patients, and access quick actions.
+- Dentists use it to review their daily schedule, see waiting patients, and check recall reminders.
+- Assistants use it to coordinate patient flow and view upcoming tasks.
+- Administrators use it to monitor clinic performance, revenue, outstanding balances, and overall operations.
+
+Why it exists
+- To give staff an at-a-glance overview of the clinic's current state.
+- To centralize key information so users don't need to navigate multiple pages for basic updates.
+- To provide quick access to common actions like registering a patient, scheduling, or sending messages.
+- To surface important alerts such as overdue recalls, outstanding balances, and waiting patients.
+
+How it fits into clinic workflow
+- The Dashboard is the first page users see after logging in.
+- It aggregates data from Patients, Appointments, Billing, and Recalls modules.
+- Quick Actions allow staff to jump directly to common tasks without navigating menus.
+- The Activity Timeline provides a chronological feed of recent system events.
+- The page acts as the command center for daily clinic operations.
+
+====================================================
+2. PAGE LAYOUT
+====================================================
+
+Overall structure
+The page uses a full-width dashboard layout with a fixed application shell consisting of a sidebar navigation, top navigation bar, and a scrollable main content area. The content is organized in a responsive grid layout.
+
+Application shell
+- Fixed sidebar on the left (collapsible on mobile).
+- Sticky top navigation bar with search, clock, theme toggle, and notifications.
+- Main content area with padding for the dashboard widgets.
+
+Header
+- Located at the top of the page content area.
+- Contains the page title "Dashboard" and a welcome message.
+- No breadcrumb is used since this is the root page.
+
+Statistics grid
+- Positioned directly below the header.
+- Displays four key metric cards in a responsive grid.
+- Cards show Total Patients, Appointments Today, Today's Revenue, and Outstanding Balance.
+
+Main content grid
+- A two-column layout on large screens (2/3 + 1/3).
+- Left column (larger): Today's Schedule and Waiting Queue.
+- Right column (smaller): Quick Actions, Patient Recalls, and Activity Timeline.
+
+Loading state
+- Components load independently with their own data.
+- Skeleton loading or shimmer effects are used during initial data fetch.
+
+Empty state
+- Each widget handles its own empty state.
+- Statistics show zero values when no data is available.
+- Schedule and queue show appropriate empty messages.
+
+====================================================
+3. SIDEBAR NAVIGATION
+====================================================
+
+Purpose
+The sidebar provides primary navigation across all modules of the clinic system.
+
+Logo and branding
+- Displays the clinic logo image and the brand name "DentalCare".
+- Logo is contained in a rounded square with border.
+
+Navigation menu items
+- Dashboard (active by default) — links to /
+- Patients — links to /patients
+- Appointments — links to /appointments
+- Reports — placeholder link (#)
+- Treatments — placeholder link (#)
+- Settings — placeholder link (#)
+
+Active state
+- The currently active page is highlighted with a primary color background and shadow.
+- Inactive items show a hover effect on mouse-over.
+
+User profile section
+- Located at the bottom of the sidebar.
+- Shows the current user's avatar (initials), name, and role.
+- Example: "Dr. Sarah" with role "Dentist".
+- Includes a Logout button.
+
+Mobile behavior
+- On mobile devices, the sidebar is hidden by default.
+- A hamburger menu button in the top nav toggles the sidebar.
+- A semi-transparent overlay appears behind the sidebar when open.
+- Tapping the overlay closes the sidebar.
+
+Responsive behavior
+- Desktop: sidebar is always visible on the left.
+- Tablet: sidebar can be toggled.
+- Mobile: sidebar slides in from the left as an overlay.
+
+====================================================
+4. TOP NAVIGATION BAR
+====================================================
+
+Purpose
+The top navigation bar provides global controls, search, time display, theme switching, and notifications.
+
+Hamburger menu
+- Visible only on mobile and tablet.
+- Toggles the sidebar open and closed.
+
+Search bar
+- Visible on desktop screens.
+- Placeholder text: "Search patients..."
+- Includes a search icon.
+- Accepts patient name, ID, or other identifiers.
+- Background is muted to blend with the nav bar.
+
+Clock / Time display
+- Shows the current time in 12-hour format (e.g., "02:30 PM").
+- Updates automatically every minute.
+- Visible on screens larger than small (sm breakpoint).
+- Preceded by a clock icon.
+
+Theme toggle
+- Switches between light and dark mode.
+- Uses a sun/moon icon toggle.
+- Persists the user's preference in localStorage.
+
+Notifications
+- Bell icon button.
+- Shows a small red dot indicator for unread notifications.
+- Placeholder for future notification system.
+
+Online status indicator
+- A small green gradient circle indicating the user's online/active status.
+
+====================================================
+5. STATISTICS GRID
+====================================================
+
+Purpose
+The Statistics Grid displays four key performance indicators for quick reference.
+
+Card layout
+- Four cards arranged in a responsive grid.
+- Desktop: 4 columns in a single row.
+- Tablet: 2 columns.
+- Mobile: 1 column (stacked).
+
+Card design
+- Each card has a colored gradient icon, a title, a value, and a change indicator.
+- Cards use a glassmorphism effect with backdrop blur.
+- Hover effect highlights the card border.
+
+Total Patients
+- Icon: Users (blue/cyan gradient).
+- Example value: 1,234.
+- Change indicator: +12% (green badge).
+- Purpose: Shows the total number of registered patients in the system.
+
+Appointments Today
+- Icon: Calendar (cyan/teal gradient).
+- Example value: 18.
+- Change indicator: +3 (green badge).
+- Purpose: Shows the number of appointments scheduled for the current day.
+
+Today's Revenue
+- Icon: DollarSign (teal/green gradient).
+- Example value: $4,820.
+- Change indicator: +8% (green badge).
+- Purpose: Shows the total revenue generated today from completed appointments.
+
+Outstanding Balance
+- Icon: AlertTriangle (green/emerald gradient).
+- Example value: $1,260.
+- Change indicator: 4 overdue (green badge).
+- Purpose: Shows the total outstanding balance from unpaid invoices.
+
+====================================================
+6. TODAY'S SCHEDULE
+====================================================
+
+Purpose
+The Today's Schedule widget displays the list of appointments scheduled for the current day.
+
+Header
+- Title: "Today's Schedule".
+- Subtitle showing the count of appointments (e.g., "5 appointments scheduled").
+- "Add Appointment" button on the right.
+
+Appointment cards
+- Each appointment is displayed as a card with:
+  - A clock icon in a gradient box.
+  - Patient name (bold).
+  - Procedure description.
+  - Status indicator (green checkmark for confirmed, yellow alert for pending).
+  - Time display.
+  - Room assignment.
+
+Status indicators
+- Confirmed: Green checkmark icon (CheckCircle).
+- Pending: Yellow alert icon (AlertCircle).
+
+Appointment data
+- Each card shows:
+  - Patient name (e.g., "John Smith").
+  - Procedure (e.g., "Routine Checkup").
+  - Time (e.g., "09:00 AM").
+  - Room (e.g., "Room 1").
+  - Status (confirmed or pending).
+
+Interaction
+- Cards are clickable (future enhancement).
+- Hover effect highlights the card.
+- The Add Appointment button opens the new appointment form.
+
+Empty state
+- If no appointments are scheduled, a friendly empty message is displayed.
+- Encourages the user to add a new appointment.
+
+====================================================
+7. WAITING QUEUE
+====================================================
+
+Purpose
+The Waiting Queue widget shows patients who have checked in and are waiting for treatment.
+
+Header
+- Title: "Waiting Queue".
+- Subtitle showing the count of waiting patients (e.g., "4 patients waiting").
+- Average wait time badge (e.g., "Avg Wait: 7 min").
+
+Queue items
+- Each patient is displayed as a row with:
+  - Queue number (in a circular badge).
+  - Patient name.
+  - Appointment details (time and procedure).
+  - Wait time.
+
+Priority indicators
+- Normal priority: Default text color.
+- High priority: Orange/warning text color for wait time.
+
+Sorting
+- Queue items are displayed in order of appointment time.
+- High-priority patients may be visually distinguished.
+
+Interaction
+- Hover effect highlights the row.
+- Future enhancement: Click to view patient details or call patient.
+
+Empty state
+- If no patients are waiting, display a friendly empty illustration with the message: "No patients are currently waiting."
+
+====================================================
+8. QUICK ACTIONS
+====================================================
+
+Purpose
+The Quick Actions widget provides shortcut buttons to common clinic tasks.
+
+Layout
+- A 2-column grid of action buttons.
+- Each button has a gradient icon and a label.
+
+Action buttons
+- New Patient — Opens the new patient registration form.
+  - Icon: Plus (blue/cyan gradient).
+- Schedule Recall — Opens the recall scheduling interface.
+  - Icon: Clock (cyan/teal gradient).
+- Call Patient — Opens the patient calling interface.
+  - Icon: PhoneCall (teal/green gradient).
+- Send Message — Opens the messaging interface.
+  - Icon: MessageSquare (green/emerald gradient).
+- Create Invoice — Opens the invoice creation interface.
+  - Icon: FileText (purple/pink gradient).
+- Settings — Opens the system settings.
+  - Icon: Settings (pink/red gradient).
+
+Interaction
+- Each button has a hover effect with scale animation.
+- Background color changes on hover.
+- Icons have a gradient background.
+
+Responsive behavior
+- Desktop: 2 columns.
+- Mobile: 2 columns (compact).
+
+====================================================
+9. PATIENT RECALLS
+====================================================
+
+Purpose
+The Patient Recalls widget displays patients who are due or overdue for follow-up appointments.
+
+Header
+- Title: "Patient Recalls".
+- Badge showing the total number of recalls due (e.g., "4 Due").
+
+Recall items
+- Each recall is displayed as a card with:
+  - Alert icon (red for urgent, yellow for high priority).
+  - Patient name.
+  - Procedure description.
+  - Due date or days overdue.
+
+Priority levels
+- Urgent: Red background and text, for recalls that are overdue.
+- High: Yellow/amber background and text, for recalls due soon.
+
+Scroll behavior
+- The list is scrollable with a maximum height.
+- Scrollbar appears when there are more items than visible space.
+
+View All button
+- A link at the bottom to view all recalls.
+- Navigates to the full Recalls page (future enhancement).
+
+Empty state
+- If no recalls are due, display a message indicating all recalls are up to date.
+
+====================================================
+10. ACTIVITY TIMELINE
+====================================================
+
+Purpose
+The Activity Timeline displays a chronological feed of recent system events and actions.
+
+Header
+- Title: "Recent Activity".
+- Subtitle: "Latest updates from the front desk and clinical team".
+- Event count badge (e.g., "8 events").
+
+Activity items
+Each activity item shows:
+- A colored icon in a circular container.
+- Activity title (bold).
+- Activity description.
+- Timestamp (relative, e.g., "2 min ago").
+
+Activity types and icons
+- Patient Checked In — UserCheck icon (emerald).
+- Appointment Completed — CheckCircle2 icon (sky).
+- Invoice Generated — FileText icon (violet).
+- Payment Received — CreditCard icon (amber).
+- Follow-up Scheduled — CalendarClock icon (cyan).
+- Recall Reminder Sent — BellRing icon (fuchsia).
+- New Patient Registered — UserPlus icon (teal).
+- Appointment Cancelled — XCircle icon (rose).
+
+Expand/Collapse
+- By default, only the 3 most recent activities are shown.
+- A "View More" button expands the list to show more items.
+- A "View Less" button collapses the list back.
+- The list animates with a smooth height transition.
+
+View All link
+- A link to the full Activity Log page (/activity-log).
+- Opens the complete activity history.
+
+Responsive behavior
+- Desktop: Full timeline layout.
+- Tablet/Mobile: Compact layout with truncated text.
+
+====================================================
+11. COMMON UX REQUIREMENTS
+====================================================
+
+Consistency
+- Dashboard widgets use the same visual language as the rest of the clinic system.
+- Status colors, icons, and buttons remain recognizable across the app.
+- Glassmorphism effects are used consistently across all cards.
+
+Accessibility
+- All actions and fields have labels, visible focus states, and keyboard support.
+- Color is not the only means of conveying information.
+- ARIA labels are used for interactive elements.
+
+Responsiveness
+- The dashboard layout adapts from desktop to tablet to mobile.
+- Statistics grid reflows from 4 columns to 2 columns to 1 column.
+- Sidebar collapses on smaller screens.
+- Widgets stack vertically on mobile.
+
+Performance
+- Dashboard loads quickly with minimal initial data.
+- Time display updates efficiently without re-rendering the entire page.
+- Activity timeline animations are smooth.
+
+Error handling
+- If data fails to load, widgets show appropriate error states.
+- The dashboard should remain usable even if some widgets fail.
+
+====================================================
+12. THEME SUPPORT
+====================================================
+
+Light mode
+- Default theme with light backgrounds and dark text.
+- Uses a calm clinical palette with strong contrast.
+- Background color: #f5f7fa.
+
+Dark mode
+- Toggleable via the theme toggle button in the top nav.
+- Dark backgrounds with light text.
+- Background color: #0f172a (slate-900).
+- All cards and surfaces adapt to dark mode.
+
+Theme persistence
+- User preference is stored in localStorage with key 'dental-dashboard-theme'.
+- On page load, the stored preference is applied before rendering.
+- Falls back to system preference if no stored value exists.
+- Theme-color meta tag updates to match the current theme.
+
+Glassmorphism
+- Subtle backdrop blur effect on cards and surfaces.
+- Blur and translucency do not reduce readability.
+- Works in both light and dark modes.
+
+====================================================
+13. SIDEBAR DETAILS
+====================================================
+
+Logo section
+- Displays the clinic logo image (Logo.png).
+- Brand name "DentalCare" in bold text.
+- Close button visible on mobile.
+
+Navigation items
+- Each item has an icon and a label.
+- Active item is highlighted with primary color and shadow.
+- Inactive items show hover state.
+
+Menu items list
+- Dashboard — Calendar icon, links to /
+- Patients — Users icon, links to /patients
+- Appointments — Stethoscope icon, links to /appointments
+- Reports — BarChart3 icon, placeholder
+- Treatments — Pill icon, placeholder
+- Settings — Settings icon, placeholder
+
+User profile
+- User avatar with initials "DR".
+- User name: "Dr. Sarah".
+- User role: "Dentist".
+- Logout button with LogOut icon.
+
+Responsive behavior
+- Desktop: Fixed position, always visible.
+- Tablet/Mobile: Overlay with backdrop, toggled by hamburger menu.
+- Width: 256px (w-64).
+- Transition: Smooth slide animation.
+
+====================================================
+14. TOP NAV DETAILS
+====================================================
+
+Sticky behavior
+- The top nav is sticky and remains visible when scrolling.
+- Has a subtle backdrop blur effect.
+- Border bottom separates it from the content.
+
+Search functionality
+- Only visible on medium screens and above (md breakpoint).
+- Max width: 280px.
+- Placeholder: "Search patients...".
+- Includes a search icon on the left.
+- Background is muted to blend with the nav.
+
+Clock display
+- Shows current time in 12-hour format.
+- Updates every 60 seconds.
+- Visible on small screens and above (sm breakpoint).
+- Preceded by a clock icon.
+
+Theme toggle
+- Toggles between light and dark themes.
+- Icon changes based on current theme.
+- Updates the theme-color meta tag.
+
+Notification bell
+- Bell icon button.
+- Red dot indicator for unread notifications.
+- Placeholder for future notification system.
+
+Online status
+- Small green gradient circle.
+- Indicates the user is active/online.
+
+====================================================
+15. WIDGET INTERACTIONS
+====================================================
+
+Hover effects
+- Statistics cards show border highlight on hover.
+- Schedule items show background change on hover.
+- Queue items show background change on hover.
+- Quick action buttons show scale animation on hover.
+- Recall items maintain their priority color on hover.
+- Activity items show background change on hover.
+
+Click effects
+- Buttons and interactive elements feel responsive with immediate feedback.
+- Quick action buttons have a scale-up animation.
+- Navigation items have active state highlighting.
+
+Loading animations
+- Each widget loads independently.
+- Skeleton loading or shimmer effects are used where appropriate.
+- Initial page load shows a brief loading state.
+
+====================================================
+16. USER PERMISSIONS
+====================================================
+
+Administrator
+- Full access to all dashboard widgets and data.
+- Can view all statistics, schedules, and activity.
+- Can perform all quick actions.
+
+Receptionist
+- Can view statistics, today's schedule, and waiting queue.
+- Can use quick actions for New Patient, Schedule Recall, Call Patient, Send Message.
+- Can view recalls and recent activity.
+
+Dentist
+- Can view today's schedule, waiting queue, and patient recalls.
+- Can use quick actions for Call Patient and Send Message.
+- Can view recent activity relevant to their patients.
+
+Assistant
+- Can view today's schedule and waiting queue.
+- Can use quick actions relevant to their support role.
+- Can view recent activity.
+
+====================================================
+17. ERROR STATES
+====================================================
+
+Data loading failure
+- Widgets show an error state if data cannot be loaded.
+- User is informed that data is temporarily unavailable.
+- Option to retry loading is provided where appropriate.
+
+Empty data
+- Statistics show zero values when no data is available.
+- Schedule shows empty state with option to add appointment.
+- Queue shows empty state with friendly message.
+- Recalls show empty state indicating all recalls are up to date.
+- Activity shows empty state if no recent events exist.
+
+Network error
+- The dashboard should remain functional even if some widgets fail.
+- Failed widgets show an error message without breaking the page layout.
+
+====================================================
+18. FUTURE FEATURES
+====================================================
+
+Real-time updates
+- Live updates for waiting queue and activity timeline.
+- WebSocket or polling for real-time data synchronization.
+
+Advanced statistics
+- More detailed charts and graphs.
+- Historical data comparison.
+- Revenue trends and forecasting.
+
+Customizable widgets
+- Allow users to rearrange dashboard widgets.
+- Option to show/hide specific widgets.
+- Save custom dashboard layouts per user.
+
+Notification center
+- Full notification system with read/unread states.
+- Notification preferences and categories.
+- In-app and push notifications.
+
+Patient search from dashboard
+- Quick patient search that works across all modules.
+- Search results with inline actions.
+
+Calendar integration
+- Interactive calendar view on the dashboard.
+- Drag-and-drop appointment rescheduling.
+
+====================================================
+19. COMPLETE USER JOURNEY
+====================================================
+
+Step 1: Login
+- User logs into the system and is redirected to the Dashboard.
+
+Step 2: Overview
+- User sees the statistics grid with key metrics for the day.
+- Total patients, today's appointments, revenue, and outstanding balance are visible at a glance.
+
+Step 3: Review schedule
+- User scrolls to Today's Schedule to see the day's appointments.
+- Confirmed and pending appointments are clearly marked.
+
+Step 4: Monitor queue
+- User checks the Waiting Queue to see which patients have checked in.
+- Wait times and priorities help manage patient flow.
+
+Step 5: Take action
+- User uses Quick Actions to register a new patient, schedule a recall, or send a message.
+- Common tasks are accessible without navigating away.
+
+Step 6: Check recalls
+- User reviews Patient Recalls to see who is due for follow-up.
+- Urgent recalls are highlighted for immediate attention.
+
+Step 7: Review activity
+- User checks the Activity Timeline for recent system events.
+- Recent check-ins, completions, and payments are visible.
+
+Step 8: Navigate
+- User uses the sidebar to navigate to Patients, Appointments, or other modules for detailed work.
+
+End goal
+- The Dashboard should provide a complete operational snapshot that enables staff to manage the clinic efficiently from a single screen, reducing the need to switch between multiple pages for routine monitoring and quick actions.
+
+====================================================
+20. DESIGN SYSTEM
+====================================================
+
+Colors
+- Use a calm clinical palette with strong contrast.
+- Primary actions use the primary color (blue/indigo).
+- Status colors are consistent across the system:
+  - Green: Confirmed, Completed, Active, Paid.
+  - Yellow/Amber: Pending, Waiting, High priority.
+  - Red: Urgent, Cancelled, Overdue, Alert.
+  - Blue/Cyan: Informational, Booked, In progress.
+
+Typography
+- Use a clean, readable sans-serif style.
+- Page title: 3xl, bold.
+- Widget titles: xl, bold.
+- Values and numbers: 2xl, bold.
+- Labels and secondary text: smaller and muted.
+
+Glassmorphism
+- Subtle backdrop blur effect on cards and surfaces.
+- Blur value: 10px (blur-sm).
+- Translucency does not reduce readability.
+- Works in both light and dark modes.
+
+Spacing
+- Consistent padding (p-6) for all widgets.
+- Gap of 6 (space-y-6) between major sections.
+- Gap of 4 (gap-4) between grid items.
+
+Cards
+- All widgets use rounded-2xl borders.
+- Border color: border-border (theme variable).
+- Background: bg-card (theme variable).
+- Shadow: theme-surface-shadow (custom theme variable).
+
+Buttons
+- Primary: bg-primary with white text and shadow.
+- Secondary: border with background/70.
+- Destructive: red tones for dangerous actions.
+- Buttons are large enough for fast front-desk use.
+
+Icons
+- Icons support scanning but never replace meaningful text alone.
+- Common icons include: search, add, edit, view, calendar, clock, users, bell, settings.
+- All icons use the Lucide React icon library.
+
+====================================================
+21. RESPONSIVE DESIGN
+====================================================
+
+Desktop (lg and above)
+- Full sidebar visible.
+- Statistics grid: 4 columns.
+- Main content: 2/3 + 1/3 grid layout.
+- Search bar visible in top nav.
+- Full table layouts for schedule and queue.
+
+Tablet (md to lg)
+- Sidebar can be toggled.
+- Statistics grid: 2 columns.
+- Main content: single column, stacked.
+- Search bar visible in top nav.
+- Compact card layouts.
+
+Mobile (below md)
+- Sidebar hidden by default, toggled via hamburger menu.
+- Statistics grid: 1 column.
+- Main content: single column, stacked.
+- Search bar hidden in top nav.
+- Card-based layouts for all widgets.
+- Quick actions remain in 2-column grid.
+
+====================================================
+22. SUCCESS METRICS
+====================================================
+
+A well-designed Dashboard module should support:
+- Quick understanding of the clinic's current operational state.
+- Reduced time to find key information (appointments, queue, recalls).
+- Faster access to common tasks through quick actions.
+- Better visibility of patient flow from check-in to treatment.
+- Clear identification of urgent items (overdue recalls, waiting patients).
+- Improved staff coordination through shared visibility of schedule and queue.
+- Reduced need to navigate between multiple pages for daily monitoring.
+
+====================================================
+23. CURRENT IMPLEMENTATION STATUS
+====================================================
+
+The Dashboard module has been fully implemented with the following components:
+
+- **Sidebar** (`components/sidebar.tsx`): Fixed sidebar with clinic logo (PreahChan Dental), navigation items (Dashboard, Patients, Appointments, Reports, Treatments, Settings), active state highlighting, user profile (Dr. Sarah / Dentist), logout button. Mobile overlay with hamburger toggle.
+
+- **Top Navigation Bar** (`components/top-nav.tsx`): Sticky top bar with hamburger menu (mobile), search bar, clock display (12-hour format, auto-updates), theme toggle (light/dark with localStorage persistence), notification bell, online status indicator.
+
+- **Statistics Grid** (`components/statistics-grid.tsx`): 4 responsive cards — Total Patients (1,234, +12%), Appointments Today (18, +3), Today's Revenue ($4,820, +8%), Outstanding Balance ($1,260, 4 overdue). Glassmorphism cards with gradient icons.
+
+- **Today's Schedule** (`components/todays-schedule.tsx`): List of today's appointments with patient name, procedure, time, room, status (confirmed/pending). Add Appointment button. Empty state with friendly message.
+
+- **Waiting Queue** (`components/waiting-queue.tsx`): Patients who have checked in, sorted by priority (Emergency first) then time. Shows queue number, patient, code, dentist, appointment time, check-in time, waiting time, priority, medical alerts, status, actions (View, Edit Patient, Call Patient). Mobile card layout.
+
+- **Quick Actions** (`components/quick-actions.tsx`): 2-column grid of action buttons — New Patient, Schedule Recall, Call Patient, Send Message, Create Invoice, Settings. Gradient icons with hover scale animation.
+
+- **Patient Recalls** (`components/recalls-list.tsx`): Scrollable list of patients due/overdue for follow-up. Urgent (red) and High (yellow) priority levels. View All link.
+
+- **Activity Timeline** (`components/activity-timeline.tsx`): Chronological feed of recent events (Patient Checked In, Appointment Completed, Invoice Generated, Payment Received, Follow-up Scheduled, Recall Reminder Sent, New Patient Registered, Appointment Cancelled). Expandable (3 items default, View More/View Less). View All link.
+
+- **Theme Support**: Light/dark mode toggle with localStorage persistence. Glassmorphism effects on all cards. Responsive layout (4→2→1 column grid).
+
+====================================================
+END OF DASHBOARD UI SPECIFICATION
+====================================================
