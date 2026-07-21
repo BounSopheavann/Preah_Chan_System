@@ -336,11 +336,23 @@ export function ActiveProcedureWorkspacePage() {
       return;
     }
 
-    updateExecution((execution) => ({
-      ...execution,
-      status: 'In Progress',
-    }));
-    setManualStatus('Procedure paused locally. Resume later from Treatment Execution.');
+    const nextFlow: TreatmentFlowState = {
+      ...flow,
+      session: {
+        ...flow.session,
+        status: 'In Treatment',
+        inProgressProcedure: {
+          ...activeExecution,
+          status: 'In Progress',
+        },
+      },
+    };
+
+    setFlow(nextFlow);
+    saveFlowState(nextFlow);
+    setManualStatus('Procedure paused. Returning to Treatment Execution.');
+
+    router.push('/treatment-execution');
   };
 
   const handleMarkIncomplete = () => {
@@ -377,10 +389,9 @@ export function ActiveProcedureWorkspacePage() {
   const handleAnesthesiaSave = () => {
     updateExecution((execution) => ({
       ...execution,
-      anesthesiaUsed: anesthesiaEnabled,
-      anesthesia: anesthesiaEnabled ? anesthesia : undefined,
+      status: 'In Progress',
     }));
-    setManualStatus('Anesthesia record saved.');
+    setManualStatus('Procedure paused locally. Resume later from Treatment Execution.');
   };
 
   const handleAnesthesiaSkip = () => {
