@@ -1,6 +1,6 @@
 'use client';
 
-import { Play, Clock, DollarSign, AlertCircle, Sparkles } from 'lucide-react';
+import { Play, Clock, AlertCircle, Sparkles, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { PlannedTreatmentItem } from './treatment-execution-data';
 import { planItemStatusBadgeColor } from './treatment-execution-data';
@@ -8,9 +8,10 @@ import { planItemStatusBadgeColor } from './treatment-execution-data';
 interface PlannedTreatmentListProps {
   items: PlannedTreatmentItem[];
   onStartProcedure: (item: PlannedTreatmentItem) => void;
+  highlightedItemId?: string | null;
 }
 
-export function PlannedTreatmentList({ items, onStartProcedure }: PlannedTreatmentListProps) {
+export function PlannedTreatmentList({ items, onStartProcedure, highlightedItemId }: PlannedTreatmentListProps) {
   if (items.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-card/90 p-6 text-center shadow-sm">
@@ -53,9 +54,15 @@ export function PlannedTreatmentList({ items, onStartProcedure }: PlannedTreatme
               const isCompleted = item.status === 'Completed';
               const isDeclined = item.status === 'Declined';
               const canStart = item.status === 'Planned' || item.status === 'In Progress';
+              const isHighlighted = highlightedItemId === item.id;
 
               return (
-                <tr key={item.id} className="hover:bg-muted/5 transition-colors">
+                <tr
+                  key={item.id}
+                  className={`transition-colors hover:bg-muted/5 ${
+                    isHighlighted ? 'bg-emerald-50/70 dark:bg-emerald-500/10' : ''
+                  }`}
+                >
                   <td className="py-2 px-3 text-center font-semibold text-muted-foreground">
                     {item.sequence}
                   </td>
@@ -93,7 +100,14 @@ export function PlannedTreatmentList({ items, onStartProcedure }: PlannedTreatme
                   </td>
                   <td className="py-2 px-3 text-center">
                     <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold leading-none ${planItemStatusBadgeColor[item.status]}`}>
-                      {item.status}
+                      {isHighlighted && isCompleted ? (
+                        <span className="inline-flex items-center gap-1">
+                          <CheckCircle2 className="size-2.5" />
+                          Completed
+                        </span>
+                      ) : (
+                        item.status
+                      )}
                     </span>
                   </td>
                   <td className="py-2 px-3 text-right">
@@ -125,9 +139,13 @@ export function PlannedTreatmentList({ items, onStartProcedure }: PlannedTreatme
           const isCompleted = item.status === 'Completed';
           const isDeclined = item.status === 'Declined';
           const canStart = item.status === 'Planned' || item.status === 'In Progress';
+          const isHighlighted = highlightedItemId === item.id;
 
           return (
-            <div key={item.id} className="p-3 space-y-2">
+            <div
+              key={item.id}
+              className={`space-y-2 p-3 ${isHighlighted ? 'bg-emerald-50/70 dark:bg-emerald-500/10' : ''}`}
+            >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
@@ -142,7 +160,14 @@ export function PlannedTreatmentList({ items, onStartProcedure }: PlannedTreatme
                   )}
                 </div>
                 <span className={`inline-flex items-center rounded-full border px-1.5 py-0.25 text-[9px] font-semibold ${planItemStatusBadgeColor[item.status]}`}>
-                  {item.status}
+                  {isHighlighted && isCompleted ? (
+                    <span className="inline-flex items-center gap-1">
+                      <Sparkles className="size-2.5" />
+                      Completed
+                    </span>
+                  ) : (
+                    item.status
+                  )}
                 </span>
               </div>
 

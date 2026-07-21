@@ -31,6 +31,7 @@ export interface ConsumableRecord {
   id: string;
   material: string;
   quantityUsed: number;
+  unit?: string;
   batchLot: string;
   notes: string;
 }
@@ -60,7 +61,9 @@ export interface ProcedureExecution {
   toothNumber: string;
   toothSurface: string[];
   dentist: string;
+  assistant?: string;
   startTime: string;
+  startedAtMs?: number;
   endTime?: string;
   status: ProcedureExecutionStatus;
   clinicalNotes: string;
@@ -83,11 +86,13 @@ export interface TreatmentSession {
   appointmentDate: string;
   appointmentTime: string;
   dentist: string;
+  assistant?: string;
   status: 'In Chair' | 'In Treatment' | 'Completed';
   plannedItems: PlannedTreatmentItem[];
   completedProcedures: ProcedureExecution[];
   inProgressProcedure: ProcedureExecution | null;
   summary?: TreatmentSummary;
+  lastCompletedItemId?: string | null;
 }
 
 export interface PlannedTreatmentItem {
@@ -230,10 +235,12 @@ export const dummySession: TreatmentSession = {
   appointmentDate: todayLabel(),
   appointmentTime: '10:30 AM',
   dentist: CURRENT_USER,
+  assistant: 'Nurse Lina',
   status: 'In Chair',
   plannedItems: dummyPlannedItems,
   completedProcedures: [],
   inProgressProcedure: null,
+  lastCompletedItemId: null,
 };
 
 export const procedureStatusBadgeColor: Record<ProcedureExecutionStatus, string> = {
