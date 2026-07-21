@@ -143,6 +143,64 @@ Validated before Finalize Invoice:
 - Invoice email / print functionality
 - Multi-currency support
 
+## Payment Calculation Changes (2026-07-21 Fix)
+
+### Overpayment / Change Due Logic
+
+**Before (BUG):** `amountReceived` was clamped to `grandTotal`, preventing proper cash overpayment.
+
+**After (FIXED):**
+- `amountReceived` = actual cash entered by user (preserves the exact amount typed)
+- `amountPaid` = `Math.min(amountReceived, grandTotal)` — amount actually applied to invoice
+- `changeDue` = `Math.max(0, amountReceived - grandTotal)` — excess to return
+- `balanceDue` = `Math.max(0, grandTotal - amountPaid)` — remaining invoice balance
+
+Examples:
+
+| Scenario | Grand Total | Amount Received | Amount Paid | Balance Due | Change Due | Status |
+|---|---|---|---|---|---|---|
+| No Payment | $100 | $0 | $0 | $100 | $0 | Unpaid |
+| Partial Payment | $100 | $40 | $40 | $60 | $0 | Partially Paid |
+| Exact Payment | $100 | $100 | $100 | $0 | $0 | Paid |
+| Cash Overpayment | $100 | $120 | $100 | $0 | **$20** | Paid |
+
+### Payment Method Changes
+
+**Before:** `Cash` | `KHQR / Bank Transfer` | `Card`
+
+**After:** `Cash` | `KHQR` | `Card` | `Bank Transfer` | `Other`
+
+### Finalized Invoice Lock
+
+After finalization, the following become read-only:
+- Invoice item descriptions (manual charges)
+- Quantity, unit price, discount on all items
+- Amount Received
+- Payment Method
+- `+ Add Charge` button hidden
+- Manual charge trash/delete icons hidden
+
+The finalized invoice remains viewable and survives page refresh.
+
+### Payment Status
+
+Payment status is calculated from `amountPaid` (NOT `amountReceived`):
+- `amountPaid <= 0` → Unpaid
+- `amountPaid < grandTotal` → Partially Paid
+- `amountPaid >= grandTotal` → Paid
+
+Invoice status = `Draft` before finalization; matches `paymentStatus` after.
+
+### UI Changes (Invoice Summary)
+
+Added explicit display of **Amount Received** and **Change Due** rows in the Invoice Summary card (shown only when applicable).
+
 ## Build/TypeScript Result
 
 Next.js build completed successfully with no new errors.
+Only the 3 billing files were modified. No clinical/treatment files were touched.
+
+## Files Changed (this fix round)
+- `components/billing/billing-data.ts` — Payment interface: added `amountReceived`, `changeDue` fields. Expanded `PaymentMethod` type. Added `calculateChangeDue()` helper.
+- `components/billing/billing-store.ts` — `updatePayment()`: now takes `amountReceived`, computes `amountPaid` + `changeDue` + `paymentStatus`. `buildInvoiceFromSession()`: initializes new Payment fields.
+- `components/billing/billing-workspace.tsx` — Payment section uses `amountReceived` input. Change Due computed. Summary shows Amount Received / Change Due. `disabled` prop locks all fields after finalization.

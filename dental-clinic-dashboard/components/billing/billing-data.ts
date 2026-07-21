@@ -6,7 +6,7 @@ import type { ProcedureExecution } from '@/components/treatment-execution/treatm
 
 export type InvoiceStatus = 'Draft' | 'Unpaid' | 'Partially Paid' | 'Paid';
 
-export type PaymentMethod = 'Cash' | 'KHQR / Bank Transfer' | 'Card';
+export type PaymentMethod = 'Cash' | 'KHQR' | 'Card' | 'Bank Transfer' | 'Other';
 
 export type PaymentStatus = 'Unpaid' | 'Partially Paid' | 'Paid';
 
@@ -31,7 +31,9 @@ export interface InvoiceItem {
 }
 
 export interface Payment {
+  amountReceived: number;
   amountPaid: number;
+  changeDue: number;
   paymentMethod: PaymentMethod;
   paymentNote: string;
   paymentStatus: PaymentStatus;
@@ -73,6 +75,10 @@ export function calculateGrandTotal(items: InvoiceItem[]): number {
 
 export function calculateBalanceDue(grandTotal: number, amountPaid: number): number {
   return Math.max(0, grandTotal - amountPaid);
+}
+
+export function calculateChangeDue(amountReceived: number, grandTotal: number): number {
+  return Math.max(0, amountReceived - grandTotal);
 }
 
 export function determinePaymentStatus(grandTotal: number, amountPaid: number): PaymentStatus {
@@ -130,4 +136,49 @@ export function generateInvoiceNumber(): string {
   const datePart = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
   const rand = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
   return `INV-${datePart}-${rand}`;
+}
+
+/* ── Receipt Types ── */
+
+export interface ReceiptItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  discount: number;
+  lineTotal: number;
+  isManualCharge: boolean;
+}
+
+export interface Receipt {
+  id: string;
+  receiptNumber: string;
+  invoiceNumber: string;
+  invoiceId: string;
+  createdAt: string;
+  sessionId: string;
+  patientId: string;
+  patientName: string;
+  appointmentDate: string;
+  dentist: string;
+  items: ReceiptItem[];
+  subtotal: number;
+  totalDiscount: number;
+  grandTotal: number;
+  amountReceived: number;
+  amountPaid: number;
+  changeDue: number;
+  balanceDue: number;
+  paymentMethod: PaymentMethod;
+  paymentNote: string;
+  paymentStatus: PaymentStatus;
+  invoiceStatus: InvoiceStatus;
+  finalizedAt: string;
+}
+
+export function generateReceiptNumber(): string {
+  const now = new Date();
+  const datePart = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+  const rand = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  return `RCP-${datePart}-${rand}`;
 }

@@ -4,18 +4,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   AlertCircle,
-  AlertTriangle,
   ArrowLeft,
   CheckCircle2,
-  Clock,
   DollarSign,
   FileText,
-  MinusCircle,
   PlusCircle,
   Receipt,
   Save,
   Trash2,
-  User,
   XCircle,
 } from 'lucide-react';
 
@@ -25,7 +21,6 @@ import {
   loadFlowState,
   type TreatmentFlowState,
 } from '@/components/treatment-execution/procedure-workspace-store';
-import type { TreatmentSession, ProcedureExecution } from '@/components/treatment-execution/treatment-execution-data';
 import {
   type Invoice,
   type InvoiceItem,
@@ -35,6 +30,7 @@ import {
   calculateTotalDiscount,
   calculateGrandTotal,
   calculateBalanceDue,
+  calculateChangeDue,
 } from './billing-data';
 import {
   buildInvoiceFromSession,
@@ -119,6 +115,10 @@ export function BillingWorkspace() {
     return calculateTotalDiscount(invoice.items);
   }, [invoice]);
 
+  const amountReceived = invoice?.payment.amountReceived ?? 0;
+  const amountPaid = invoice?.payment.amountPaid ?? 0;
+  const changeDue = invoice?.payment.changeDue ?? 0;
+
   const balanceDue = useMemo(() => {
     if (!invoice) return 0;
     return calculateBalanceDue(grandTotal, invoice.payment.amountPaid);
@@ -198,7 +198,10 @@ export function BillingWorkspace() {
     const finalized = finalizeInvoice(invoice);
     persistInvoice(finalized);
     setIsFinalizing(false);
-  }, [invoice, validate, persistInvoice]);
+
+    // Navigate to receipt after successful finalization
+    router.push('/receipt');
+  }, [invoice, validate, persistInvoice, router]);
 
   const handleItemUpdate = useCallback(
     (itemId: string, updates: Partial<Pick<InvoiceItem, 'quantity' | 'unitPrice' | 'description' | 'discount'>>) => {
@@ -225,7 +228,7 @@ export function BillingWorkspace() {
   }, [invoice, persistInvoice]);
 
   const handlePaymentUpdate = useCallback(
-    (updates: Partial<{ amountPaid: number; paymentMethod: PaymentMethod; paymentNote: string }>) => {
+    (updates: Partial<{ amountReceived: number; paymentMethod: PaymentMethod; paymentNote: string }>) => {
       if (!invoice) return;
       const updated = updatePayment(invoice, updates);
       persistInvoice(updated);
@@ -573,7 +576,7 @@ export function BillingWorkspace() {
             </h3>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {/* Amount Paid */}
+              {/* Amount Received */}
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-foreground">Amount Received</label>
                 <div className="relative">
@@ -582,10 +585,10 @@ export function BillingWorkspace() {
                     type="number"
                     min="0"
                     step="0.01"
-                    value={invoice.payment.amountPaid}
+                    value={amountReceived}
                     onChange={(e) =>
                       handlePaymentUpdate({
-                        amountPaid: Math.max(0, parseFloat(e.target.value) || 0),
+                        amountReceived: Math.max(0, parseFloat(e.target.value) || 0),
                       })
                     }
                     className={inputClass + ' pl-7 text-sm'}
@@ -607,8 +610,10 @@ export function BillingWorkspace() {
                   disabled={isFinalized}
                 >
                   <option value="Cash">Cash</option>
-                  <option value="KHQR / Bank Transfer">KHQR / Bank Transfer</option>
+                  <option value="KHQR">KHQR</option>
                   <option value="Card">Card</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
 
@@ -624,13 +629,11 @@ export function BillingWorkspace() {
                 </div>
               </div>
 
-              {/* Change Due (when overpaid) */}
+              {/* Change Due */}
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-foreground">Change Due</label>
                 <p className="h-9 flex items-center text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                  {invoice.payment.amountPaid > grandTotal
-                    ? formatCurrency(invoice.payment.amountPaid - grandTotal)
-                    : formatCurrency(0)}
+                  {changeDue > 0 ? formatCurrency(changeDue) : formatCurrency(0)}
                 </p>
               </div>
             </div>
@@ -684,13 +687,33 @@ export function BillingWorkspace() {
               </div>
 
               <div className="border-t border-border pt-3 space-y-2">
+                {/* Amount Received */}
+                {amountReceived > 0 && (
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Amount Received</span>
+                    <span className="font-semibold text-foreground">
+                      {formatCurrency(amountReceived)}
+                    </span>
+                  </div>
+                )}
+
                 {/* Amount Paid */}
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">Amount Paid</span>
                   <span className="font-semibold text-foreground">
-                    {formatCurrency(invoice.payment.amountPaid)}
+                    {formatCurrency(amountPaid)}
                   </span>
                 </div>
+
+                {/* Change Due */}
+                {changeDue > 0 && (
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Change Due</span>
+                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                      {formatCurrency(changeDue)}
+                    </span>
+                  </div>
+                )}
 
                 {/* Balance Due */}
                 <div className="flex items-center justify-between">
