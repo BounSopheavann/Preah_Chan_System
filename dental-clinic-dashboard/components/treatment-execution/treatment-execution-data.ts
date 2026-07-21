@@ -58,6 +58,7 @@ export interface ProcedureExecution {
   id: string;
   treatmentItemId: string;
   procedure: string;
+  procedureCode?: string;
   toothNumber: string;
   toothSurface: string[];
   dentist: string;
@@ -77,6 +78,7 @@ export interface ProcedureExecution {
   prescriptions: ProcedurePrescriptionItem[];
   interruptionReason?: InterruptionReason;
   interruptionNotes?: string;
+  billingEligible?: boolean;
 }
 
 export interface TreatmentSession {

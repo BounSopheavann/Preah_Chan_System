@@ -6,6 +6,7 @@ import {
   type PlannedTreatmentItem,
   type ProcedureExecution,
   type TreatmentSession,
+  type TreatmentSummary,
 } from './treatment-execution-data';
 
 const STORAGE_KEY = 'preah-chan-treatment-flow';
@@ -85,6 +86,7 @@ export function buildProcedureExecution(
     id: existingExecution?.id || `exec-${item.id}-${Date.now()}`,
     treatmentItemId: item.id,
     procedure: item.procedure,
+    procedureCode: item.procedureCode,
     toothNumber: item.toothArea,
     toothSurface: [...item.toothSurface],
     dentist,
@@ -202,5 +204,99 @@ export function applyProcedureIncomplete(flow: TreatmentFlowState): TreatmentFlo
     },
     activeItemId: null,
     workspaceStartedAt: null,
+  };
+}
+
+/* ── Treatment Summary Store Functions ── */
+
+export interface VisitCompletionData {
+  finalNotes: string;
+  recommendations: string;
+  postOpInstructions: string;
+}
+
+export function applySummaryFieldUpdate(
+  flow: TreatmentFlowState,
+  field: keyof VisitCompletionData,
+  value: string
+): TreatmentFlowState {
+  return {
+    ...flow,
+    session: {
+      ...flow.session,
+      summary: {
+        ...flow.session.summary,
+        [field]: value,
+      } as TreatmentSummary,
+    },
+  };
+}
+
+export function applyVisitCompletion(
+  flow: TreatmentFlowState,
+  completionData: VisitCompletionData
+): TreatmentFlowState {
+  const updatedProcedures = flow.session.completedProcedures.map((proc) => ({
+    ...proc,
+    billingEligible: true,
+  }));
+
+  const now = new Date().toLocaleString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  return {
+    ...flow,
+    session: {
+      ...flow.session,
+      status: 'Completed',
+      completedProcedures: updatedProcedures,
+      summary: {
+        completedProcedures: updatedProcedures,
+        inProgressProcedures: flow.session.inProgressProcedure
+          ? [flow.session.inProgressProcedure]
+          : [],
+        remainingPlanned: flow.session.plannedItems.filter(
+          (item) => item.status === 'Planned' || item.status === 'Postponed'
+        ),
+        dentist: flow.session.dentist,
+        totalDuration:
+          updatedProcedures
+            .filter((proc) => proc.duration)
+            .map((proc) => proc.duration)
+            .join(', ') || 'N/A',
+        finalNotes: completionData.finalNotes,
+        recommendations: completionData.recommendations,
+        postOpInstructions: completionData.postOpInstructions,
+        createdAt: now,
+      },
+    },
+  };
+}
+
+export function buildSummaryFromSession(session: TreatmentSession): TreatmentSummary {
+  const activeExecution = session.inProgressProcedure;
+  const remainingPlanned = session.plannedItems.filter(
+    (item) => item.status === 'Planned' || item.status === 'Postponed'
+  );
+
+  return {
+    completedProcedures: session.completedProcedures,
+    inProgressProcedures: activeExecution ? [activeExecution] : [],
+    remainingPlanned,
+    dentist: session.dentist,
+    totalDuration:
+      session.completedProcedures
+        .filter((proc) => proc.duration)
+        .map((proc) => proc.duration)
+        .join(', ') || 'N/A',
+    finalNotes: session.summary?.finalNotes || '',
+    recommendations: session.summary?.recommendations || '',
+    postOpInstructions: session.summary?.postOpInstructions || '',
+    createdAt: session.summary?.createdAt || new Date().toLocaleString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+    }),
   };
 }
