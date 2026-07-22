@@ -21,7 +21,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { PatientAvatar } from '../patients/patient-avatar';
 import {
@@ -62,12 +62,63 @@ interface AppointmentFilterState {
   date: string;
 }
 
+type AppointmentDraftKind = 'follow-up' | 'recall';
+
+interface AppointmentDraft {
+  kind: AppointmentDraftKind;
+  patientId: string;
+  patientName: string;
+  patientCode: string;
+  dentist: string;
+  appointmentType: string;
+  preferredDate?: string;
+  reason: string;
+  source: string;
+}
+
 const initialFilters: AppointmentFilterState = {
   status: 'All',
   dentist: 'All',
   type: 'All',
   date: todayDateValue,
 };
+
+function parseAppointmentDraft(searchParams: ReturnType<typeof useSearchParams>): AppointmentDraft | null {
+  const mode = searchParams.get('mode');
+  if (mode !== 'create') {
+    return null;
+  }
+
+  const kind = searchParams.get('kind');
+  if (kind !== 'follow-up' && kind !== 'recall') {
+    return null;
+  }
+
+  const patientId = searchParams.get('patientId')?.trim() || '';
+  const patientName = searchParams.get('patientName')?.trim() || '';
+  const patientCode = searchParams.get('patientCode')?.trim() || patientId || 'Not recorded';
+  const dentist = searchParams.get('dentist')?.trim() || 'Not recorded';
+  const appointmentType = searchParams.get('appointmentType')?.trim() || (kind === 'follow-up' ? 'Follow-up' : 'Recall Visit');
+  const reason = searchParams.get('reason')?.trim() || (kind === 'follow-up' ? 'Post-treatment review' : 'Routine recall');
+  const source = searchParams.get('source')?.trim() || 'Visit completion workspace';
+  const preferredDate = searchParams.get('preferredDate')?.trim() || undefined;
+
+  if (!patientId && !patientName) {
+    return null;
+  }
+
+  return {
+    kind,
+    patientId,
+    patientName: patientName || patientCode,
+    patientCode,
+    dentist,
+    appointmentType,
+    preferredDate,
+    reason,
+    source,
+  };
+}
 
 const statusOrder: Record<AppointmentStatus, number> = {
   Booked: 0,
@@ -243,6 +294,62 @@ function EmptyState() {
         <Plus className="size-4" />
         New Appointment
       </button>
+    </div>
+  );
+}
+
+function DraftBanner({
+  draft,
+  onClear,
+}: {
+  draft: AppointmentDraft;
+  onClear: () => void;
+}) {
+  return (
+    <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center rounded-full border border-emerald-200 bg-white px-2.5 py-1 text-[11px] font-bold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+              Prefilled Draft
+            </span>
+            <span className="inline-flex items-center rounded-full border border-border bg-background/70 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
+              {draft.kind === 'follow-up' ? 'Follow-up' : 'Recall'}
+            </span>
+          </div>
+          <h3 className="mt-2 text-base font-bold text-foreground">{draft.patientName}</h3>
+          <p className="text-sm text-muted-foreground">
+            {draft.patientCode} · {draft.dentist} · {draft.appointmentType}
+          </p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-xl border border-border bg-white/70 px-3 py-2 dark:bg-background/20">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Reason</p>
+              <p className="mt-0.5 text-sm font-semibold text-foreground">{draft.reason}</p>
+            </div>
+            <div className="rounded-xl border border-border bg-white/70 px-3 py-2 dark:bg-background/20">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Preferred Date</p>
+              <p className="mt-0.5 text-sm font-semibold text-foreground">{draft.preferredDate || 'Not recorded'}</p>
+            </div>
+            <div className="rounded-xl border border-border bg-white/70 px-3 py-2 dark:bg-background/20">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Source</p>
+              <p className="mt-0.5 text-sm font-semibold text-foreground">{draft.source}</p>
+            </div>
+            <div className="rounded-xl border border-border bg-white/70 px-3 py-2 dark:bg-background/20">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Patient ID</p>
+              <p className="mt-0.5 text-sm font-semibold text-foreground">{draft.patientId || 'Not recorded'}</p>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onClear}
+            className="inline-flex h-9 items-center gap-2 rounded-xl border border-border bg-background/70 px-3 text-sm font-semibold text-foreground transition-all hover:bg-muted/70"
+          >
+            Clear Draft
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -843,6 +950,8 @@ export function AppointmentsModule() {
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [currentTime, setCurrentTime] = useState(() => new Date());
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const appointmentDraft = useMemo(() => parseAppointmentDraft(searchParams), [searchParams]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setIsLoading(false), 450);
@@ -857,6 +966,20 @@ export function AppointmentsModule() {
   useEffect(() => {
     setPage(1);
   }, [deferredSearch, filters, sortKey, sortDirection, pageSize]);
+
+  useEffect(() => {
+    if (!appointmentDraft) {
+      return;
+    }
+
+    setSearch(appointmentDraft.patientName);
+    setFilters((current) => ({
+      ...current,
+      dentist: appointmentDraft.dentist !== 'Not recorded' ? appointmentDraft.dentist : current.dentist,
+      type: appointmentDraft.appointmentType || current.type,
+    }));
+    setViewMode('table');
+  }, [appointmentDraft?.kind, appointmentDraft?.patientId, appointmentDraft?.patientName, appointmentDraft?.dentist, appointmentDraft?.appointmentType]);
 
   const filteredAppointments = useMemo(() => {
     const normalizedSearch = deferredSearch.trim().toLowerCase();
@@ -1008,6 +1131,13 @@ export function AppointmentsModule() {
           </div>
         </div>
       </div>
+
+      {appointmentDraft && (
+        <DraftBanner
+          draft={appointmentDraft}
+          onClear={() => router.replace('/appointments')}
+        />
+      )}
 
       <AppointmentSearchBar value={search} onChange={setSearch} />
 

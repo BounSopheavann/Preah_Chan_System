@@ -51,7 +51,7 @@ export function ReceiptWorkspace() {
   }, []);
 
   const handleFinishVisit = useCallback(() => {
-    router.push('/treatment-execution');
+    router.push('/visit-completion');
   }, [router]);
 
   const handleReturnToBilling = useCallback(() => {
