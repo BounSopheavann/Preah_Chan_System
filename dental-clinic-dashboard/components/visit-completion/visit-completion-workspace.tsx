@@ -34,9 +34,8 @@ import {
   buildReceiptFromInvoice,
   loadSavedInvoice,
   loadSavedReceipt,
-  type Invoice,
-  type Receipt,
 } from '@/components/billing/billing-store';
+import type { Invoice as BillingInvoice, Receipt as BillingReceipt } from '@/components/billing/billing-data';
 import {
   calculateGrandTotal,
   calculateTotalDiscount,
@@ -117,7 +116,7 @@ function formatDurationLabel(procedures: ProcedureExecution[], summary: Treatmen
     .join(', ') || 'Not recorded';
 }
 
-function getPaymentBadgeClass(status?: Receipt['paymentStatus'] | Invoice['status']) {
+function getPaymentBadgeClass(status?: BillingReceipt['paymentStatus'] | BillingInvoice['status']) {
   const map: Record<string, string> = {
     Paid: 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300',
     'Partially Paid': 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300',
@@ -193,7 +192,7 @@ function buildAppointmentDraft(args: {
   kind: AppointmentKind;
   patient: Patient | null;
   session: TreatmentSession | null;
-  receipt: Receipt | null;
+  receipt: BillingReceipt | null;
   summary: TreatmentSummary | null;
 }): AppointmentDraft | null {
   const { kind, patient, session, receipt, summary } = args;
@@ -232,8 +231,8 @@ export function VisitCompletionWorkspace() {
   const router = useRouter();
   const [hydrated, setHydrated] = useState(false);
   const [flow, setFlow] = useState<TreatmentFlowState | null>(null);
-  const [invoice, setInvoice] = useState<Invoice | null>(null);
-  const [receipt, setReceipt] = useState<Receipt | null>(null);
+  const [invoice, setInvoice] = useState<BillingInvoice | null>(null);
+  const [receipt, setReceipt] = useState<BillingReceipt | null>(null);
 
   useEffect(() => {
     const storedFlow = loadFlowState();
@@ -363,6 +362,11 @@ export function VisitCompletionWorkspace() {
     (kind?: AppointmentKind) => {
       if (kind === 'follow-up') {
         router.push('/follow-up-appointment');
+        return;
+      }
+
+      if (kind === 'recall') {
+        router.push('/recall-scheduling');
         return;
       }
 
