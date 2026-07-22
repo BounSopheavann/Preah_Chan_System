@@ -20,7 +20,7 @@
 - http://localhost:3000/visit-completion          - Visit Completion
 - http://localhost:3000/follow-up-appointment     - Follow-up Appointment
 - http://localhost:3000/recall-scheduling          - Recall Scheduling
-- http://localhost:3000/reminder-center            - Reminder Center (placeholder)
+- http://localhost:3000/reminder-center            - Reminder Center
 
 ## Other
 - http://localhost:3000/activity-log - Activity Log
