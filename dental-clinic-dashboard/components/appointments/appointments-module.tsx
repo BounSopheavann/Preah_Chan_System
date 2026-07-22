@@ -33,6 +33,10 @@ import {
   type AppointmentRecord,
   type AppointmentStatus,
 } from './appointment-data';
+import {
+  loadSavedFollowUpAppointment,
+  toAppointmentRecord,
+} from '@/components/follow-up-appointment/follow-up-appointment-store';
 import { AppointmentPagination } from './pagination';
 import { AppointmentSearchBar } from './appointment-search-bar';
 import {
@@ -961,6 +965,20 @@ export function AppointmentsModule() {
   useEffect(() => {
     const timer = window.setInterval(() => setCurrentTime(new Date()), 60000);
     return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const savedFollowUp = loadSavedFollowUpAppointment();
+
+    if (!savedFollowUp) {
+      return;
+    }
+
+    const followUpRecord = toAppointmentRecord(savedFollowUp);
+    setAppointments((current) => {
+      const withoutDuplicate = current.filter((appointment) => appointment.appointmentId !== followUpRecord.appointmentId);
+      return [followUpRecord, ...withoutDuplicate];
+    });
   }, []);
 
   useEffect(() => {

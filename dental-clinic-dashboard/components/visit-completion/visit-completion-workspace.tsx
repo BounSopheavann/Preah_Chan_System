@@ -43,6 +43,7 @@ import {
   formatCurrency,
 } from '@/components/billing/billing-data';
 import { patientRecords, type Patient } from '@/components/patients/patient-data';
+import { loadSavedFollowUpAppointment } from '@/components/follow-up-appointment/follow-up-appointment-store';
 import type { ReactNode } from 'react';
 
 type AppointmentKind = 'follow-up' | 'recall';
@@ -313,6 +314,18 @@ export function VisitCompletionWorkspace() {
   const upcoming = patient ? parseUpcomingAppointment(patient.upcomingAppointment) : null;
   const recall = upcoming && /recall/i.test(upcoming.reason) ? upcoming : null;
   const followUp = upcoming && !/recall/i.test(upcoming.reason) ? upcoming : null;
+  const savedFollowUp = useMemo(() => {
+    if (!patient) {
+      return null;
+    }
+
+    const record = loadSavedFollowUpAppointment();
+    if (!record) {
+      return null;
+    }
+
+    return record.patientCode.toLowerCase() === patient.patientCode.toLowerCase() ? record : null;
+  }, [patient]);
 
   const appointmentDraft = useMemo(
     () =>
@@ -348,12 +361,17 @@ export function VisitCompletionWorkspace() {
 
   const handleOpenAppointments = useCallback(
     (kind?: AppointmentKind) => {
+      if (kind === 'follow-up') {
+        router.push('/follow-up-appointment');
+        return;
+      }
+
       if (!patient && !session && !receipt) {
         router.push('/appointments');
         return;
       }
 
-      const draft = kind === 'recall' ? recallDraft : appointmentDraft;
+      const draft = recallDraft;
       if (!draft) {
         router.push('/appointments');
         return;
@@ -377,7 +395,7 @@ export function VisitCompletionWorkspace() {
 
       router.push(`/appointments?${params.toString()}`);
     },
-    [appointmentDraft, recallDraft, patient, session, receipt, router]
+    [recallDraft, patient, session, receipt, router]
   );
 
   const handleReturnDashboard = useCallback(() => {
@@ -478,6 +496,32 @@ export function VisitCompletionWorkspace() {
           </div>
         </div>
       </section>
+
+      {savedFollowUp && (
+        <section className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-5 shadow-sm dark:border-emerald-500/20 dark:bg-emerald-500/10">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-lg font-bold text-foreground">Next Appointment Booked</h2>
+                <span className="inline-flex items-center rounded-full border border-emerald-200 bg-white px-2.5 py-1 text-xs font-bold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+                  <BadgeCheck className="mr-1.5 size-3.5" />
+                  Booked
+                </span>
+              </div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                The patient already has a saved follow-up for this completed visit.
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[430px]">
+              <Field label="Next Visit Date" value={savedFollowUp.dateLabel} />
+              <Field label="Next Visit Time" value={savedFollowUp.timeLabel} />
+              <Field label="Dentist" value={savedFollowUp.dentist} />
+              <Field label="Appointment Type" value={savedFollowUp.appointmentType} />
+            </div>
+          </div>
+        </section>
+      )}
 
       <div className="grid gap-5 xl:grid-cols-2">
         <SectionCard
@@ -699,7 +743,20 @@ export function VisitCompletionWorkspace() {
           title="Follow-up Appointment"
           subtitle="Recommended return visit if one was recorded"
         >
-          {followUp ? (
+          {savedFollowUp ? (
+            <div className="space-y-3">
+              <Field label="Next Appointment" value={`${savedFollowUp.dateLabel} - ${savedFollowUp.timeLabel}`} />
+              <Field label="Reason" value={savedFollowUp.reason} />
+              <Field
+                label="Status"
+                value={
+                  <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+                    Booked
+                  </span>
+                }
+              />
+            </div>
+          ) : followUp ? (
             <div className="space-y-3">
               <Field label="Recommended Follow-up Date" value={followUp.dateLabel} />
               <Field label="Reason" value={followUp.reason} />
