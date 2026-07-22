@@ -1,0 +1,26 @@
+# Dental Clinic Dashboard - Page URLs
+
+## Main Pages
+- http://localhost:3000/                      - Dashboard
+- http://localhost:3000/appointments          - Appointments
+- http://localhost:3000/patients              - Patients
+
+## Clinical Workflow
+- http://localhost:3000/clinical-examination       - Clinical Examination
+- http://localhost:3000/diagnosis                  - Diagnosis
+- http://localhost:3000/treatment-execution        - Treatment Execution
+- http://localhost:3000/active-procedure-workspace - Active Procedure Workspace
+- http://localhost:3000/treatment-summary          - Treatment Summary
+
+## Billing & Payment
+- http://localhost:3000/billing   - Billing / Invoice
+- http://localhost:3000/receipt   - Receipt
+
+## Post-Visit
+- http://localhost:3000/visit-completion          - Visit Completion
+- http://localhost:3000/follow-up-appointment     - Follow-up Appointment
+- http://localhost:3000/recall-scheduling          - Recall Scheduling
+- http://localhost:3000/reminder-center            - Reminder Center (placeholder)
+
+## Other
+- http://localhost:3000/activity-log - Activity Log
