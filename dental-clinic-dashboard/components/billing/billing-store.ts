@@ -3,10 +3,8 @@
 import {
   type Invoice,
   type InvoiceItem,
-  type InvoiceStatus,
   type Payment,
   type PaymentMethod,
-  type PaymentStatus,
   type Receipt,
   type ReceiptItem,
   buildInvoiceItemsFromProcedures,
@@ -18,39 +16,46 @@ import {
   generateInvoiceNumber,
   generateReceiptNumber,
 } from './billing-data';
-import { loadFlowState, saveFlowState } from '@/components/treatment-execution/procedure-workspace-store';
 
-const INVOICE_STORAGE_KEY = 'preah-chan-billing-invoice';
-const RECEIPT_STORAGE_KEY = 'preah-chan-billing-receipt';
+/* ── In-memory state (no localStorage) ── */
+
+let _memoryInvoice: Invoice | null = null;
+let _memoryReceipt: Receipt | null = null;
 
 /* ── Invoice Creation ── */
 
-/**
- * Build a fresh Invoice from the current treatment session state.
- * Returns null if there is no valid completed session with billing-eligible procedures.
- */
 export function buildInvoiceFromSession(): Invoice | null {
-  const flow = loadFlowState();
-  if (!flow) return null;
-
-  const session = flow.session;
-  if (session.status !== 'Completed') return null;
-
-  const billingEligible = session.completedProcedures.filter((p) => p.billingEligible === true);
-  if (billingEligible.length === 0) return null;
-
-  const items = buildInvoiceItemsFromProcedures(billingEligible);
-  if (items.length === 0) return null;
-
+  // Build a mock invoice with sample items
   const now = new Date().toISOString();
   const invoiceNumber = generateInvoiceNumber();
 
+  const mockItems: InvoiceItem[] = [
+    {
+      id: 'item-001',
+      description: 'Composite Filling - Tooth 14',
+      quantity: 1,
+      unitPrice: 180,
+      discount: 0,
+      lineTotal: 180,
+      isManualCharge: false,
+    },
+    {
+      id: 'item-002',
+      description: 'Local Anesthesia',
+      quantity: 1,
+      unitPrice: 25,
+      discount: 0,
+      lineTotal: 25,
+      isManualCharge: false,
+    },
+  ];
+
   const invoice: Invoice = {
-    id: `inv-${session.id}-${Date.now()}`,
+    id: `inv-mock-${Date.now()}`,
     invoiceNumber,
     createdAt: now,
     status: 'Draft',
-    items,
+    items: mockItems,
     payment: {
       amountReceived: 0,
       amountPaid: 0,
@@ -59,40 +64,31 @@ export function buildInvoiceFromSession(): Invoice | null {
       paymentNote: '',
       paymentStatus: 'Unpaid',
     },
-    sessionId: session.id,
-    patientId: session.patientId,
-    patientName: session.patientName,
-    appointmentDate: session.appointmentDate,
-    dentist: session.dentist,
+    sessionId: 'mock-session',
+    patientId: 'PC-1001',
+    patientName: 'Ariana Lopez',
+    appointmentDate: 'July 23, 2026',
+    dentist: 'Dr. Sarah',
   };
 
   return invoice;
 }
 
-/* ── LocalStorage Persistence ── */
+/* ── In-memory Persistence ── */
 
 export function loadSavedInvoice(): Invoice | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = window.localStorage.getItem(INVOICE_STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as Invoice;
-  } catch {
-    return null;
-  }
+  return _memoryInvoice;
 }
 
 export function saveInvoice(invoice: Invoice): void {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(INVOICE_STORAGE_KEY, JSON.stringify(invoice));
+  _memoryInvoice = invoice;
 }
 
 export function clearSavedInvoice(): void {
-  if (typeof window === 'undefined') return;
-  window.localStorage.removeItem(INVOICE_STORAGE_KEY);
+  _memoryInvoice = null;
 }
 
-/* ── Invoice Mutations ── */
+/* ── Invoice Mutations ── (kept for UI interactivity) */
 
 export function updateInvoiceItem(
   invoice: Invoice,
@@ -101,11 +97,9 @@ export function updateInvoiceItem(
 ): Invoice {
   const updatedItems = invoice.items.map((item) => {
     if (item.id !== itemId) return item;
-
     const newQuantity = updates.quantity ?? item.quantity;
     const newUnitPrice = updates.unitPrice ?? item.unitPrice;
     const newDiscount = updates.discount ?? item.discount;
-
     return {
       ...item,
       description: updates.description ?? item.description,
@@ -115,19 +109,13 @@ export function updateInvoiceItem(
       lineTotal: Math.max(0, newQuantity * newUnitPrice - newDiscount),
     };
   });
-
   return { ...invoice, items: updatedItems };
 }
 
 export function removeInvoiceItem(invoice: Invoice, itemId: string): Invoice {
-  // Only allow removal of manual charges
   const item = invoice.items.find((i) => i.id === itemId);
   if (!item || !item.isManualCharge) return invoice;
-
-  return {
-    ...invoice,
-    items: invoice.items.filter((i) => i.id !== itemId),
-  };
+  return { ...invoice, items: invoice.items.filter((i) => i.id !== itemId) };
 }
 
 export function addManualCharge(invoice: Invoice): Invoice {
@@ -140,11 +128,7 @@ export function addManualCharge(invoice: Invoice): Invoice {
     lineTotal: 0,
     isManualCharge: true,
   };
-
-  return {
-    ...invoice,
-    items: [...invoice.items, newItem],
-  };
+  return { ...invoice, items: [...invoice.items, newItem] };
 }
 
 export function updatePayment(
@@ -153,13 +137,9 @@ export function updatePayment(
 ): Invoice {
   const grandTotal = calculateGrandTotal(invoice.items);
   const newAmountReceived = Math.max(0, updates.amountReceived ?? invoice.payment.amountReceived);
-
-  // amountPaid = min(amountReceived, grandTotal)
   const newAmountPaid = Math.min(newAmountReceived, grandTotal);
-  // changeDue = max(0, amountReceived - grandTotal)
   const changeDue = Math.max(0, newAmountReceived - grandTotal);
   const paymentStatus = determinePaymentStatus(grandTotal, newAmountPaid);
-
   return {
     ...invoice,
     payment: {
@@ -176,15 +156,11 @@ export function updatePayment(
 export function finalizeInvoice(invoice: Invoice): Invoice {
   const grandTotal = calculateGrandTotal(invoice.items);
   const paymentStatus = determinePaymentStatus(grandTotal, invoice.payment.amountPaid);
-
   return {
     ...invoice,
     status: paymentStatus,
     finalizedAt: new Date().toISOString(),
-    payment: {
-      ...invoice.payment,
-      paymentStatus,
-    },
+    payment: { ...invoice.payment, paymentStatus },
   };
 }
 
@@ -192,39 +168,23 @@ export function saveDraftInvoice(invoice: Invoice): void {
   saveInvoice({ ...invoice, status: 'Draft' });
 }
 
-/* ── Receipt Persistence ── */
+/* ── Receipt ── */
 
 export function loadSavedReceipt(): Receipt | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = window.localStorage.getItem(RECEIPT_STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as Receipt;
-  } catch {
-    return null;
-  }
+  return _memoryReceipt;
 }
 
 export function saveReceipt(receipt: Receipt): void {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(RECEIPT_STORAGE_KEY, JSON.stringify(receipt));
+  _memoryReceipt = receipt;
 }
 
 export function clearSavedReceipt(): void {
-  if (typeof window === 'undefined') return;
-  window.localStorage.removeItem(RECEIPT_STORAGE_KEY);
+  _memoryReceipt = null;
 }
 
-/**
- * Build a Receipt from a finalized Invoice.
- * The receipt is a read-only snapshot of the finalized financial data.
- * If a receipt already exists for this invoice, it is returned as-is (no duplicate).
- */
 export function buildReceiptFromInvoice(invoice: Invoice): Receipt {
-  // Check if a receipt already exists for this invoice
-  const existing = loadSavedReceipt();
-  if (existing && existing.invoiceId === invoice.id) {
-    return existing;
+  if (_memoryReceipt && _memoryReceipt.invoiceId === invoice.id) {
+    return _memoryReceipt;
   }
 
   const items: ReceiptItem[] = invoice.items.map((item) => ({
@@ -268,6 +228,6 @@ export function buildReceiptFromInvoice(invoice: Invoice): Receipt {
     finalizedAt: invoice.finalizedAt || new Date().toISOString(),
   };
 
-  saveReceipt(receipt);
+  _memoryReceipt = receipt;
   return receipt;
 }

@@ -184,8 +184,14 @@ function RowActions({
   onGenerateQr,
   onDeactivate,
   onCopyCode,
-}: Omit<PatientTableProps, 'patients' | 'isLoading' | 'sortKey' | 'sortDirection' | 'onSort' | 'onCreatePatient'> & {
+}: Omit<PatientTableProps, 'patients' | 'isLoading' | 'sortKey' | 'sortDirection' | 'onSort' | 'onCreatePatient' | 'filters' | 'onFiltersChange' | 'onFiltersReset'> & {
   patient: Patient;
+  onView: (patient: Patient) => void;
+  onEdit: (patient: Patient) => void;
+  onBookAppointment: (patient: Patient) => void;
+  onGenerateQr: (patient: Patient) => void;
+  onDeactivate: (patient: Patient) => void;
+  onCopyCode: (patient: Patient) => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
 

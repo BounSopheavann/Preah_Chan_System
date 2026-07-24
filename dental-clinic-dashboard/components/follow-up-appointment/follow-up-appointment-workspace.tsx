@@ -188,7 +188,7 @@ export function FollowUpAppointmentWorkspace() {
     };
   }, [appointmentType, context, dateValue, dentist, reason, timeValue]);
 
-  const completedProcedures = context?.session?.completedProcedures ?? context?.summary?.completedProcedures ?? [];
+  const completedProcedures: never[] = [];
   const completedTreatment = context?.completedTreatmentLabel || 'Not recorded';
 
   const validate = () => {

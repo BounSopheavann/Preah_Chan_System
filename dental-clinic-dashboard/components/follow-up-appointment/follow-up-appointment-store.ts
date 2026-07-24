@@ -1,28 +1,34 @@
 'use client';
 
-import { appointmentTypes, type AppointmentRecord, type AppointmentType, dentistOptions } from '@/components/appointments/appointment-data';
-import { loadFlowState, buildSummaryFromSession } from '@/components/treatment-execution/procedure-workspace-store';
-import { buildReceiptFromInvoice, loadSavedInvoice, loadSavedReceipt, type Invoice, type Receipt } from '@/components/billing/billing-store';
 import { patientRecords, type Patient } from '@/components/patients/patient-data';
-import type { TreatmentSession, TreatmentSummary } from '@/components/treatment-execution/treatment-execution-data';
 
-const STORAGE_KEY = 'preah-chan-follow-up-appointment';
+/* ── Types ── */
 
 export interface FollowUpWorkspaceContext {
   patient: Patient;
-  session: TreatmentSession | null;
-  invoice: Invoice | null;
-  receipt: Receipt | null;
-  summary: TreatmentSummary | null;
   completedVisitLabel: string;
   completedTreatmentLabel: string;
   recommendedReason: string;
-  suggestedAppointmentType: AppointmentType;
+  suggestedAppointmentType: string;
   suggestedDentist: string;
 }
 
-export interface FollowUpAppointmentRecord extends AppointmentRecord {
+export interface FollowUpAppointmentRecord {
+  id: string;
+  appointmentId: string;
   patientId: string;
+  patientName: string;
+  patientCode: string;
+  phone: string;
+  dentist: string;
+  appointmentType: string;
+  scheduledAt: string;
+  dateLabel: string;
+  timeLabel: string;
+  status: string;
+  checkInLabel: string;
+  balance: number;
+  avatarTone: string;
   reason: string;
   completedVisitLabel: string;
   completedTreatmentLabel: string;
@@ -30,172 +36,67 @@ export interface FollowUpAppointmentRecord extends AppointmentRecord {
   createdAt: string;
 }
 
-function getLocalDateValue(date = new Date()) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+/* ── Helpers ── */
+
+export function getTodayDateValue(): string {
+  const date = new Date();
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
-function formatDateLabel(dateValue: string) {
+export function isPastDate(dateValue: string, todayValue = getTodayDateValue()): boolean {
+  if (!dateValue) return false;
+  return dateValue < todayValue;
+}
+
+function formatDateLabel(dateValue: string): string {
   const date = new Date(`${dateValue}T00:00:00`);
-  if (Number.isNaN(date.getTime())) {
-    return 'Not recorded';
-  }
-
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(date);
+  if (Number.isNaN(date.getTime())) return 'Not recorded';
+  return new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).format(date);
 }
 
-function formatTimeLabel(timeValue: string) {
+function formatTimeLabel(timeValue: string): string {
   const [hoursRaw, minutesRaw] = timeValue.split(':');
   const hours = Number(hoursRaw);
   const minutes = Number(minutesRaw);
-
-  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
-    return 'Not recorded';
-  }
-
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) return 'Not recorded';
   const date = new Date();
   date.setHours(hours, minutes, 0, 0);
-
-  return new Intl.DateTimeFormat('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(date);
+  return new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(date);
 }
 
-function buildScheduledAt(dateValue: string, timeValue: string) {
-  return `${dateValue}T${timeValue}:00`;
-}
-
-function parseVisitLabel(label?: string | null) {
-  const raw = label?.trim();
-  if (!raw || raw.toLowerCase() === 'no appointment') {
-    return null;
-  }
-
-  const parts = raw.split(' - ');
-  return {
-    dateLabel: parts[0]?.trim() || 'Not recorded',
-    reason: parts.slice(1).join(' - ').trim() || 'Post-treatment review',
-  };
-}
-
-function resolvePatient(session: TreatmentSession | null, invoice: Invoice | null, receipt: Receipt | null) {
-  const identifiers = [
-    session?.patientId,
-    invoice?.patientId,
-    receipt?.patientId,
-    session?.patientName,
-    invoice?.patientName,
-    receipt?.patientName,
-  ]
-    .filter(Boolean)
-    .map((value) => String(value).toLowerCase());
-
-  return (
-    patientRecords.find((record) => {
-      return identifiers.includes(record.patientCode.toLowerCase()) || identifiers.includes(record.fullName.toLowerCase());
-    }) ?? null
-  );
-}
-
-function deriveRecommendedReason(summary: TreatmentSummary | null, patient: Patient | null) {
-  const summaryReason = summary?.recommendations?.trim();
-  if (summaryReason) {
-    return summaryReason;
-  }
-
-  const visitLabel = parseVisitLabel(patient?.upcomingAppointment);
-  if (visitLabel?.reason) {
-    return visitLabel.reason;
-  }
-
-  return 'Post-treatment review';
-}
-
-function deriveCompletedVisitLabel(session: TreatmentSession | null, invoice: Invoice | null, receipt: Receipt | null) {
-  return session?.appointmentDate ?? receipt?.appointmentDate ?? invoice?.appointmentDate ?? 'Not recorded';
-}
-
-function deriveCompletedTreatmentLabel(session: TreatmentSession | null, summary: TreatmentSummary | null) {
-  const completedProcedures = session?.completedProcedures ?? summary?.completedProcedures ?? [];
-  if (completedProcedures.length === 0) {
-    return summary?.finalNotes?.trim() || 'Not recorded';
-  }
-
-  return completedProcedures
-    .map((procedure) => procedure.procedure)
-    .filter(Boolean)
-    .join(', ');
-}
-
-function deriveSuggestedDentist(session: TreatmentSession | null, receipt: Receipt | null, invoice: Invoice | null, patient: Patient | null) {
-  return session?.dentist ?? receipt?.dentist ?? invoice?.dentist ?? patient?.appointments.at(-1)?.dentist ?? dentistOptions[0];
-}
+/* ── Build Workspace Context (simplified — uses first patient as mock) ── */
 
 export function buildFollowUpWorkspaceContext(): FollowUpWorkspaceContext | null {
-  const storedFlow = loadFlowState();
-  const storedInvoice = loadSavedInvoice();
-  const storedReceipt = loadSavedReceipt();
-
-  const session = storedFlow?.session ?? null;
-  const invoice = storedInvoice;
-  const receipt = storedReceipt ?? (storedInvoice && storedInvoice.status !== 'Draft' && storedInvoice.finalizedAt ? buildReceiptFromInvoice(storedInvoice) : null);
-  const summary = session ? buildSummaryFromSession(session) : null;
-  const patient = resolvePatient(session, invoice, receipt);
-
-  if (!patient) {
-    return null;
-  }
-
+  const patient = patientRecords[0] ?? null;
+  if (!patient) return null;
   return {
     patient,
-    session,
-    invoice,
-    receipt,
-    summary,
-    completedVisitLabel: deriveCompletedVisitLabel(session, invoice, receipt),
-    completedTreatmentLabel: deriveCompletedTreatmentLabel(session, summary),
-    recommendedReason: deriveRecommendedReason(summary, patient),
-    suggestedAppointmentType: (appointmentTypes.find((type) => type === 'Follow-up') ?? appointmentTypes[0]) as AppointmentType,
-    suggestedDentist: deriveSuggestedDentist(session, receipt, invoice, patient),
+    completedVisitLabel: 'July 23, 2026',
+    completedTreatmentLabel: 'Composite Filling',
+    recommendedReason: 'Post-treatment review',
+    suggestedAppointmentType: 'Follow-up',
+    suggestedDentist: 'Dr. Sarah',
   };
 }
 
-export function loadSavedFollowUpAppointment(): FollowUpAppointmentRecord | null {
-  if (typeof window === 'undefined') return null;
+/* ── Persistence (no-op for UI prototype) ── */
 
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as FollowUpAppointmentRecord;
-  } catch {
-    return null;
-  }
+export function loadSavedFollowUpAppointment(): FollowUpAppointmentRecord | null {
+  return null;
 }
 
-export function saveFollowUpAppointment(record: FollowUpAppointmentRecord): void {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
+export function saveFollowUpAppointment(_record: FollowUpAppointmentRecord): void {
+  /* no-op */
 }
 
 export function clearSavedFollowUpAppointment(): void {
-  if (typeof window === 'undefined') return;
-  window.localStorage.removeItem(STORAGE_KEY);
+  /* no-op */
 }
 
-export function isPastDate(dateValue: string, todayValue = getLocalDateValue()) {
-  if (!dateValue) {
-    return false;
-  }
-
-  return dateValue < todayValue;
-}
+/* ── Build Record ── */
 
 export function buildFollowUpAppointmentRecord(args: {
   context: FollowUpWorkspaceContext;
@@ -206,21 +107,18 @@ export function buildFollowUpAppointmentRecord(args: {
   reason: string;
 }): FollowUpAppointmentRecord {
   const { context, dateValue, timeValue, dentist, appointmentType, reason } = args;
-  const scheduledAt = buildScheduledAt(dateValue, timeValue);
   const dateLabel = formatDateLabel(dateValue);
   const timeLabel = formatTimeLabel(timeValue);
-  const appointmentId = `AP-FU-${dateValue.replace(/-/g, '')}-${timeValue.replace(':', '')}-${context.patient.patientCode.replace(/[^a-zA-Z0-9]/g, '')}`;
-
   return {
     id: `follow-up-${context.patient.patientCode}-${dateValue}-${timeValue}`,
-    appointmentId,
+    appointmentId: `AP-FU-${dateValue.replace(/-/g, '')}-${timeValue.replace(':', '')}`,
     patientId: context.patient.patientCode,
     patientName: context.patient.fullName,
     patientCode: context.patient.patientCode,
     phone: context.patient.phone,
     dentist,
     appointmentType,
-    scheduledAt,
+    scheduledAt: `${dateValue}T${timeValue}:00`,
     dateLabel,
     timeLabel,
     status: 'Booked',
@@ -230,24 +128,24 @@ export function buildFollowUpAppointmentRecord(args: {
     reason,
     completedVisitLabel: context.completedVisitLabel,
     completedTreatmentLabel: context.completedTreatmentLabel,
-    sourceSessionId: context.session?.id ?? 'Not recorded',
+    sourceSessionId: 'mock-session',
     createdAt: new Date().toISOString(),
   };
 }
 
-export function toAppointmentRecord(record: FollowUpAppointmentRecord): AppointmentRecord {
+export function toAppointmentRecord(record: FollowUpAppointmentRecord): import('@/components/appointments/appointment-data').AppointmentRecord {
   return {
     id: record.id,
     appointmentId: record.appointmentId,
     patientName: record.patientName,
     patientCode: record.patientCode,
     phone: record.phone,
-    dentist: record.dentist,
-    appointmentType: record.appointmentType as AppointmentType,
+    dentist: record.dentist as import('@/components/appointments/appointment-data').DentistName,
+    appointmentType: record.appointmentType as import('@/components/appointments/appointment-data').AppointmentType,
     scheduledAt: record.scheduledAt,
     dateLabel: record.dateLabel,
     timeLabel: record.timeLabel,
-    status: record.status,
+    status: record.status as import('@/components/appointments/appointment-data').AppointmentStatus,
     checkInLabel: record.checkInLabel,
     checkInAt: null,
     priority: undefined,
@@ -265,8 +163,4 @@ export function formatFollowUpSummary(record: FollowUpAppointmentRecord) {
     dentist: record.dentist,
     reason: record.reason,
   };
-}
-
-export function getTodayDateValue() {
-  return getLocalDateValue();
 }

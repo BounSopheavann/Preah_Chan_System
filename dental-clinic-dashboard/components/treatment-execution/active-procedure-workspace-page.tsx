@@ -34,8 +34,6 @@ import {
   applyProcedureCompletion,
   applyProcedureIncomplete,
   createDefaultFlowState,
-  loadFlowState,
-  saveFlowState,
   type TreatmentFlowState,
 } from './procedure-workspace-store';
 import type {
@@ -170,9 +168,9 @@ export function ActiveProcedureWorkspacePage() {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [flow, setFlow] = useState<TreatmentFlowState>(() => createDefaultFlowState());
-  const [hydrated, setHydrated] = useState(false);
-  const [nowMs, setNowMs] = useState(Date.now());
+  const [nowMs] = useState(Date.now());
   const [notesHtml, setNotesHtml] = useState('');
+  const [hydrated, setHydrated] = useState(false);
   const [consumables, setConsumables] = useState<ConsumableRecord[]>([]);
   const [prescriptions, setPrescriptions] = useState<ProcedurePrescriptionItem[]>([]);
   const [attachments, setAttachments] = useState<WorkspaceAttachment[]>([]);
@@ -190,30 +188,8 @@ export function ActiveProcedureWorkspacePage() {
   const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
-    const stored = loadFlowState();
-    if (stored) {
-      setFlow(stored);
-    }
+    setManualStatus('UI prototype mode');
     setHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (!hydrated) {
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      saveFlowState(flow);
-      const stamp = new Date();
-      setManualStatus(`Auto-saved ${stamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`);
-    }, 280);
-
-    return () => window.clearTimeout(timer);
-  }, [flow, hydrated]);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setNowMs(Date.now()), 1000);
-    return () => window.clearInterval(timer);
   }, []);
 
   const activeExecution = flow.session.inProgressProcedure;
@@ -326,8 +302,7 @@ export function ActiveProcedureWorkspacePage() {
   };
 
   const handleManualSave = () => {
-    saveFlowState(flow);
-    setManualStatus(`Saved at ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`);
+    setManualStatus('Prototype save disabled — UI only');
     setValidationMessage('');
   };
 
@@ -349,7 +324,6 @@ export function ActiveProcedureWorkspacePage() {
     };
 
     setFlow(nextFlow);
-    saveFlowState(nextFlow);
     setManualStatus('Procedure paused. Returning to Treatment Execution.');
 
     router.push('/treatment-execution');
@@ -358,7 +332,6 @@ export function ActiveProcedureWorkspacePage() {
   const handleMarkIncomplete = () => {
     const nextFlow = applyProcedureIncomplete(flow);
     setFlow(nextFlow);
-    saveFlowState(nextFlow);
     setValidationMessage('');
     router.push('/treatment-execution');
   };
@@ -381,7 +354,6 @@ export function ActiveProcedureWorkspacePage() {
 
     const nextFlow = applyProcedureCompletion(flow);
     setFlow(nextFlow);
-    saveFlowState(nextFlow);
     setValidationMessage('');
     router.push('/treatment-execution');
   };
@@ -554,7 +526,7 @@ export function ActiveProcedureWorkspacePage() {
   if (!hydrated) {
     return (
       <div className="mx-auto max-w-[1600px] space-y-4 px-4 pb-6 pt-4 lg:px-8">
-        <div className="rounded-3xl border border-border bg-card/90 p-6 shadow-sm">
+        <div className="rounded-3xl border border-border bg-card/95 p-8 shadow-sm">
           <p className="text-sm text-muted-foreground">Loading active procedure workspace...</p>
         </div>
       </div>

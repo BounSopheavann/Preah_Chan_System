@@ -9,8 +9,6 @@ import {
   type TreatmentSummary,
 } from './treatment-execution-data';
 
-const STORAGE_KEY = 'preah-chan-treatment-flow';
-
 export interface TreatmentFlowState {
   session: TreatmentSession;
   activeItemId: string | null;
@@ -32,48 +30,15 @@ export function createDefaultFlowState(): TreatmentFlowState {
 }
 
 export function loadFlowState(): TreatmentFlowState | null {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return null;
-    }
-
-    const parsed = JSON.parse(raw) as TreatmentFlowState;
-    return {
-      session: cloneSession(parsed.session),
-      activeItemId: parsed.activeItemId ?? null,
-      workspaceStartedAt: parsed.workspaceStartedAt ?? null,
-      lastSavedAt: parsed.lastSavedAt ?? null,
-    };
-  } catch {
-    return null;
-  }
+  return createDefaultFlowState();
 }
 
-export function saveFlowState(state: TreatmentFlowState): void {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify({
-      ...state,
-      lastSavedAt: new Date().toISOString(),
-    })
-  );
+export function saveFlowState(_state: TreatmentFlowState): void {
+  /* no-op — UI prototype only */
 }
 
 export function clearFlowState(): void {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.localStorage.removeItem(STORAGE_KEY);
+  /* no-op — UI prototype only */
 }
 
 export function buildProcedureExecution(

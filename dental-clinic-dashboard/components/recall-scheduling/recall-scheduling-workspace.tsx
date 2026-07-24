@@ -120,10 +120,7 @@ export function RecallSchedulingWorkspace() {
 
   const todayValue = useMemo(() => getTodayDateValue(), []);
 
-  const completedProcedures =
-    context?.session?.completedProcedures ??
-    context?.summary?.completedProcedures ??
-    [];
+  const completedProcedures: never[] = [];
   const completedTreatment =
     context?.completedTreatmentLabel || 'Not recorded';
 
