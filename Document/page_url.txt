@@ -13,7 +13,9 @@
 - http://localhost:3000/treatment-summary          - Treatment Summary
 
 ## Billing & Payment
-- http://localhost:3000/billing   - Billing / Invoice
+- http://localhost:3000/billing   - Billing
+- http://localhost:3000/invoice   - Invoice
+- http://localhost:3000/payment   - Payment
 - http://localhost:3000/receipt   - Receipt
 
 ## Post-Visit
@@ -21,7 +23,6 @@
 - http://localhost:3000/follow-up-appointment     - Follow-up Appointment
 - http://localhost:3000/recall-scheduling          - Recall Scheduling
 - http://localhost:3000/reminder-center            - Reminder Center
-- http://localhost:3000/telegram-linking           - Telegram Linking
 
 ## Other
 - http://localhost:3000/activity-log - Activity Log

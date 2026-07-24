@@ -89,8 +89,8 @@ export function BillingWorkspace() {
   }, [showToast]);
 
   const handleViewInvoice = useCallback(() => {
-    showToast('Navigating to invoice view...', 'info');
-  }, [showToast]);
+    router.push('/invoice');
+  }, [router]);
 
   const handleBack = useCallback(() => {
     router.push('/treatment-summary');
