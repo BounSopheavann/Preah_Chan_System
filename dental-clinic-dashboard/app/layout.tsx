@@ -7,10 +7,16 @@ export const metadata: Metadata = {
   title: 'Dental Clinic Dashboard',
   description: 'Professional dental clinic management system',
   generator: 'v0.app',
+  manifest: '/manifest.json',
   icons: {
     icon: '/Logo.png',
     shortcut: '/Logo.png',
     apple: '/Logo.png',
+  },
+  appleWebApp: {
+    capable: true,
+    title: 'Dental Clinic',
+    statusBarStyle: 'default',
   },
 }
 
