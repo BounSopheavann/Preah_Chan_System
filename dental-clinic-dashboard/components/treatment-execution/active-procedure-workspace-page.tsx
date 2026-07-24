@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -234,6 +235,7 @@ function Toast({ message, visible }: { message: string; visible: boolean }) {
 /* ── MAIN PAGE ──────────────────────────────────────────── */
 
 export function ActiveProcedureWorkspacePage() {
+  const router = useRouter();
   const [toastMessage, setToastMessage] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
   const [notesHtml, setNotesHtml] = useState(MOCK_CLINICAL_NOTES);
@@ -301,7 +303,7 @@ export function ActiveProcedureWorkspacePage() {
   };
 
   const handleBackToTreatment = () => {
-    showToast('Returning to Treatment Execution (UI mockup)');
+    router.push('/treatment-execution');
   };
 
   const markStepComplete = (procedure: string) => {
