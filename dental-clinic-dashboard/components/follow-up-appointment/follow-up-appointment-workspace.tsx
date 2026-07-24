@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   AlertCircle,
@@ -16,27 +16,91 @@ import {
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { appointmentTypes, dentistOptions } from '@/components/appointments/appointment-data';
-import {
-  buildFollowUpAppointmentRecord,
-  buildFollowUpWorkspaceContext,
-  formatFollowUpSummary,
-  getTodayDateValue,
-  isPastDate,
-  loadSavedFollowUpAppointment,
-  saveFollowUpAppointment,
-  type FollowUpAppointmentRecord,
-  type FollowUpWorkspaceContext,
-} from './follow-up-appointment-store';
 
-type FieldError = Partial<Record<'dentist' | 'date' | 'time' | 'appointmentType' | 'context', string>>;
+/* ── Mock Data ── */
 
-function formatCompactDate(dateValue: string) {
+const mockPatient = {
+  fullName: 'Sopheak Chan',
+  patientCode: 'PT000015',
+  phone: '012 345 678',
+  currentDentist: 'Dr. Dara Sok',
+  completedTreatment: 'Root Canal Treatment',
+  tooth: '36',
+  visitStatus: 'Completed',
+};
+
+const mockFollowUpRecommendation = {
+  required: true,
+  reason: 'Root canal review',
+  recommendedTimeframe: '7 days',
+  dentistRecommendation: 'Review healing and evaluate tooth before final restoration.',
+};
+
+const dentistOptions = [
+  'Dr. Dara Sok',
+  'Dr. Chan Vireak',
+  'Dr. Sopheak Chan',
+  'Dr. Boun Sopheavann',
+  'Dr. Kim Srey Pich',
+];
+
+const appointmentTypeOptions = [
+  'Treatment Follow-up',
+  'Root Canal Review',
+  'Crown Fitting',
+  'Suture Removal',
+  'Orthodontic Review',
+  'General Review',
+];
+
+const durationOptions = [
+  { value: '15', label: '15 minutes' },
+  { value: '30', label: '30 minutes' },
+  { value: '45', label: '45 minutes' },
+  { value: '60', label: '60 minutes' },
+  { value: '90', label: '90 minutes' },
+];
+
+const mockTimeSlots = [
+  '08:00 AM',
+  '08:30 AM',
+  '09:00 AM',
+  '09:30 AM',
+  '10:00 AM',
+  '10:30 AM',
+  '11:00 AM',
+  '11:30 AM',
+  '01:00 PM',
+  '01:30 PM',
+  '02:00 PM',
+  '02:30 PM',
+  '03:00 PM',
+  '03:30 PM',
+  '04:00 PM',
+  '04:30 PM',
+];
+
+function getTodayDateString() {
+  const today = new Date();
+  return today.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
+function getDefaultDate() {
+  const date = new Date();
+  date.setDate(date.getDate() + 7);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function formatDateDisplay(dateValue: string) {
   const date = new Date(`${dateValue}T00:00:00`);
-  if (Number.isNaN(date.getTime())) {
-    return 'Not recorded';
-  }
-
+  if (Number.isNaN(date.getTime())) return 'Not recorded';
   return new Intl.DateTimeFormat('en-US', {
     month: 'long',
     day: 'numeric',
@@ -44,36 +108,15 @@ function formatCompactDate(dateValue: string) {
   }).format(date);
 }
 
-function addDays(dateValue: string, days: number) {
-  const date = new Date(`${dateValue}T00:00:00`);
-  if (Number.isNaN(date.getTime())) {
-    return dateValue;
-  }
-
-  date.setDate(date.getDate() + days);
+function getTodayValue() {
+  const date = new Date();
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
 
-function getDisplayTimeLabel(timeValue: string) {
-  const [hoursRaw, minutesRaw] = timeValue.split(':');
-  const hours = Number(hoursRaw);
-  const minutes = Number(minutesRaw);
-
-  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
-    return 'Not recorded';
-  }
-
-  const date = new Date();
-  date.setHours(hours, minutes, 0, 0);
-
-  return new Intl.DateTimeFormat('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(date);
-}
+/* ── Helper Components ── */
 
 function SectionCard({
   icon,
@@ -102,13 +145,7 @@ function SectionCard({
   );
 }
 
-function Field({
-  label,
-  value,
-}: {
-  label: string;
-  value: ReactNode;
-}) {
+function Field({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="rounded-xl border border-border bg-muted/30 px-3.5 py-3 dark:bg-background/20">
       <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">{label}</div>
@@ -119,220 +156,120 @@ function Field({
 
 function ErrorText({ message }: { message?: string }) {
   if (!message) return null;
-
   return <p className="mt-1 text-xs font-medium text-rose-600 dark:text-rose-300">{message}</p>;
 }
 
-function formatAppointmentSummary(record: FollowUpAppointmentRecord | null) {
-  if (!record) {
-    return null;
-  }
-
-  return formatFollowUpSummary(record);
-}
+/* ── Main Component ── */
 
 export function FollowUpAppointmentWorkspace() {
   const router = useRouter();
-  const [hydrated, setHydrated] = useState(false);
-  const [context, setContext] = useState<FollowUpWorkspaceContext | null>(null);
-  const [savedAppointment, setSavedAppointment] = useState<FollowUpAppointmentRecord | null>(null);
-  const [dentist, setDentist] = useState('');
-  const [dateValue, setDateValue] = useState('');
-  const [timeValue, setTimeValue] = useState('');
-  const [appointmentType, setAppointmentType] = useState('');
-  const [reason, setReason] = useState('');
-  const [errors, setErrors] = useState<FieldError>({});
-  const [isSaving, setIsSaving] = useState(false);
+  const [dentist, setDentist] = useState(mockPatient.currentDentist);
+  const [dateValue, setDateValue] = useState(getDefaultDate());
+  const [timeSlot, setTimeSlot] = useState('10:30 AM');
+  const [appointmentType, setAppointmentType] = useState(mockFollowUpRecommendation.reason);
+  const [duration, setDuration] = useState('30');
+  const [notes, setNotes] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saved, setSaved] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
-  useEffect(() => {
-    const workspaceContext = buildFollowUpWorkspaceContext();
+  const todayValue = getTodayValue();
 
-    if (!workspaceContext) {
-      setHydrated(true);
-      return;
-    }
-
-    const storedAppointment = loadSavedFollowUpAppointment();
-    const matchesCurrentPatient = storedAppointment?.patientCode === workspaceContext.patient.patientCode;
-    const currentDateValue = getTodayDateValue();
-    const defaultDateValue = addDays(currentDateValue, 7);
-    const initialDateValue = matchesCurrentPatient && storedAppointment ? storedAppointment.scheduledAt.slice(0, 10) : defaultDateValue;
-    const initialTimeValue = matchesCurrentPatient && storedAppointment ? storedAppointment.scheduledAt.slice(11, 16) : '10:00';
-
-    setContext(workspaceContext);
-    setSavedAppointment(matchesCurrentPatient ? storedAppointment : null);
-    setDentist(matchesCurrentPatient && storedAppointment ? storedAppointment.dentist : workspaceContext.suggestedDentist);
-    setDateValue(initialDateValue);
-    setTimeValue(initialTimeValue);
-    setAppointmentType(matchesCurrentPatient && storedAppointment ? storedAppointment.appointmentType : workspaceContext.suggestedAppointmentType);
-    setReason(matchesCurrentPatient && storedAppointment ? storedAppointment.reason : workspaceContext.recommendedReason);
-    setHydrated(true);
-  }, []);
-
-  const todayValue = useMemo(() => getTodayDateValue(), []);
-
-  const bookedSummary = useMemo(() => formatAppointmentSummary(savedAppointment), [savedAppointment]);
-
-  const currentPreview = useMemo(() => {
-    if (!context) {
-      return null;
-    }
-
-    return {
-      date: dateValue ? formatCompactDate(dateValue) : 'Not recorded',
-      time: timeValue ? getDisplayTimeLabel(timeValue) : 'Not recorded',
-      dentist: dentist || context.suggestedDentist,
-      appointmentType: appointmentType || context.suggestedAppointmentType,
-      reason: reason.trim() || context.recommendedReason,
-    };
-  }, [appointmentType, context, dateValue, dentist, reason, timeValue]);
-
-  const completedProcedures: never[] = [];
-  const completedTreatment = context?.completedTreatmentLabel || 'Not recorded';
+  const preview = {
+    patient: mockPatient.fullName,
+    dentist: dentist || mockPatient.currentDentist,
+    date: dateValue ? formatDateDisplay(dateValue) : 'Not recorded',
+    time: timeSlot || 'Not recorded',
+    type: appointmentType || mockFollowUpRecommendation.reason,
+    duration: durationOptions.find((d) => d.value === duration)?.label || 'Not recorded',
+    status: saved ? 'Booked' : 'Ready to Schedule',
+  };
 
   const validate = () => {
-    const nextErrors: FieldError = {};
-
-    if (!context) {
-      nextErrors.context = 'The completed visit context is missing. Open Visit Completion first.';
-      return nextErrors;
-    }
-
-    if (!dentist.trim()) {
-      nextErrors.dentist = 'Select the dentist for the follow-up.';
-    }
-
-    if (!dateValue.trim()) {
-      nextErrors.date = 'Select a follow-up date.';
-    } else if (isPastDate(dateValue, todayValue)) {
-      nextErrors.date = 'The follow-up date cannot be in the past.';
-    }
-
-    if (!timeValue.trim()) {
-      nextErrors.time = 'Select a follow-up time.';
-    }
-
-    if (!appointmentType.trim()) {
-      nextErrors.appointmentType = 'Choose an appointment type.';
-    }
-
+    const nextErrors: Record<string, string> = {};
+    if (!dentist.trim()) nextErrors.dentist = 'Select the dentist for the follow-up.';
+    if (!dateValue.trim()) nextErrors.date = 'Select a follow-up date.';
+    else if (dateValue < todayValue) nextErrors.date = 'The follow-up date cannot be in the past.';
+    if (!timeSlot.trim()) nextErrors.time = 'Select a follow-up time.';
+    if (!appointmentType.trim()) nextErrors.appointmentType = 'Choose an appointment type.';
     return nextErrors;
   };
 
   const handleSave = () => {
     const nextErrors = validate();
     setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
 
-    if (Object.keys(nextErrors).length > 0 || !context) {
-      return;
-    }
-
-    setIsSaving(true);
-    const record = buildFollowUpAppointmentRecord({
-      context,
-      dateValue,
-      timeValue,
-      dentist: dentist.trim(),
-      appointmentType: appointmentType.trim(),
-      reason: reason.trim() || context.recommendedReason,
-    });
-
-    saveFollowUpAppointment(record);
-    setSavedAppointment(record);
-    setSuccessMessage('Follow-up appointment saved successfully. Returning to Visit Completion...');
-
-    window.setTimeout(() => {
-      setIsSaving(false);
-      router.replace('/visit-completion');
-    }, 900);
+    setSaved(true);
+    setSuccessMessage('Follow-up appointment scheduled successfully.');
   };
 
   const handleCancel = () => {
     router.push('/visit-completion');
   };
 
-  const handleContextRecovery = () => {
+  const handleBack = () => {
     router.push('/visit-completion');
   };
-
-  if (!hydrated) {
-    return (
-      <div className="space-y-4">
-        <div className="rounded-xl border border-border bg-card/90 p-6 shadow-sm">
-          <p className="text-sm text-muted-foreground">Loading follow-up workspace...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!context) {
-    return (
-      <div className="space-y-4">
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-8 text-center dark:border-rose-500/20 dark:bg-rose-500/10">
-          <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-rose-100 dark:bg-rose-500/20">
-            <XCircle className="size-8 text-rose-600 dark:text-rose-300" />
-          </div>
-          <h1 className="text-xl font-bold text-rose-800 dark:text-rose-200">Missing Visit Context</h1>
-          <p className="mt-2 text-sm text-rose-700 dark:text-rose-300">
-            The follow-up workspace needs a completed visit before it can book the next appointment.
-          </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Button variant="outline" onClick={handleContextRecovery}>
-              <ArrowLeft className="mr-1.5 size-4" />
-              Return to Visit Completion
-            </Button>
-            <Button variant="secondary" onClick={() => router.push('/dashboard')}>
-              Dashboard
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   const validationSummary = Object.values(errors).filter(Boolean) as string[];
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div className="space-y-2">
-          <Button variant="ghost" size="sm" onClick={handleCancel} className="-ml-2 w-fit text-muted-foreground hover:text-foreground">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleBack}
+            className="-ml-2 w-fit text-muted-foreground hover:text-foreground"
+          >
             <ArrowLeft className="mr-2 size-4" />
             Back to Visit Completion
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Follow-up Appointment Workspace</h1>
+            <h1 className="text-3xl font-bold text-foreground">Follow-up Appointment</h1>
             <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-              Book the patient&apos;s next visit after the completed treatment without re-searching the patient record.
+              Schedule the patient's next visit after the completed treatment.
             </p>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
-            <BadgeCheck className="mr-1.5 size-3.5" />
-            Booked status
-          </span>
-          <span className="inline-flex items-center rounded-full border border-border bg-background/70 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
-            Same patient
-          </span>
+          {saved ? (
+            <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+              <BadgeCheck className="mr-1.5 size-3.5" />
+              Booked
+            </span>
+          ) : (
+            <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+              Ready to Schedule
+            </span>
+          )}
         </div>
       </div>
 
+      {/* Success Message */}
       {successMessage && (
         <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 dark:border-emerald-500/20 dark:bg-emerald-500/10">
           <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
           <div>
             <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-200">{successMessage}</p>
-            <p className="mt-0.5 text-xs text-emerald-600 dark:text-emerald-300">The completed visit stays closed and the new appointment is saved as Booked.</p>
+            <p className="mt-0.5 text-xs text-emerald-600 dark:text-emerald-300">
+              The appointment is saved locally. You can review it below.
+            </p>
           </div>
         </div>
       )}
 
+      {/* Validation Errors */}
       {validationSummary.length > 0 && (
         <div className="space-y-2">
           {validationSummary.map((message) => (
-            <div key={message} className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 dark:border-rose-500/20 dark:bg-rose-500/10">
+            <div
+              key={message}
+              className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 dark:border-rose-500/20 dark:bg-rose-500/10"
+            >
               <AlertCircle className="mt-0.5 size-5 shrink-0 text-rose-600 dark:text-rose-300" />
               <p className="text-sm text-rose-700 dark:text-rose-200">{message}</p>
             </div>
@@ -340,44 +277,48 @@ export function FollowUpAppointmentWorkspace() {
         </div>
       )}
 
+      {/* Patient Banner */}
       <section className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5 dark:border-emerald-500/20 dark:bg-emerald-500/10">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-xl font-bold text-foreground">{context.patient.fullName}</h2>
+              <h2 className="text-xl font-bold text-foreground">{mockPatient.fullName}</h2>
               <span className="rounded-md border border-border bg-background/70 px-1.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
-                {context.patient.patientCode}
+                {mockPatient.patientCode}
               </span>
               <span className="inline-flex items-center rounded-full border border-emerald-200 bg-white px-2.5 py-1 text-[11px] font-bold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
-                {savedAppointment ? 'Next appointment already booked' : 'New follow-up draft'}
+                {saved ? 'Next appointment booked' : 'New follow-up draft'}
               </span>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
-              Scheduling the patient&apos;s next appointment after the completed visit.
+              Scheduling the patient's next appointment after the completed visit.
             </p>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[440px]">
-            <Field label="Completed Visit" value={context.completedVisitLabel} />
-            <Field label="Treating Dentist" value={context.suggestedDentist} />
-            <Field label="Completed Treatment" value={completedTreatment} />
-            <Field label="Follow-up Reason" value={context.recommendedReason} />
+            <Field label="Completed Treatment" value={`${mockPatient.completedTreatment} (Tooth ${mockPatient.tooth})`} />
+            <Field label="Current Dentist" value={mockPatient.currentDentist} />
+            <Field label="Visit Status" value={mockPatient.visitStatus} />
+            <Field label="Follow-up Reason" value={mockFollowUpRecommendation.reason} />
           </div>
         </div>
       </section>
 
+      {/* Main Content */}
       <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+        {/* Form */}
         <SectionCard
           icon={<CalendarDays className="size-5" />}
           title="Appointment Details"
-          subtitle="Use the current patient and the normal Booked appointment flow."
+          subtitle="Fill in the details for the patient's follow-up visit."
         >
           <div className="grid gap-4 sm:grid-cols-2">
+            {/* Dentist */}
             <label className="space-y-1.5 text-sm font-semibold text-foreground">
               Dentist
               <select
                 value={dentist}
-                onChange={(event) => setDentist(event.target.value)}
+                onChange={(e) => setDentist(e.target.value)}
                 className={`h-10 w-full rounded-xl border bg-background/70 px-3 text-sm outline-none transition-all focus:border-primary/50 focus:ring-2 focus:ring-ring/20 dark:bg-background/30 ${
                   errors.dentist ? 'border-rose-300 ring-2 ring-rose-200/60 dark:border-rose-500/40 dark:ring-rose-500/20' : 'border-border'
                 }`}
@@ -392,13 +333,14 @@ export function FollowUpAppointmentWorkspace() {
               <ErrorText message={errors.dentist} />
             </label>
 
+            {/* Date */}
             <label className="space-y-1.5 text-sm font-semibold text-foreground">
-              Date
+              Follow-up Date
               <input
                 type="date"
                 value={dateValue}
                 min={todayValue}
-                onChange={(event) => setDateValue(event.target.value)}
+                onChange={(e) => setDateValue(e.target.value)}
                 className={`h-10 w-full rounded-xl border bg-background/70 px-3 text-sm outline-none transition-all focus:border-primary/50 focus:ring-2 focus:ring-ring/20 dark:bg-background/30 ${
                   errors.date ? 'border-rose-300 ring-2 ring-rose-200/60 dark:border-rose-500/40 dark:ring-rose-500/20' : 'border-border'
                 }`}
@@ -406,30 +348,38 @@ export function FollowUpAppointmentWorkspace() {
               <ErrorText message={errors.date} />
             </label>
 
+            {/* Time Slot */}
             <label className="space-y-1.5 text-sm font-semibold text-foreground">
               Time
-              <input
-                type="time"
-                value={timeValue}
-                onChange={(event) => setTimeValue(event.target.value)}
+              <select
+                value={timeSlot}
+                onChange={(e) => setTimeSlot(e.target.value)}
                 className={`h-10 w-full rounded-xl border bg-background/70 px-3 text-sm outline-none transition-all focus:border-primary/50 focus:ring-2 focus:ring-ring/20 dark:bg-background/30 ${
                   errors.time ? 'border-rose-300 ring-2 ring-rose-200/60 dark:border-rose-500/40 dark:ring-rose-500/20' : 'border-border'
                 }`}
-              />
+              >
+                <option value="">Select time slot</option>
+                {mockTimeSlots.map((slot) => (
+                  <option key={slot} value={slot}>
+                    {slot}
+                  </option>
+                ))}
+              </select>
               <ErrorText message={errors.time} />
             </label>
 
+            {/* Appointment Type */}
             <label className="space-y-1.5 text-sm font-semibold text-foreground">
               Appointment Type
               <select
                 value={appointmentType}
-                onChange={(event) => setAppointmentType(event.target.value)}
+                onChange={(e) => setAppointmentType(e.target.value)}
                 className={`h-10 w-full rounded-xl border bg-background/70 px-3 text-sm outline-none transition-all focus:border-primary/50 focus:ring-2 focus:ring-ring/20 dark:bg-background/30 ${
                   errors.appointmentType ? 'border-rose-300 ring-2 ring-rose-200/60 dark:border-rose-500/40 dark:ring-rose-500/20' : 'border-border'
                 }`}
               >
                 <option value="">Select appointment type</option>
-                {appointmentTypes.map((option) => (
+                {appointmentTypeOptions.map((option) => (
                   <option key={option} value={option}>
                     {option}
                   </option>
@@ -437,27 +387,45 @@ export function FollowUpAppointmentWorkspace() {
               </select>
               <ErrorText message={errors.appointmentType} />
             </label>
+
+            {/* Duration */}
+            <label className="space-y-1.5 text-sm font-semibold text-foreground">
+              Duration
+              <select
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                className="h-10 w-full rounded-xl border border-border bg-background/70 px-3 text-sm outline-none transition-all focus:border-primary/50 focus:ring-2 focus:ring-ring/20 dark:bg-background/30"
+              >
+                {durationOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
 
+          {/* Notes */}
           <label className="mt-4 block space-y-1.5 text-sm font-semibold text-foreground">
-            Reason / Notes
+            Appointment Notes
             <textarea
-              value={reason}
-              onChange={(event) => setReason(event.target.value)}
-              rows={5}
-              className="min-h-28 w-full rounded-xl border border-border bg-background/70 px-3 py-2.5 text-sm outline-none transition-all placeholder:text-muted-foreground/60 focus:border-primary/50 focus:ring-2 focus:ring-ring/20 dark:bg-background/30"
-              placeholder="Describe the follow-up reason or any notes for the receptionist..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={4}
+              className="min-h-24 w-full rounded-xl border border-border bg-background/70 px-3 py-2.5 text-sm outline-none transition-all placeholder:text-muted-foreground/60 focus:border-primary/50 focus:ring-2 focus:ring-ring/20 dark:bg-background/30"
+              placeholder="Optional notes for the appointment..."
             />
           </label>
 
+          {/* Buttons */}
           <div className="mt-5 flex flex-wrap gap-3">
             <Button
               onClick={handleSave}
-              disabled={isSaving}
+              disabled={saved}
               className="h-11 min-w-52 px-5 text-sm font-semibold shadow-lg shadow-primary/20"
             >
               <Save className="mr-2 size-4" />
-              {isSaving ? 'Saving...' : 'Save Follow-up Appointment'}
+              {saved ? 'Saved' : 'Save Follow-up'}
             </Button>
             <Button variant="outline" onClick={handleCancel} className="h-11 px-5 text-sm font-semibold">
               <XCircle className="mr-2 size-4" />
@@ -466,84 +434,81 @@ export function FollowUpAppointmentWorkspace() {
           </div>
         </SectionCard>
 
+        {/* Sidebar */}
         <div className="space-y-5">
+          {/* Visit Context */}
           <SectionCard
             icon={<ClipboardList className="size-5" />}
             title="Visit Context"
-            subtitle="Everything needed to book the next visit is already loaded."
+            subtitle="Reference from the completed visit."
           >
             <div className="grid gap-3">
-              <Field label="Patient" value={context.patient.fullName} />
-              <Field label="Patient ID" value={context.patient.patientCode} />
-              <Field label="Completed Visit" value={context.completedVisitLabel} />
-              <Field label="Treating Dentist" value={context.suggestedDentist} />
-              <Field label="Completed Treatment / Procedure" value={completedTreatment} />
-              <Field label="Recommended Follow-up Reason" value={context.recommendedReason} />
+              <Field label="Patient" value={mockPatient.fullName} />
+              <Field label="Patient ID" value={mockPatient.patientCode} />
+              <Field label="Phone" value={mockPatient.phone} />
+              <Field label="Completed Treatment" value={`${mockPatient.completedTreatment} (Tooth ${mockPatient.tooth})`} />
+              <Field label="Current Dentist" value={mockPatient.currentDentist} />
+              <Field label="Recommended Follow-up" value={mockFollowUpRecommendation.reason} />
             </div>
           </SectionCard>
 
+          {/* Appointment Preview */}
           <SectionCard
             icon={<Clock3 className="size-5" />}
-            title="Next Appointment Preview"
-            subtitle="This preview updates as the receptionist edits the form."
+            title="Appointment Preview"
+            subtitle="Updates as you edit the form."
           >
             <div className="space-y-3">
               <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 dark:bg-background/20">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Date</p>
-                <p className="mt-1 text-sm font-semibold text-foreground">{currentPreview?.date ?? 'Not recorded'}</p>
-              </div>
-              <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 dark:bg-background/20">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Time</p>
-                <p className="mt-1 text-sm font-semibold text-foreground">{currentPreview?.time ?? 'Not recorded'}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Patient</p>
+                <p className="mt-1 text-sm font-semibold text-foreground">{preview.patient}</p>
               </div>
               <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 dark:bg-background/20">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Dentist</p>
-                <p className="mt-1 text-sm font-semibold text-foreground">{currentPreview?.dentist ?? 'Not recorded'}</p>
+                <p className="mt-1 text-sm font-semibold text-foreground">{preview.dentist}</p>
               </div>
               <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 dark:bg-background/20">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Appointment Type</p>
-                <p className="mt-1 text-sm font-semibold text-foreground">{currentPreview?.appointmentType || 'Not recorded'}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Date</p>
+                <p className="mt-1 text-sm font-semibold text-foreground">{preview.date}</p>
               </div>
               <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 dark:bg-background/20">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Reason / Notes</p>
-                <p className="mt-1 text-sm font-semibold text-foreground">{currentPreview?.reason || 'Not recorded'}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Time</p>
+                <p className="mt-1 text-sm font-semibold text-foreground">{preview.time}</p>
+              </div>
+              <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 dark:bg-background/20">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Type</p>
+                <p className="mt-1 text-sm font-semibold text-foreground">{preview.type}</p>
+              </div>
+              <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 dark:bg-background/20">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Duration</p>
+                <p className="mt-1 text-sm font-semibold text-foreground">{preview.duration}</p>
+              </div>
+              <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 dark:bg-background/20">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Status</p>
+                <span
+                  className={`mt-1 inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-bold ${
+                    saved
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300'
+                      : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300'
+                  }`}
+                >
+                  {preview.status}
+                </span>
               </div>
             </div>
           </SectionCard>
 
-          {savedAppointment && (
-            <SectionCard
-              icon={<CheckCircle2 className="size-5" />}
-              title="Saved Next Appointment"
-              subtitle="The follow-up appointment already exists in local storage."
-            >
-              {bookedSummary && (
-                <div className="space-y-3">
-                  <Field label="Next Appointment" value={bookedSummary.nextAppointmentLabel} />
-                  <Field label="Dentist" value={bookedSummary.dentist} />
-                  <Field label="Appointment Type" value={bookedSummary.appointmentType} />
-                  <Field label="Reason" value={bookedSummary.reason} />
-                </div>
-              )}
-              <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200">
-                Saving again updates this same booked follow-up instead of creating a duplicate visit.
-              </div>
-            </SectionCard>
-          )}
-
+          {/* Dentist Recommendation */}
           <SectionCard
             icon={<Stethoscope className="size-5" />}
-            title="Completed Visit Snapshot"
-            subtitle="Reference only. The previous appointment stays completed."
+            title="Dentist Recommendation"
+            subtitle="From the completed visit."
           >
-            <div className="grid gap-3">
-              <Field label="Visit Date" value={context.completedVisitLabel} />
-              <Field label="Treating Dentist" value={context.suggestedDentist} />
-              <Field label="Completed Treatment" value={completedTreatment} />
-              <Field label="Procedures Completed" value={completedProcedures.length > 0 ? `${completedProcedures.length} procedure${completedProcedures.length === 1 ? '' : 's'}` : 'Not recorded'} />
+            <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 dark:bg-background/20">
+              <p className="text-sm text-foreground">{mockFollowUpRecommendation.dentistRecommendation}</p>
             </div>
             <div className="mt-3 rounded-xl border border-border bg-muted/20 px-4 py-3 text-xs text-muted-foreground dark:bg-background/20">
-              The follow-up appointment is saved separately from the completed visit and uses the normal Booked appointment status.
+              Recommended timeframe: {mockFollowUpRecommendation.recommendedTimeframe}
             </div>
           </SectionCard>
         </div>

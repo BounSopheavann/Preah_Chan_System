@@ -1,41 +1,105 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   AlertCircle,
   ArrowLeft,
-  BadgeCheck,
+  Bell,
   CalendarDays,
   CheckCircle2,
-  ClipboardList,
   Clock3,
   Save,
-  Stethoscope,
   XCircle,
-  Bell,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import {
-  buildRecallRecord,
-  buildRecallWorkspaceContext,
-  findDuplicateRecall,
-  getTodayDateValue,
-  isPastDate,
-  addMonths,
-  recallTypes,
-  reminderMethods,
-  saveRecall,
-  type RecallRecord,
-  type RecallType,
-  type RecallWorkspaceContext,
-  type ReminderMethod,
-} from './recall-scheduling-store';
+
+/* ── Inline helpers ── */
+
+function getTodayDateValue(): string {
+  const date = new Date();
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function addMonths(dateValue: string, months: number): string {
+  const date = new Date(`${dateValue}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return dateValue;
+  date.setMonth(date.getMonth() + months);
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function formatDateDisplay(dateValue: string): string {
+  if (!dateValue) return 'Not selected';
+  const date = new Date(`${dateValue}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return 'Not selected';
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(date);
+}
+
+function isPastDate(dateValue: string, todayValue: string): boolean {
+  if (!dateValue) return false;
+  return dateValue < todayValue;
+}
+
+/* ── Inline mock constants ── */
+
+const recallTypes = [
+  'Routine Check-up',
+  'Treatment Follow-up',
+  'Orthodontic Review',
+  'Periodontal Maintenance',
+  'Preventive Cleaning',
+  'Other',
+] as const;
+
+const reminderMethods = ['Telegram', 'SMS', 'Phone', 'Email'] as const;
+
+interface QuickInterval {
+  label: string;
+  months: number;
+}
+
+const quickIntervals: QuickInterval[] = [
+  { label: '1 Month', months: 1 },
+  { label: '3 Months', months: 3 },
+  { label: '6 Months', months: 6 },
+  { label: '12 Months', months: 12 },
+];
+
+const mockPatient = {
+  fullName: 'Sopheak Chan',
+  patientCode: 'PT000015',
+  phone: '012 345 678',
+  dentist: 'Dr. Dara Sok',
+  lastVisit: 'July 24, 2026',
+  completedTreatment: 'Root Canal Treatment',
+  tooth: '36',
+};
+
+const mockRecallRecommendation = {
+  recommended: true,
+  recommendedType: 'Treatment Follow-up' as const,
+  recommendedInterval: '6 months',
+  suggestedDueDate: 'January 24, 2027',
+  recommendation:
+    'Routine review and preventive examination.',
+};
 
 type FieldError = Partial<
-  Record<'recallType' | 'dueDate' | 'reminderMethod' | 'context', string>
+  Record<'recallType' | 'dueDate' | 'reminderMethod', string>
 >;
+
+/* ── Sub-components ── */
 
 function SectionCard({
   icon,
@@ -90,161 +154,53 @@ function ErrorText({ message }: { message?: string }) {
   );
 }
 
+/* ── Main Workspace ── */
+
 export function RecallSchedulingWorkspace() {
   const router = useRouter();
-  const [hydrated, setHydrated] = useState(false);
-  const [context, setContext] = useState<RecallWorkspaceContext | null>(null);
+  const todayValue = getTodayDateValue();
+  const defaultDueDate = addMonths(todayValue, 6);
+
   const [recallType, setRecallType] = useState('');
-  const [dueDate, setDueDate] = useState('');
+  const [dueDate, setDueDate] = useState(defaultDueDate);
   const [reminderMethod, setReminderMethod] = useState('Telegram');
-  const [notes, setNotes] = useState('');
+  const [notes, setNotes] = useState(
+    'Routine 6-month review. Check tooth 36 and overall oral health.'
+  );
   const [errors, setErrors] = useState<FieldError>({});
-  const [isSaving, setIsSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
-
-  useEffect(() => {
-    const workspaceContext = buildRecallWorkspaceContext();
-    if (!workspaceContext) {
-      setHydrated(true);
-      return;
-    }
-
-    const today = getTodayDateValue();
-    const defaultDueDate = addMonths(today, 6);
-
-    setContext(workspaceContext);
-    setDueDate(defaultDueDate);
-    setHydrated(true);
-  }, []);
-
-  const todayValue = useMemo(() => getTodayDateValue(), []);
-
-  const completedProcedures: never[] = [];
-  const completedTreatment =
-    context?.completedTreatmentLabel || 'Not recorded';
 
   const validate = () => {
     const nextErrors: FieldError = {};
-
-    if (!context) {
-      nextErrors.context =
-        'The completed visit context is missing. Open Visit Completion first.';
-      return nextErrors;
-    }
-
-    if (!recallType.trim()) {
-      nextErrors.recallType = 'Select a recall type.';
-    }
-
+    if (!recallType.trim()) nextErrors.recallType = 'Select a recall type.';
     if (!dueDate.trim()) {
       nextErrors.dueDate = 'Select a recall due date.';
     } else if (isPastDate(dueDate, todayValue)) {
       nextErrors.dueDate = 'The due date cannot be in the past.';
     }
-
-    if (!reminderMethod.trim()) {
-      nextErrors.reminderMethod = 'Select a reminder method.';
-    }
-
+    if (!reminderMethod.trim()) nextErrors.reminderMethod = 'Select a reminder method.';
     return nextErrors;
   };
 
   const handleCreateRecall = () => {
     const nextErrors = validate();
     setErrors(nextErrors);
-    setDuplicateWarning(null);
+    if (Object.keys(nextErrors).length > 0) return;
 
-    if (Object.keys(nextErrors).length > 0 || !context) {
-      return;
-    }
-
-    // Duplicate check
-    const duplicate = findDuplicateRecall(
-      context.patient.patientCode,
-      recallType as RecallType,
-      dueDate,
-    );
-    if (duplicate) {
-      setDuplicateWarning(
-        `A Pending "${recallType}" recall for ${context.patient.fullName} already exists with the same due date (${duplicate.dueDateLabel}).`,
-      );
-      return;
-    }
-
-    setIsSaving(true);
-    const record = buildRecallRecord({
-      context,
-      recallType: recallType as RecallType,
-      dueDate,
-      reminderMethod: reminderMethod as ReminderMethod,
-      notes,
-    });
-
-    saveRecall(record);
-
-    setSuccessMessage(
-      'Recall created successfully. Redirecting to Reminder Center...',
-    );
-
-    window.setTimeout(() => {
-      setIsSaving(false);
-      router.replace('/reminder-center');
-    }, 900);
+    setSaved(true);
+    setSuccessMessage('Recall scheduled successfully.');
   };
 
   const handleCancel = () => {
     router.push('/visit-completion');
   };
 
-  const handleContextRecovery = () => {
-    router.push('/visit-completion');
-  };
-
-  if (!hydrated) {
-    return (
-      <div className="space-y-4">
-        <div className="rounded-xl border border-border bg-card/90 p-6 shadow-sm">
-          <p className="text-sm text-muted-foreground">
-            Loading recall scheduling workspace...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!context) {
-    return (
-      <div className="space-y-4">
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-8 text-center dark:border-rose-500/20 dark:bg-rose-500/10">
-          <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-rose-100 dark:bg-rose-500/20">
-            <XCircle className="size-8 text-rose-600 dark:text-rose-300" />
-          </div>
-          <h1 className="text-xl font-bold text-rose-800 dark:text-rose-200">
-            No Completed Visit Found
-          </h1>
-          <p className="mt-2 text-sm text-rose-700 dark:text-rose-300">
-            The recall scheduling workspace needs a completed visit before it
-            can schedule a future recall.
-          </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Button variant="outline" onClick={handleContextRecovery}>
-              <ArrowLeft className="mr-1.5 size-4" />
-              Return to Visit Completion
-            </Button>
-            <Button variant="secondary" onClick={() => router.push('/dashboard')}>
-              Dashboard
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const validationSummary = Object.values(errors).filter(Boolean) as string[];
 
   return (
     <div className="space-y-6">
+      {/* ── Header ── */}
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div className="space-y-2">
           <Button
@@ -278,6 +234,7 @@ export function RecallSchedulingWorkspace() {
         </div>
       </div>
 
+      {/* ── Success message ── */}
       {successMessage && (
         <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 dark:border-emerald-500/20 dark:bg-emerald-500/10">
           <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
@@ -286,27 +243,13 @@ export function RecallSchedulingWorkspace() {
               {successMessage}
             </p>
             <p className="mt-0.5 text-xs text-emerald-600 dark:text-emerald-300">
-              The completed visit stays closed and the recall is saved as
-              Pending.
+              The recall has been saved as Pending.
             </p>
           </div>
         </div>
       )}
 
-      {duplicateWarning && (
-        <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3 dark:border-amber-500/20 dark:bg-amber-500/10">
-          <AlertCircle className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-400" />
-          <div>
-            <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
-              Duplicate Recall Detected
-            </p>
-            <p className="mt-0.5 text-xs text-amber-700 dark:text-amber-300">
-              {duplicateWarning}
-            </p>
-          </div>
-        </div>
-      )}
-
+      {/* ── Validation errors ── */}
       {validationSummary.length > 0 && (
         <div className="space-y-2">
           {validationSummary.map((message) => (
@@ -323,15 +266,16 @@ export function RecallSchedulingWorkspace() {
         </div>
       )}
 
+      {/* ── Patient Info Banner ── */}
       <section className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5 dark:border-emerald-500/20 dark:bg-emerald-500/10">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-xl font-bold text-foreground">
-                {context.patient.fullName}
+                {mockPatient.fullName}
               </h2>
               <span className="rounded-md border border-border bg-background/70 px-1.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
-                {context.patient.patientCode}
+                {mockPatient.patientCode}
               </span>
               <span className="inline-flex items-center rounded-full border border-amber-200 bg-white px-2.5 py-1 text-[11px] font-bold text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
                 New recall draft
@@ -344,41 +288,63 @@ export function RecallSchedulingWorkspace() {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[440px]">
-            <Field label="Completed Visit" value={context.completedVisitLabel} />
-            <Field label="Treating Dentist" value={context.suggestedDentist} />
-            <Field label="Completed Treatment" value={completedTreatment} />
+            <Field label="Last Visit" value={mockPatient.lastVisit} />
+            <Field label="Treating Dentist" value={mockPatient.dentist} />
             <Field
-              label="Telegram"
+              label="Completed Treatment"
+              value={`${mockPatient.completedTreatment} (Tooth ${mockPatient.tooth})`}
+            />
+            <Field
+              label="Preferred Contact"
               value={
-                context.patient.telegramStatus === 'Linked' ? (
-                  <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                    <BadgeCheck className="size-3.5" />
-                    Linked
-                  </span>
-                ) : (
-                  <span className="text-muted-foreground">Not linked</span>
-                )
+                <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                  Telegram
+                </span>
               }
             />
           </div>
         </div>
+
+        {mockRecallRecommendation.recommended && (
+          <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 dark:border-primary/30 dark:bg-primary/10">
+            <div className="flex items-start gap-2">
+              <Bell className="mt-0.5 size-4 shrink-0 text-primary" />
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-primary">
+                  Recall Recommendation
+                </p>
+                <p className="mt-1 text-sm text-foreground">
+                  {mockRecallRecommendation.recommendedType} recommended
+                  every {mockRecallRecommendation.recommendedInterval}.
+                  Suggested due date:{' '}
+                  <span className="font-semibold">
+                    {mockRecallRecommendation.suggestedDueDate}
+                  </span>
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {mockRecallRecommendation.recommendation}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
 
+      {/* ── Main grid ── */}
       <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+        {/* ── Left: Form ── */}
         <SectionCard
           icon={<Bell className="size-5" />}
           title="Recall Details"
           subtitle="Configure the recall reminder for this patient."
         >
           <div className="grid gap-4 sm:grid-cols-2">
+            {/* Recall Type */}
             <label className="space-y-1.5 text-sm font-semibold text-foreground">
               Recall Type
               <select
                 value={recallType}
-                onChange={(event) => {
-                  setRecallType(event.target.value);
-                  setDuplicateWarning(null);
-                }}
+                onChange={(event) => setRecallType(event.target.value)}
                 className={`h-10 w-full rounded-xl border bg-background/70 px-3 text-sm outline-none transition-all focus:border-primary/50 focus:ring-2 focus:ring-ring/20 dark:bg-background/30 ${
                   errors.recallType
                     ? 'border-rose-300 ring-2 ring-rose-200/60 dark:border-rose-500/40 dark:ring-rose-500/20'
@@ -395,6 +361,7 @@ export function RecallSchedulingWorkspace() {
               <ErrorText message={errors.recallType} />
             </label>
 
+            {/* Reminder Method */}
             <label className="space-y-1.5 text-sm font-semibold text-foreground">
               Reminder Method
               <select
@@ -415,16 +382,14 @@ export function RecallSchedulingWorkspace() {
               <ErrorText message={errors.reminderMethod} />
             </label>
 
+            {/* Due Date */}
             <label className="space-y-1.5 text-sm font-semibold text-foreground sm:col-span-2">
               Due Date
               <input
                 type="date"
                 value={dueDate}
                 min={todayValue}
-                onChange={(event) => {
-                  setDueDate(event.target.value);
-                  setDuplicateWarning(null);
-                }}
+                onChange={(event) => setDueDate(event.target.value)}
                 className={`h-10 w-full rounded-xl border bg-background/70 px-3 text-sm outline-none transition-all focus:border-primary/50 focus:ring-2 focus:ring-ring/20 dark:bg-background/30 ${
                   errors.dueDate
                     ? 'border-rose-300 ring-2 ring-rose-200/60 dark:border-rose-500/40 dark:ring-rose-500/20'
@@ -435,30 +400,24 @@ export function RecallSchedulingWorkspace() {
             </label>
           </div>
 
-          {/* Quick date presets */}
+          {/* Quick interval buttons */}
           <div className="mt-3 flex flex-wrap gap-2">
-            <span className="text-xs font-semibold text-muted-foreground self-center">
+            <span className="self-center text-xs font-semibold text-muted-foreground">
               Quick select:
             </span>
-            {[
-              { label: '3 Months', months: 3 },
-              { label: '6 Months', months: 6 },
-              { label: '12 Months', months: 12 },
-            ].map((preset) => (
+            {quickIntervals.map((preset) => (
               <button
                 key={preset.label}
                 type="button"
-                onClick={() => {
-                  setDueDate(addMonths(todayValue, preset.months));
-                  setDuplicateWarning(null);
-                }}
-                className="rounded-lg border border-border bg-background/50 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-all hover:border-primary/40 hover:text-foreground hover:bg-primary/5"
+                onClick={() => setDueDate(addMonths(todayValue, preset.months))}
+                className="rounded-lg border border-border bg-background/50 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-all hover:border-primary/40 hover:bg-primary/5 hover:text-foreground"
               >
                 {preset.label}
               </button>
             ))}
           </div>
 
+          {/* Notes */}
           <label className="mt-4 block space-y-1.5 text-sm font-semibold text-foreground">
             Notes
             <span className="text-xs font-normal text-muted-foreground">
@@ -474,14 +433,15 @@ export function RecallSchedulingWorkspace() {
             />
           </label>
 
+          {/* Buttons */}
           <div className="mt-5 flex flex-wrap gap-3">
             <Button
               onClick={handleCreateRecall}
-              disabled={isSaving}
+              disabled={saved}
               className="h-11 min-w-52 px-5 text-sm font-semibold shadow-lg shadow-primary/20"
             >
               <Save className="mr-2 size-4" />
-              {isSaving ? 'Creating...' : 'Create Recall'}
+              {saved ? 'Scheduled' : 'Create Recall'}
             </Button>
             <Button
               variant="outline"
@@ -494,44 +454,23 @@ export function RecallSchedulingWorkspace() {
           </div>
         </SectionCard>
 
+        {/* ── Right: Sidebar ── */}
         <div className="space-y-5">
-          <SectionCard
-            icon={<ClipboardList className="size-5" />}
-            title="Patient / Visit Context"
-            subtitle="Current patient and completed visit details."
-          >
-            <div className="grid gap-3">
-              <Field label="Patient" value={context.patient.fullName} />
-              <Field label="Patient ID" value={context.patient.patientCode} />
-              <Field
-                label="Completed Visit"
-                value={context.completedVisitLabel}
-              />
-              <Field
-                label="Treating Dentist"
-                value={context.suggestedDentist}
-              />
-              <Field
-                label="Completed Treatment"
-                value={completedTreatment}
-              />
-              <Field
-                label="Procedures Completed"
-                value={
-                  completedProcedures.length > 0
-                    ? `${completedProcedures.length} procedure${completedProcedures.length === 1 ? '' : 's'}`
-                    : 'Not recorded'
-                }
-              />
-            </div>
-          </SectionCard>
-
+          {/* Recall Preview */}
           <SectionCard
             icon={<Clock3 className="size-5" />}
             title="Recall Preview"
             subtitle="This preview updates as you fill in the form."
           >
             <div className="space-y-3">
+              <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 dark:bg-background/20">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Patient
+                </p>
+                <p className="mt-1 text-sm font-semibold text-foreground">
+                  {mockPatient.fullName}
+                </p>
+              </div>
               <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 dark:bg-background/20">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                   Recall Type
@@ -545,13 +484,7 @@ export function RecallSchedulingWorkspace() {
                   Due Date
                 </p>
                 <p className="mt-1 text-sm font-semibold text-foreground">
-                  {dueDate
-                    ? new Intl.DateTimeFormat('en-US', {
-                        month: 'long',
-                        day: 'numeric',
-                        year: 'numeric',
-                      }).format(new Date(`${dueDate}T00:00:00`))
-                    : 'Not selected'}
+                  {formatDateDisplay(dueDate)}
                 </p>
               </div>
               <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 dark:bg-background/20">
@@ -568,43 +501,32 @@ export function RecallSchedulingWorkspace() {
                 </p>
                 <p className="mt-1">
                   <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-                    Pending
+                    {saved ? 'Scheduled' : 'Pending'}
                   </span>
                 </p>
               </div>
             </div>
           </SectionCard>
 
+          {/* Dentist Recommendation */}
           <SectionCard
-            icon={<Stethoscope className="size-5" />}
-            title="Completed Visit Snapshot"
-            subtitle="Reference only. The previous appointment stays completed."
+            icon={<CalendarDays className="size-5" />}
+            title="Dentist Recommendation"
+            subtitle="Based on the completed visit."
           >
             <div className="grid gap-3">
               <Field
-                label="Visit Date"
-                value={context.completedVisitLabel}
+                label="Recommended Interval"
+                value={mockRecallRecommendation.recommendedInterval}
               />
               <Field
-                label="Treating Dentist"
-                value={context.suggestedDentist}
+                label="Suggested Due Date"
+                value={mockRecallRecommendation.suggestedDueDate}
               />
               <Field
-                label="Completed Treatment"
-                value={completedTreatment}
+                label="Recommendation"
+                value={mockRecallRecommendation.recommendation}
               />
-              <Field
-                label="Procedures Completed"
-                value={
-                  completedProcedures.length > 0
-                    ? `${completedProcedures.length} procedure${completedProcedures.length === 1 ? '' : 's'}`
-                    : 'Not recorded'
-                }
-              />
-            </div>
-            <div className="mt-3 rounded-xl border border-border bg-muted/20 px-4 py-3 text-xs text-muted-foreground dark:bg-background/20">
-              The recall is saved separately from the completed visit and does
-              not create an appointment.
             </div>
           </SectionCard>
         </div>
