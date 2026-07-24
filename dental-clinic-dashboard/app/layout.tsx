@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: 'Dental Clinic',
+    title: 'Preah Chan',
     statusBarStyle: 'default',
   },
 }
