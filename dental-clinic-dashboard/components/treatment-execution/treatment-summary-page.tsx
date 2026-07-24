@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   AlertTriangle,
@@ -10,187 +10,249 @@ import {
   Clock,
   FileText,
   Pill,
-  Paperclip,
+  Printer,
   Stethoscope,
   User,
-  XCircle,
-  AlertCircle,
   Syringe,
   Package,
+  DollarSign,
+  ClipboardList,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { PatientContextHeader } from './patient-context-header';
-import { PATIENT } from '@/components/clinical-examination/patient-context';
-import {
-  loadFlowState,
-  saveFlowState,
-  buildSummaryFromSession,
-  applyVisitCompletion,
-  type TreatmentFlowState,
-  type VisitCompletionData,
-} from './procedure-workspace-store';
-import type { TreatmentSummary, ProcedureExecution } from './treatment-execution-data';
-import { procedureStatusBadgeColor, planItemStatusBadgeColor } from './treatment-execution-data';
+import type { TreatmentSession } from './treatment-execution-data';
 
-type ValidationError = {
-  type: 'no_completed' | 'no_final_notes' | 'in_progress_procedure';
-  message: string;
+/* ────────────────────────────────────────────
+   MOCK DATA
+   ──────────────────────────────────────────── */
+
+const MOCK_SESSION: TreatmentSession = {
+  id: 'SES-20260724-0042',
+  patientName: 'Sok Dara',
+  patientId: 'PT000124',
+  appointmentDate: '2026-07-24',
+  appointmentTime: '09:00 AM',
+  dentist: 'Dr. Chan Vireak',
+  status: 'Completed',
+  plannedItems: [],
+  completedProcedures: [],
+  inProgressProcedure: null,
+  summary: {
+    completedProcedures: [],
+    inProgressProcedures: [],
+    remainingPlanned: [],
+    dentist: 'Dr. Chan Vireak',
+    totalDuration: '65 minutes',
+    finalNotes:
+      'Composite restoration completed on tooth #16. Scaling completed successfully. Patient tolerated treatment well with no complications.',
+    recommendations:
+      'Avoid chewing hard food on the treated tooth for 24 hours. Maintain regular brushing and flossing. Return if sensitivity becomes severe or persistent. Schedule crown review for tooth #26.',
+    postOpInstructions:
+      'Do not eat or drink for 30 minutes after procedure. If bleeding occurs, bite on gauze for 20 minutes. Use prescribed mouthwash as directed. Apply ice pack if swelling occurs.',
+    createdAt: '2026-07-24T10:35:00Z',
+  },
 };
+
+interface MockCompletedProcedure {
+  id: string;
+  procedure: string;
+  toothNumber: string;
+  toothSurface: string[];
+  dentist: string;
+  duration: string;
+  startTime: string;
+  endTime: string;
+  clinicalNotes: string;
+  status: 'Completed';
+  anesthesiaUsed: boolean;
+  anesthesia: {
+    drug: string;
+    dosage: string;
+    quantity: string;
+    injectionSite: string;
+  } | null;
+  consumables: { id: string; material: string; quantityUsed: number; unit: string }[];
+  prescriptions: {
+    id: string;
+    medicineName: string;
+    dosage: string;
+    frequency: string;
+    duration: string;
+    instructions: string;
+  }[];
+  attachments: { id: string; fileName: string; type: string; uploadedBy: string; uploadedAt: string }[];
+  price: number;
+}
+
+interface MockRemainingProcedure {
+  id: string;
+  procedure: string;
+  toothArea: string;
+  toothSurface: string[];
+  estimatedDuration: string;
+  priority: string;
+  status: string;
+  recommendation: string;
+}
+
+const MOCK_COMPLETED_PROCEDURES: MockCompletedProcedure[] = [
+  {
+    id: 'proc-001',
+    procedure: 'Composite Filling',
+    toothNumber: '#16',
+    toothSurface: ['Occlusal'],
+    dentist: 'Dr. Chan Vireak',
+    duration: '35 minutes',
+    startTime: '09:15 AM',
+    endTime: '09:50 AM',
+    clinicalNotes: 'Class I carious lesion on occlusal surface. Caries removed, cavity prepared, etched, bonded, and restored with composite resin. Occlusion checked and adjusted.',
+    status: 'Completed',
+    anesthesiaUsed: true,
+    anesthesia: {
+      drug: 'Lidocaine 2%',
+      dosage: '1.8 ml',
+      quantity: '1 cartridge',
+      injectionSite: 'Buccal infiltration',
+    },
+    consumables: [
+      { id: 'mat-001', material: 'Composite Resin (A3)', quantityUsed: 1, unit: 'unit' },
+      { id: 'mat-002', material: 'Etching Gel (37% PA)', quantityUsed: 1, unit: 'unit' },
+      { id: 'mat-003', material: 'Bonding Agent', quantityUsed: 1, 'unit': 'unit' },
+      { id: 'mat-004', material: 'Cotton Roll', quantityUsed: 2, 'unit': 'units' },
+    ],
+    prescriptions: [
+      {
+        id: 'rx-001',
+        medicineName: 'Ibuprofen',
+        dosage: '400 mg',
+        frequency: 'Every 8 hours',
+        duration: '3 days',
+        instructions: 'Take after food',
+      },
+    ],
+    attachments: [
+      { id: 'att-001', fileName: 'pre-op-xray-16.png', type: 'X-Ray', uploadedBy: 'Dr. Chan Vireak', uploadedAt: '09:10 AM' },
+      { id: 'att-002', fileName: 'post-op-photo-16.png', type: 'Photo', uploadedBy: 'Dr. Chan Vireak', uploadedAt: '09:55 AM' },
+    ],
+    price: 35.0,
+  },
+  {
+    id: 'proc-002',
+    procedure: 'Scaling',
+    toothNumber: 'Full Mouth',
+    toothSurface: ['All'],
+    dentist: 'Dr. Chan Vireak',
+    duration: '30 minutes',
+    startTime: '10:00 AM',
+    endTime: '10:30 AM',
+    clinicalNotes: 'Full mouth scaling completed. Moderate calculus deposits removed. Patient tolerated well. Oral hygiene instructions reinforced.',
+    status: 'Completed',
+    anesthesiaUsed: false,
+    anesthesia: null,
+    consumables: [
+      { id: 'mat-005', material: 'Scaling Tip', quantityUsed: 1, unit: 'unit' },
+      { id: 'mat-006', material: 'Polishing Paste', quantityUsed: 1, unit: 'unit' },
+    ],
+    prescriptions: [],
+    attachments: [],
+    price: 25.0,
+  },
+];
+
+const MOCK_REMAINING_PROCEDURES: MockRemainingProcedure[] = [
+  {
+    id: 'plan-001',
+    procedure: 'Crown Review',
+    toothArea: '#26',
+    toothSurface: ['Full'],
+    estimatedDuration: '20 minutes',
+    priority: 'Medium',
+    status: 'Planned',
+    recommendation: 'Next visit',
+  },
+];
+
+const MOCK_CLINICAL_SUMMARY = {
+  finalNotes:
+    'Composite restoration completed on tooth #16. Scaling completed successfully. Patient tolerated treatment well with no complications.',
+  recommendations:
+    'Avoid chewing hard food on the treated tooth for 24 hours. Maintain regular brushing and flossing. Return if sensitivity becomes severe or persistent. Schedule crown review for tooth #26.',
+  postOpInstructions:
+    'Do not eat or drink for 30 minutes after procedure. If bleeding occurs, bite on gauze for 20 minutes. Use prescribed mouthwash as directed. Apply ice pack if swelling occurs.',
+};
+
+const MOCK_BILLABLE = {
+  items: [
+    { procedure: 'Composite Filling', price: 35.0 },
+    { procedure: 'Scaling', price: 25.0 },
+  ],
+  total: 60.0,
+};
+
+/* ────────────────────────────────────────────
+   BADGE COLOR HELPERS (inline, no external dep)
+   ──────────────────────────────────────────── */
+
+const statusBadgeCompleted =
+  'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300';
+const statusBadgeInProgress =
+  'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300';
+const statusBadgePlanned =
+  'border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200';
+
+/* ────────────────────────────────────────────
+   COMPONENT
+   ──────────────────────────────────────────── */
 
 export function TreatmentSummaryPage() {
   const router = useRouter();
-  const [flow, setFlow] = useState<TreatmentFlowState | null>(null);
-  const [hydrated, setHydrated] = useState(false);
-  const [finalNotes, setFinalNotes] = useState('');
-  const [recommendations, setRecommendations] = useState('');
-  const [postOpInstructions, setPostOpInstructions] = useState('');
-  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
-  const [isCompleting, setIsCompleting] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
-  useEffect(() => {
-    const stored = loadFlowState();
-    if (stored) {
-      setFlow(stored);
-      const summary = buildSummaryFromSession(stored.session);
-      setFinalNotes(summary.finalNotes || stored.session.summary?.finalNotes || '');
-      setRecommendations(summary.recommendations || stored.session.summary?.recommendations || '');
-      setPostOpInstructions(summary.postOpInstructions || stored.session.summary?.postOpInstructions || '');
-    }
-    setHydrated(true);
+  const showToast = useCallback((msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
   }, []);
-
-  useEffect(() => {
-    if (!hydrated || !flow) return;
-    saveFlowState(flow);
-  }, [flow, hydrated]);
-
-  const summary = useMemo<TreatmentSummary>(() => {
-    if (!flow) {
-      return {
-        completedProcedures: [],
-        inProgressProcedures: [],
-        remainingPlanned: [],
-        dentist: '',
-        totalDuration: 'N/A',
-        finalNotes: '',
-        recommendations: '',
-        postOpInstructions: '',
-        createdAt: '',
-      };
-    }
-    return buildSummaryFromSession(flow.session);
-  }, [flow]);
-
-  const session = flow?.session;
-
-  const completedCount = summary.completedProcedures.length;
-  const inProgressCount = summary.inProgressProcedures.length;
-  const remainingCount = summary.remainingPlanned.length;
-  const hasInProgress = inProgressCount > 0;
-  const hasCompleted = completedCount > 0;
-
-  /* Helper to collect all unique prescriptions from completed procedures */
-  const allPrescriptions = useMemo(() => {
-    return summary.completedProcedures
-      .filter((p) => p.prescriptions.length > 0)
-      .flatMap((p) => p.prescriptions);
-  }, [summary.completedProcedures]);
-
-  /* Helper to collect all unique attachments from completed procedures */
-  const allAttachments = useMemo(() => {
-    return summary.completedProcedures
-      .filter((p) => p.attachments.length > 0)
-      .flatMap((p) => p.attachments);
-  }, [summary.completedProcedures]);
-
-  /* Has anesthesia records */
-  const hasAnesthesia = summary.completedProcedures.some((p) => p.anesthesiaUsed && p.anesthesia);
-
-  /* Has consumables */
-  const hasConsumables = summary.completedProcedures.some((p) => p.consumables.length > 0);
 
   const handleReturnToTreatment = useCallback(() => {
     router.push('/treatment-execution');
   }, [router]);
 
-  const validate = useCallback((): ValidationError[] => {
-    const errors: ValidationError[] = [];
-    if (completedCount === 0) {
-      errors.push({
-        type: 'no_completed',
-        message: 'At least one procedure must be completed before completing the visit.',
-      });
-    }
-    if (!finalNotes.trim()) {
-      errors.push({
-        type: 'no_final_notes',
-        message: 'Final clinical notes are required before completing the visit.',
-      });
-    }
-    if (hasInProgress) {
-      errors.push({
-        type: 'in_progress_procedure',
-        message:
-          'An active procedure is still in progress. Resume or resolve the procedure before completing the visit.',
-      });
-    }
-    return errors;
-  }, [completedCount, finalNotes, hasInProgress]);
-
-  const handleCompleteVisit = useCallback(() => {
-    const errors = validate();
-    setValidationErrors(errors);
-
-    if (errors.length > 0) {
-      return;
-    }
-
-    setIsCompleting(true);
-
-    const completionData: VisitCompletionData = {
-      finalNotes: finalNotes.trim(),
-      recommendations: recommendations.trim(),
-      postOpInstructions: postOpInstructions.trim(),
-    };
-
-    const nextFlow = applyVisitCompletion(flow!, completionData);
-    setFlow(nextFlow);
-    saveFlowState(nextFlow);
-
-    // Navigate to billing
+  const handleContinueToBilling = useCallback(() => {
     router.push('/billing');
-  }, [flow, finalNotes, recommendations, postOpInstructions, validate, router]);
+  }, [router]);
 
-  const dismissError = useCallback((type: ValidationError['type']) => {
-    setValidationErrors((prev) => prev.filter((e) => e.type !== type));
+  const handlePrintSummary = useCallback(() => {
+    window.print();
   }, []);
+
+  const completedCount = MOCK_COMPLETED_PROCEDURES.length;
+  const remainingCount = MOCK_REMAINING_PROCEDURES.length;
+
+  /* Collect all unique prescriptions */
+  const allPrescriptions = MOCK_COMPLETED_PROCEDURES.flatMap((p) => p.prescriptions);
+
+  /* Collect all unique attachments */
+  const allAttachments = MOCK_COMPLETED_PROCEDURES.flatMap((p) => p.attachments);
+
+  /* Has anesthesia */
+  const hasAnesthesia = MOCK_COMPLETED_PROCEDURES.some((p) => p.anesthesiaUsed && p.anesthesia);
+
+  /* Has consumables */
+  const hasConsumables = MOCK_COMPLETED_PROCEDURES.some((p) => p.consumables.length > 0);
 
   const textareaClass =
     'min-h-20 w-full rounded-xl border border-border bg-background/70 px-3 py-2.5 text-sm text-foreground outline-none transition-all focus:border-primary/50 focus:ring-2 focus:ring-ring/20 dark:bg-background/30 placeholder:text-muted-foreground/60';
 
-  if (!hydrated) {
-    return (
-      <div className="space-y-4 mx-[100px]">
-        <div className="rounded-xl border border-border bg-card/90 p-6 shadow-sm">
-          <p className="text-sm text-muted-foreground">Loading treatment summary...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!flow || !session) {
-    return (
-      <div className="space-y-4 mx-[100px]">
-        <div className="rounded-xl border border-border bg-card/90 p-6 shadow-sm">
-          <p className="text-sm text-muted-foreground">No active treatment session found.</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4 mx-[100px]">
+      {/* Toast notification */}
+      {toast && (
+        <div className="fixed right-6 top-6 z-50 animate-in slide-in-from-right-2 fade-in rounded-xl border border-border bg-card/95 px-5 py-3 shadow-lg backdrop-blur-sm">
+          <p className="text-sm font-semibold text-foreground">{toast}</p>
+        </div>
+      )}
+
       {/* Back navigation */}
       <div>
         <Button
@@ -209,51 +271,27 @@ export function TreatmentSummaryPage() {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Treatment Summary</h1>
           <p className="text-sm text-muted-foreground">
-            Final clinical review for {session.patientName} · {session.appointmentDate}
+            Final clinical review for {MOCK_SESSION.patientName} · {MOCK_SESSION.appointmentDate}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={handlePrintSummary}>
+            <Printer className="size-4" />
+            Print Summary
+          </Button>
           <Button variant="outline" onClick={handleReturnToTreatment}>
             <ArrowRight className="size-4 rotate-180" />
             Return to Treatment
           </Button>
-          <Button onClick={handleCompleteVisit} disabled={isCompleting}>
-            <CheckCircle2 className="size-4" />
-            {isCompleting ? 'Completing...' : 'Complete Visit'}
+          <Button onClick={handleContinueToBilling}>
+            <DollarSign className="size-4" />
+            Continue to Billing
           </Button>
         </div>
       </div>
 
       {/* Patient / Visit Header */}
-      <PatientContextHeader session={session} />
-
-      {/* Validation errors */}
-      {validationErrors.length > 0 && (
-        <div className="space-y-2">
-          {validationErrors.map((err) => (
-            <div
-              key={err.type}
-              className="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 dark:border-rose-500/20 dark:bg-rose-500/10"
-            >
-              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" />
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-rose-800 dark:text-rose-200">
-                  {err.type === 'no_completed' && 'No Completed Procedures'}
-                  {err.type === 'no_final_notes' && 'Missing Final Clinical Notes'}
-                  {err.type === 'in_progress_procedure' && 'In Progress Procedure'}
-                </p>
-                <p className="text-xs text-rose-700 dark:text-rose-300">{err.message}</p>
-              </div>
-              <button
-                onClick={() => dismissError(err.type)}
-                className="shrink-0 text-rose-400 hover:text-rose-600 dark:hover:text-rose-200"
-              >
-                <XCircle className="h-4 w-4" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+      <PatientContextHeader session={MOCK_SESSION} />
 
       {/* Visit Status Overview */}
       <div className="grid gap-4 sm:grid-cols-3">
@@ -266,22 +304,22 @@ export function TreatmentSummaryPage() {
             {completedCount === 1 ? 'Procedure' : 'Procedures'} Completed
           </p>
         </div>
-        <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 dark:border-amber-500/20 dark:bg-amber-500/5">
-          <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
-            <Clock className="h-5 w-5" />
-            <span className="text-lg font-bold">{inProgressCount}</span>
-          </div>
-          <p className="mt-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
-            In Progress
-          </p>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-700 dark:bg-slate-800/30">
-          <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-            <AlertTriangle className="h-5 w-5" />
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/5">
+          <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
+            <CheckCircle2 className="h-5 w-5" />
             <span className="text-lg font-bold">{remainingCount}</span>
           </div>
-          <p className="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
             Remaining / Planned
+          </p>
+        </div>
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/5">
+          <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
+            <DollarSign className="h-5 w-5" />
+            <span className="text-lg font-bold">${MOCK_BILLABLE.total.toFixed(2)}</span>
+          </div>
+          <p className="mt-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+            Estimated Billing Total
           </p>
         </div>
       </div>
@@ -294,7 +332,7 @@ export function TreatmentSummaryPage() {
             Completed Procedures
           </h3>
           <div className="space-y-2">
-            {summary.completedProcedures.map((proc) => (
+            {MOCK_COMPLETED_PROCEDURES.map((proc) => (
               <div
                 key={proc.id}
                 className="flex flex-col gap-1.5 rounded-xl border border-border bg-muted/30 px-4 py-3 dark:bg-background/20"
@@ -309,7 +347,7 @@ export function TreatmentSummaryPage() {
                     </p>
                   </div>
                   <span
-                    className={`inline-flex shrink-0 items-center rounded-lg border px-2 py-0.5 text-[11px] font-semibold ${procedureStatusBadgeColor.Completed}`}
+                    className={`inline-flex shrink-0 items-center rounded-lg border px-2 py-0.5 text-[11px] font-semibold ${statusBadgeCompleted}`}
                   >
                     Completed
                   </span>
@@ -338,46 +376,6 @@ export function TreatmentSummaryPage() {
         </div>
       )}
 
-      {/* In Progress Procedures */}
-      {inProgressCount > 0 && (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50/30 p-5 dark:border-amber-500/20 dark:bg-amber-500/5">
-          <h3 className="mb-3 flex items-center gap-2 text-sm font-bold text-amber-800 dark:text-amber-200">
-            <Clock className="size-4" />
-            In Progress Procedures
-          </h3>
-          <p className="mb-3 text-xs text-amber-600 dark:text-amber-400">
-            These procedures are NOT completed. They must be resolved before the visit can be finalized.
-          </p>
-          <div className="space-y-2">
-            {summary.inProgressProcedures.map((proc) => (
-              <div
-                key={proc.id}
-                className="flex items-center justify-between rounded-xl border border-amber-200 bg-white/50 px-4 py-3 dark:border-amber-500/20 dark:bg-amber-500/10"
-              >
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{proc.procedure}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Tooth {proc.toothNumber} · Started at {proc.startTime}
-                    {proc.interruptionReason && ` · ${proc.interruptionReason}`}
-                  </p>
-                </div>
-                <span
-                  className={`inline-flex items-center rounded-lg border px-2 py-0.5 text-[11px] font-semibold ${procedureStatusBadgeColor['In Progress']}`}
-                >
-                  In Progress
-                </span>
-              </div>
-            ))}
-          </div>
-          <div className="mt-3">
-            <Button variant="outline" size="sm" onClick={handleReturnToTreatment}>
-              <ArrowRight className="mr-1 size-3 rotate-180" />
-              Return to resolve in Treatment
-            </Button>
-          </div>
-        </div>
-      )}
-
       {/* Remaining / Planned Procedures */}
       {remainingCount > 0 && (
         <div className="rounded-2xl border border-border bg-card/90 p-5 theme-surface-shadow">
@@ -389,7 +387,7 @@ export function TreatmentSummaryPage() {
             These procedures were not completed during this visit and remain available for future treatment.
           </p>
           <div className="space-y-2">
-            {summary.remainingPlanned.map((item) => (
+            {MOCK_REMAINING_PROCEDURES.map((item) => (
               <div
                 key={item.id}
                 className="flex items-center justify-between rounded-xl border border-border bg-muted/30 px-4 py-3 dark:bg-background/20"
@@ -401,10 +399,11 @@ export function TreatmentSummaryPage() {
                     {item.toothSurface.length > 0 && ` · ${item.toothSurface.join(', ')}`}
                     {item.estimatedDuration && ` · ${item.estimatedDuration}`}
                     {item.priority && ` · ${item.priority} priority`}
+                    {item.recommendation && ` · ${item.recommendation}`}
                   </p>
                 </div>
                 <span
-                  className={`inline-flex items-center rounded-lg border px-2 py-0.5 text-[11px] font-semibold ${planItemStatusBadgeColor[item.status] || 'border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'}`}
+                  className={`inline-flex items-center rounded-lg border px-2 py-0.5 text-[11px] font-semibold ${statusBadgePlanned}`}
                 >
                   {item.status}
                 </span>
@@ -427,16 +426,14 @@ export function TreatmentSummaryPage() {
               <FileText className="size-3.5" />
               Clinical Notes
             </div>
-            {summary.completedProcedures.some((p) => p.clinicalNotes) ? (
+            {MOCK_COMPLETED_PROCEDURES.some((p) => p.clinicalNotes) ? (
               <div className="space-y-1.5">
-                {summary.completedProcedures
-                  .filter((p) => p.clinicalNotes)
-                  .map((p) => (
-                    <p key={p.id} className="text-xs text-muted-foreground">
-                      <span className="font-medium text-foreground">{p.procedure}:</span>{' '}
-                      {p.clinicalNotes}
-                    </p>
-                  ))}
+                {MOCK_COMPLETED_PROCEDURES.filter((p) => p.clinicalNotes).map((p) => (
+                  <p key={p.id} className="text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground">{p.procedure}:</span>{' '}
+                    {p.clinicalNotes}
+                  </p>
+                ))}
               </div>
             ) : (
               <p className="text-xs text-muted-foreground/60 italic">No clinical notes recorded.</p>
@@ -451,15 +448,16 @@ export function TreatmentSummaryPage() {
             </div>
             {hasAnesthesia ? (
               <div className="space-y-1.5">
-                {summary.completedProcedures
-                  .filter((p) => p.anesthesiaUsed && p.anesthesia)
-                  .map((p) => (
+                {MOCK_COMPLETED_PROCEDURES.filter((p) => p.anesthesiaUsed && p.anesthesia).map(
+                  (p) => (
                     <div key={p.id} className="text-xs text-muted-foreground">
                       <span className="font-medium text-foreground">{p.procedure}:</span>{' '}
                       {p.anesthesia!.drug} ({p.anesthesia!.dosage})
                       {p.anesthesia!.injectionSite && ` · ${p.anesthesia!.injectionSite}`}
+                      {p.anesthesia!.quantity && ` · ${p.anesthesia!.quantity}`}
                     </div>
-                  ))}
+                  )
+                )}
               </div>
             ) : (
               <p className="text-xs text-muted-foreground/60 italic">No anesthesia recorded.</p>
@@ -474,14 +472,11 @@ export function TreatmentSummaryPage() {
             </div>
             {hasConsumables ? (
               <div className="space-y-1">
-                {summary.completedProcedures
-                  .filter((p) => p.consumables.length > 0)
+                {MOCK_COMPLETED_PROCEDURES.filter((p) => p.consumables.length > 0)
                   .flatMap((p) =>
                     p.consumables.map((c) => (
                       <p key={c.id} className="text-xs text-muted-foreground">
-                        {c.material} × {c.quantityUsed}
-                        {c.unit && ` ${c.unit}`}
-                        {c.batchLot && ` · Lot: ${c.batchLot}`}
+                        {c.material} × {c.quantityUsed} {c.unit}
                       </p>
                     ))
                   )}
@@ -514,7 +509,7 @@ export function TreatmentSummaryPage() {
         {/* Attachments */}
         <div className="mt-3 rounded-xl border border-border bg-muted/30 px-3.5 py-3 dark:bg-background/20">
           <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-foreground">
-            <Paperclip className="size-3.5" />
+            <ClipboardList className="size-3.5" />
             Clinical Attachments
           </div>
           {allAttachments.length > 0 ? (
@@ -531,7 +526,7 @@ export function TreatmentSummaryPage() {
         </div>
       </div>
 
-      {/* Final Clinical Review - Editable Fields */}
+      {/* Final Clinical Review - Read-only Display */}
       <div className="rounded-2xl border border-border bg-card/90 p-5 theme-surface-shadow">
         <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-foreground">
           <Stethoscope className="size-4" />
@@ -542,20 +537,13 @@ export function TreatmentSummaryPage() {
         <div className="mb-4">
           <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-foreground">
             <FileText className="size-3.5" />
-            Final Notes <span className="text-rose-500">*</span>
+            Final Notes
           </label>
           <textarea
-            value={finalNotes}
-            onChange={(e) => {
-              setFinalNotes(e.target.value);
-              dismissError('no_final_notes');
-            }}
+            value={MOCK_CLINICAL_SUMMARY.finalNotes}
+            readOnly
             className={textareaClass}
-            placeholder="Enter final clinical notes for today's visit (required)..."
           />
-          {!finalNotes.trim() && (
-            <p className="mt-1 text-[10px] text-rose-500">Final notes are required to complete the visit.</p>
-          )}
         </div>
 
         {/* Recommendations */}
@@ -565,10 +553,9 @@ export function TreatmentSummaryPage() {
             Recommendations
           </label>
           <textarea
-            value={recommendations}
-            onChange={(e) => setRecommendations(e.target.value)}
+            value={MOCK_CLINICAL_SUMMARY.recommendations}
+            readOnly
             className={textareaClass}
-            placeholder="Enter follow-up recommendations for the patient..."
           />
         </div>
 
@@ -579,82 +566,81 @@ export function TreatmentSummaryPage() {
             Post-Operative / Home Care Instructions
           </label>
           <textarea
-            value={postOpInstructions}
-            onChange={(e) => setPostOpInstructions(e.target.value)}
+            value={MOCK_CLINICAL_SUMMARY.postOpInstructions}
+            readOnly
             className={textareaClass}
-            placeholder="Enter post-operative / home care instructions..."
           />
         </div>
       </div>
 
-      {/* Additional Visit Required */}
+      {/* Billable Procedures Summary */}
       <div className="rounded-2xl border border-border bg-card/90 p-5 theme-surface-shadow">
         <h3 className="mb-3 flex items-center gap-2 text-sm font-bold text-foreground">
-          <AlertTriangle className="size-4" />
+          <DollarSign className="size-4 text-emerald-500" />
+          Billable Procedures Summary
+        </h3>
+        <div className="space-y-2">
+          {MOCK_BILLABLE.items.map((item, idx) => (
+            <div
+              key={idx}
+              className="flex items-center justify-between rounded-xl border border-border bg-muted/30 px-4 py-3 dark:bg-background/20"
+            >
+              <span className="text-sm font-medium text-foreground">{item.procedure}</span>
+              <span className="text-sm font-bold text-foreground">${item.price.toFixed(2)}</span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50/50 px-4 py-3 dark:border-emerald-500/20 dark:bg-emerald-500/5">
+          <span className="text-sm font-bold text-foreground">Total Billable Procedures: {MOCK_BILLABLE.items.length}</span>
+          <span className="text-lg font-bold text-emerald-700 dark:text-emerald-300">
+            ${MOCK_BILLABLE.total.toFixed(2)}
+          </span>
+        </div>
+        <p className="mt-2 text-[10px] text-muted-foreground/60 italic">
+          This is display data only. Not connected to the real Billing Workspace.
+        </p>
+      </div>
+
+      {/* Visit Status */}
+      <div className="rounded-2xl border border-border bg-card/90 p-5 theme-surface-shadow">
+        <h3 className="mb-3 flex items-center gap-2 text-sm font-bold text-foreground">
+          <CheckCircle2 className="size-4 text-emerald-500" />
           Visit Status
         </h3>
-        {remainingCount > 0 || hasInProgress ? (
+        <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50/50 px-4 py-3 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+          <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
           <div>
-            <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/50 px-4 py-3 dark:border-amber-500/20 dark:bg-amber-500/10">
-              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
-              <div>
-                <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
-                  Additional treatment remains
-                </p>
-                <p className="mt-0.5 text-xs text-amber-600 dark:text-amber-400">
-                  {remainingCount > 0 && `${remainingCount} planned procedure${remainingCount !== 1 ? 's' : ''} not yet completed. `}
-                  {hasInProgress && `${inProgressCount} procedure${inProgressCount !== 1 ? 's' : ''} still in progress. `}
-                  These will remain available for future visits.
-                </p>
-              </div>
-            </div>
-            {remainingCount > 0 && (
-              <div className="mt-2 space-y-1">
-                {summary.remainingPlanned.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 px-3 py-2"
-                  >
-                    <span className="text-xs text-foreground">{item.procedure}</span>
-                    <span
-                      className={`inline-flex items-center rounded border px-1.5 py-0.25 text-[10px] font-semibold ${planItemStatusBadgeColor[item.status] || 'border-slate-200 bg-slate-50 text-slate-700'}`}
-                    >
-                      {item.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
+            <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-200">
+              Treatment Completed
+            </p>
+            <p className="mt-0.5 text-xs text-emerald-600 dark:text-emerald-400">
+              {completedCount} procedure{completedCount !== 1 ? 's' : ''} completed.
+              {remainingCount > 0 &&
+                ` ${remainingCount} planned procedure${remainingCount !== 1 ? 's' : ''} remain for future visits.`}
+            </p>
           </div>
-        ) : (
-          <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50/50 px-4 py-3 dark:border-emerald-500/20 dark:bg-emerald-500/10">
-            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-            <div>
-              <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-200">
-                All planned procedures completed
-              </p>
-              <p className="mt-0.5 text-xs text-emerald-600 dark:text-emerald-400">
-                All treatment items for this visit have been completed.
-              </p>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
 
       {/* Bottom actions */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <User className="size-3.5" />
-          Responsible Dentist: <strong className="text-foreground">{session.dentist}</strong>
+          Responsible Dentist:{' '}
+          <strong className="text-foreground">{MOCK_SESSION.dentist}</strong>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={handlePrintSummary}>
+            <Printer className="size-4" />
+            Print Summary
+          </Button>
           <Button variant="outline" onClick={handleReturnToTreatment}>
             <ArrowRight className="mr-1 size-4 rotate-180" />
             Return to Treatment
           </Button>
-          <Button onClick={handleCompleteVisit} disabled={isCompleting}>
-            <CheckCircle2 className="size-4" />
-            {isCompleting ? 'Completing...' : 'Complete Visit'}
+          <Button onClick={handleContinueToBilling}>
+            <DollarSign className="size-4" />
+            Continue to Billing
           </Button>
         </div>
       </div>
