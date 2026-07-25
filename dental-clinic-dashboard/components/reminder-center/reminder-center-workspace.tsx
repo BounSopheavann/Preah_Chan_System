@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   AlertCircle,
@@ -23,19 +23,37 @@ import {
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import {
-  deriveRemindersFromRecalls,
-  loadSavedReminders,
-  sendReminderNow,
-  retryFailedReminder,
-  simulateFailedReminder,
-  getReminderHistory,
-  updateRecallReminderDate,
-  getDueDateLabel,
-  type ReminderRecord,
-  type ReminderDeliveryStatus,
-  type ReminderAttempt,
-} from './reminder-center-store';
+
+/* ── Types ── */
+
+type ReminderDeliveryStatus = 'Pending' | 'Sent' | 'Failed';
+
+export interface ReminderAttempt {
+  attemptNumber: number;
+  attemptedAt: string;
+  status: ReminderDeliveryStatus;
+  failureReason?: string | null;
+}
+
+export interface ReminderRecord {
+  reminderId: string;
+  recallId: string;
+  patientId: string;
+  patientName: string;
+  patientCode: string;
+  recallType: string;
+  dueDate: string;
+  dueDateLabel: string;
+  reminderMethod: string;
+  reminderStatus: ReminderDeliveryStatus;
+  sentAt: string | null;
+  attemptCount: number;
+  lastAttemptAt: string | null;
+  failureReason: string | null;
+  history: ReminderAttempt[];
+  createdAt: string;
+  updatedAt: string;
+}
 
 /* ── Sub-components ── */
 
@@ -75,6 +93,17 @@ function getMethodIcon(method: string) {
   }
 }
 
+function getDueDateLabel(dueDate: string): string {
+  const today = new Date();
+  const due = new Date(dueDate);
+  const diffDays = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return 'Due Today';
+  if (diffDays < 0) return `Overdue (${Math.abs(diffDays)} days)`;
+  if (diffDays <= 7) return `Due in ${diffDays} days`;
+  return 'Due soon';
+}
+
 function StatCard({
   icon,
   label,
@@ -108,7 +137,7 @@ function HistoryModal({
   reminder: ReminderRecord;
   onClose: () => void;
 }) {
-  const history = getReminderHistory(reminder.reminderId);
+  const history = reminder.history;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
@@ -177,16 +206,99 @@ function HistoryModal({
   );
 }
 
-/* ── Tab type ── */
+/* ── Mock Data ── */
 
-type ReminderTab = 'Upcoming' | 'Sent' | 'Failed';
+const MOCK_REMINDERS: ReminderRecord[] = [
+  {
+    reminderId: 'rm-001',
+    recallId: 'recall-001',
+    patientId: 'pt-001',
+    patientName: 'Ariana Lopez',
+    patientCode: 'PC-1001',
+    recallType: 'Routine Check-up',
+    dueDate: '2026-08-01',
+    dueDateLabel: 'August 1, 2026',
+    reminderMethod: 'Telegram',
+    reminderStatus: 'Pending',
+    sentAt: null,
+    attemptCount: 0,
+    lastAttemptAt: null,
+    failureReason: null,
+    history: [],
+    createdAt: '2026-07-23T00:00:00.000Z',
+    updatedAt: '2026-07-23T00:00:00.000Z',
+  },
+  {
+    reminderId: 'rm-002',
+    recallId: 'recall-002',
+    patientId: 'pt-002',
+    patientName: 'Daniel Kim',
+    patientCode: 'PC-1002',
+    recallType: 'Periodontal Maintenance',
+    dueDate: '2026-07-25',
+    dueDateLabel: 'July 25, 2026',
+    reminderMethod: 'SMS',
+    reminderStatus: 'Sent',
+    sentAt: '2026-07-22T10:00:00.000Z',
+    attemptCount: 1,
+    lastAttemptAt: '2026-07-22T10:00:00.000Z',
+    failureReason: null,
+    history: [
+      { attemptNumber: 1, attemptedAt: '2026-07-22T10:00:00.000Z', status: 'Sent' },
+    ],
+    createdAt: '2026-07-20T00:00:00.000Z',
+    updatedAt: '2026-07-22T10:00:00.000Z',
+  },
+  {
+    reminderId: 'rm-003',
+    recallId: 'recall-003',
+    patientId: 'pt-003',
+    patientName: 'Sofia Martin',
+    patientCode: 'PC-1003',
+    recallType: 'Treatment Follow-up',
+    dueDate: '2026-07-20',
+    dueDateLabel: 'July 20, 2026',
+    reminderMethod: 'Telegram',
+    reminderStatus: 'Failed',
+    sentAt: null,
+    attemptCount: 2,
+    lastAttemptAt: '2026-07-21T14:00:00.000Z',
+    failureReason: 'Telegram user not found',
+    history: [
+      { attemptNumber: 1, attemptedAt: '2026-07-19T09:00:00.000Z', status: 'Failed', failureReason: 'Network error' },
+      { attemptNumber: 2, attemptedAt: '2026-07-21T14:00:00.000Z', status: 'Failed', failureReason: 'Telegram user not found' },
+    ],
+    createdAt: '2026-07-18T00:00:00.000Z',
+    updatedAt: '2026-07-21T14:00:00.000Z',
+  },
+  {
+    reminderId: 'rm-004',
+    recallId: 'recall-004',
+    patientId: 'pt-004',
+    patientName: 'James Wilson',
+    patientCode: 'PC-1004',
+    recallType: 'Root Canal Follow-up',
+    dueDate: '2026-07-29',
+    dueDateLabel: 'July 29, 2026',
+    reminderMethod: 'Phone',
+    reminderStatus: 'Pending',
+    sentAt: null,
+    attemptCount: 0,
+    lastAttemptAt: null,
+    failureReason: null,
+    history: [],
+    createdAt: '2026-07-24T00:00:00.000Z',
+    updatedAt: '2026-07-24T00:00:00.000Z',
+  },
+];
 
 /* ── Main Workspace ── */
 
+type ReminderTab = 'Upcoming' | 'Sent' | 'Failed';
+
 export function ReminderCenterWorkspace() {
   const router = useRouter();
-  const [hydrated, setHydrated] = useState(false);
-  const [reminders, setReminders] = useState<ReminderRecord[]>([]);
+  const [reminders, setReminders] = useState<ReminderRecord[]>(MOCK_REMINDERS);
   const [activeTab, setActiveTab] = useState<ReminderTab>('Upcoming');
   const [searchQuery, setSearchQuery] = useState('');
   const [methodFilter, setMethodFilter] = useState<string>('');
@@ -195,13 +307,6 @@ export function ReminderCenterWorkspace() {
     message: string;
   } | null>(null);
   const [historyTarget, setHistoryTarget] = useState<ReminderRecord | null>(null);
-
-  // Load / derive reminders on mount
-  useEffect(() => {
-    const loaded = deriveRemindersFromRecalls();
-    setReminders(loaded);
-    setHydrated(true);
-  }, []);
 
   // Filtered reminders by tab + search + method
   const filteredReminders = useMemo(() => {
@@ -269,48 +374,74 @@ export function ReminderCenterWorkspace() {
   }, []);
 
   // Send Now
-  const handleSendNow = useCallback(
-    (reminder: ReminderRecord) => {
-      const result = sendReminderNow(reminder.reminderId);
-      if (result.success) {
-        updateRecallReminderDate(reminder.recallId);
-        setReminders(loadSavedReminders());
-        setActionFeedback({
-          type: 'success',
-          message: `Reminder marked as sent for ${reminder.patientName}.`,
-        });
-      } else {
-        setActionFeedback({
-          type: 'error',
-          message: result.error ?? 'Failed to send reminder.',
-        });
-      }
-      window.setTimeout(clearFeedback, 4000);
-    },
-    [clearFeedback],
-  );
+  const handleSendNow = useCallback((reminder: ReminderRecord) => {
+    const now = new Date();
+    const sentAt = now.toISOString();
+
+    setReminders((prev) =>
+      prev.map((r) =>
+        r.reminderId === reminder.reminderId
+          ? {
+              ...r,
+              reminderStatus: 'Sent' as ReminderDeliveryStatus,
+              sentAt,
+              attemptCount: r.attemptCount + 1,
+              lastAttemptAt: sentAt,
+              failureReason: null,
+              updatedAt: sentAt,
+              history: [
+                ...r.history,
+                {
+                  attemptNumber: r.attemptCount + 1,
+                  attemptedAt: sentAt,
+                  status: 'Sent' as ReminderDeliveryStatus,
+                },
+              ],
+            }
+          : r,
+      ),
+    );
+
+    setActionFeedback({
+      type: 'success',
+      message: `Reminder marked as sent for ${reminder.patientName}.`,
+    });
+  }, []);
 
   // Retry Failed
-  const handleRetryFailed = useCallback(
-    (reminder: ReminderRecord) => {
-      const result = retryFailedReminder(reminder.reminderId);
-      if (result.success) {
-        updateRecallReminderDate(reminder.recallId);
-        setReminders(loadSavedReminders());
-        setActionFeedback({
-          type: 'success',
-          message: `Retry successful for ${reminder.patientName}. Reminder moved to Sent.`,
-        });
-      } else {
-        setActionFeedback({
-          type: 'error',
-          message: result.error ?? 'Failed to retry reminder.',
-        });
-      }
-      window.setTimeout(clearFeedback, 4000);
-    },
-    [clearFeedback],
-  );
+  const handleRetryFailed = useCallback((reminder: ReminderRecord) => {
+    const now = new Date();
+    const sentAt = now.toISOString();
+
+    setReminders((prev) =>
+      prev.map((r) =>
+        r.reminderId === reminder.reminderId
+          ? {
+              ...r,
+              reminderStatus: 'Sent' as ReminderDeliveryStatus,
+              sentAt,
+              attemptCount: r.attemptCount + 1,
+              lastAttemptAt: sentAt,
+              failureReason: null,
+              updatedAt: sentAt,
+              history: [
+                ...r.history,
+                {
+                  attemptNumber: r.attemptCount + 1,
+                  attemptedAt: sentAt,
+                  status: 'Sent' as ReminderDeliveryStatus,
+                },
+              ],
+            }
+          : r,
+      ),
+    );
+
+    setActionFeedback({
+      type: 'success',
+      message: `Retry successful for ${reminder.patientName}. Reminder moved to Sent.`,
+    });
+  }, []);
 
   // View History
   const handleViewHistory = useCallback((reminder: ReminderRecord) => {
@@ -319,25 +450,13 @@ export function ReminderCenterWorkspace() {
 
   // Refresh
   const handleRefresh = useCallback(() => {
-    const loaded = deriveRemindersFromRecalls();
-    setReminders(loaded);
+    setReminders(MOCK_REMINDERS);
     setActionFeedback({ type: 'success', message: 'Reminder list refreshed.' });
-    window.setTimeout(clearFeedback, 3000);
-  }, [clearFeedback]);
+  }, []);
 
   const handleBack = useCallback(() => {
     router.push('/recall-scheduling');
   }, [router]);
-
-  if (!hydrated) {
-    return (
-      <div className="space-y-4">
-        <div className="rounded-xl border border-border bg-card/90 p-6 shadow-sm">
-          <p className="text-sm text-muted-foreground">Loading Reminder Center...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -389,6 +508,14 @@ export function ReminderCenterWorkspace() {
           >
             {actionFeedback.message}
           </p>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearFeedback}
+            className="ml-auto shrink-0"
+          >
+            <XCircle className="size-4" />
+          </Button>
         </div>
       )}
 
@@ -475,7 +602,7 @@ export function ReminderCenterWorkspace() {
           <BellOff className="mx-auto mb-4 size-12 text-muted-foreground/40" />
           <h2 className="text-xl font-bold text-foreground">No Reminders Yet</h2>
           <p className="mt-2 max-w-md mx-auto text-sm text-muted-foreground">
-            Recall reminders will appear here once you create them from the Recall Scheduling workspace.
+            Reminders will appear here once they are created from the Recall Scheduling workspace.
           </p>
           <div className="mt-6">
             <Button variant="outline" onClick={() => router.push('/recall-scheduling')}>
