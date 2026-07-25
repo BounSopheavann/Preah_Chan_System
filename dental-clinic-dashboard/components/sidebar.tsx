@@ -112,7 +112,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <p className="text-xs text-muted-foreground">Dentist</p>
               </div>
             </div>
-            <button className="w-full flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-muted rounded-lg transition-all">
+             <button
+              onClick={() => {
+                window.location.href = '/login';
+              }}
+              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-muted rounded-lg transition-all"
+            >
               <LogOut className="w-4 h-4" />
               <span>Logout</span>
             </button>

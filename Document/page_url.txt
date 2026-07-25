@@ -1,6 +1,7 @@
 # Dental Clinic Dashboard - Page URLs
 
 ## Main Pages
+- http://localhost:3000/login                 - Login
 - http://localhost:3000/                      - Dashboard
 - http://localhost:3000/appointments          - Appointments
 - http://localhost:3000/patients              - Patients
