@@ -2,6 +2,7 @@
 
 import {
   Calendar,
+  CalendarDays,
   Users,
   Settings,
   BarChart3,
@@ -24,6 +25,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const menuItems = [
     { icon: Calendar, label: 'Dashboard', href: '/' },
+    { icon: CalendarDays, label: 'Calendar', href: '/calendar' },
     { icon: Users, label: 'Patients', href: '/patients' },
     { icon: Stethoscope, label: 'Appointments', href: '/appointments' },
     { icon: Activity, label: 'Treatment Execution', href: '/treatment-execution' },
