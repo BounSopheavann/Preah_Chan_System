@@ -212,6 +212,10 @@ export function RecallSchedulingWorkspace() {
             <ArrowLeft className="mr-2 size-4" />
             Back to Visit Completion
           </Button>
+          <Button variant="outline" onClick={() => router.push('/recall-dashboard')}>
+            <CalendarDays className="mr-2 size-4" />
+            Recall Dashboard
+          </Button>
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               Recall Scheduling
