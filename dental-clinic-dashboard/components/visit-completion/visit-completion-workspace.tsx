@@ -18,6 +18,7 @@ import {
   Pill,
   ClipboardList,
   AlertTriangle,
+  MessageCircle,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -629,6 +630,10 @@ export function VisitCompletionWorkspace() {
             <Button variant="outline" size="sm" onClick={handleCreateRecall}>
               <CalendarDays className="mr-1.5 size-4" />
               Create Recall
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => router.push('/telegram-linking')}>
+              <MessageCircle className="mr-1.5 size-4" />
+              Link Telegram Account
             </Button>
             <Button variant="secondary" size="sm" onClick={handleReturnDashboard}>
               <ArrowLeft className="mr-1.5 size-4" />
