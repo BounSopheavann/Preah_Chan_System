@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   ChevronRight,
   ClipboardList,
@@ -285,6 +286,7 @@ const filterForCondition = (condition: ConditionKey, group: string) => {
 };
 
 export function ClinicalExaminationPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'odontogram' | 'xrays' | 'diagnosis' | 'treatment' | 'prescription' | 'progress'>('odontogram');
   const [records, setRecords] = useState<ToothMap>(initialRecords);
   const [selectedTooth, setSelectedTooth] = useState<number | null>(26);
@@ -453,6 +455,10 @@ export function ClinicalExaminationPage() {
           <p className="text-sm text-muted-foreground">Interactive Odontogram</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => router.push('/odontogram')}>
+            <ClipboardList className="mr-1.5 size-4" />
+            Open Full Odontogram
+          </Button>
           <ToolbarButton label="Undo" icon={<Undo2 className="size-4" />} onClick={() => setHistoryIndex((current) => Math.max(0, current - 1))} />
           <ToolbarButton label="Redo" icon={<CornerDownRight className="size-4" />} onClick={() => setHistoryIndex((current) => Math.min(history.length - 1, current + 1))} />
           <ToolbarButton label="Clear Selection" icon={<X className="size-4" />} onClick={clearSelection} />

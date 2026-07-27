@@ -475,7 +475,7 @@ export function InvoiceWorkspace() {
 
       {/* Action Buttons */}
       <div className="flex flex-wrap items-center gap-3">
-        <Button onClick={() => setDiscountModalOpen(true)}>
+        <Button onClick={() => router.push('/discount-approval')}>
           <Percent className="size-4" />
           Apply Discount
         </Button>

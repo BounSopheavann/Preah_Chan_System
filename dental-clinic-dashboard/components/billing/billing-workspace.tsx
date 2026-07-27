@@ -422,6 +422,10 @@ export function BillingWorkspace() {
                 <FileText className="mr-1.5 size-4" />
                 View Invoice
               </Button>
+              <Button variant="outline" className="w-full" onClick={() => router.push('/transaction-history')}>
+                <FileText className="mr-1.5 size-4" />
+                Transaction History
+              </Button>
               <Button variant="outline" className="w-full" onClick={handlePrint}>
                 <Printer className="mr-1.5 size-4" />
                 Print Summary

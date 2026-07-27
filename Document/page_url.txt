@@ -13,7 +13,9 @@
 
 ## Clinical Workflow
 - http://localhost:3000/clinical-examination       - Clinical Examination
-- http://localhost:3000/diagnosis                  - Diagnosis- http://localhost:3000/treatment-execution        - Treatment Execution
+- http://localhost:3000/diagnosis                  - Diagnosis
+- http://localhost:3000/odontogram                 - Odontogram
+- http://localhost:3000/treatment-execution        - Treatment Execution
 - http://localhost:3000/active-procedure-workspace - Active Procedure Workspace
 - http://localhost:3000/treatment-summary          - Treatment Summary
 
@@ -21,6 +23,8 @@
 - http://localhost:3000/billing   - Billing
 - http://localhost:3000/invoice   - Invoice
 - http://localhost:3000/payment   - Payment
+- http://localhost:3000/discount-approval - Discount Approval
+- http://localhost:3000/transaction-history - Transaction History
 - http://localhost:3000/receipt   - Receipt
 
 ## Post-Visit
