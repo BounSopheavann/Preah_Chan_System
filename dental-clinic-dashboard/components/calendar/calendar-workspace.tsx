@@ -9,6 +9,7 @@ import {
   Search,
   X,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import {
@@ -154,9 +155,11 @@ function SlotInfoPanel({
 function AppointmentDetailPanel({
   appointment,
   onClose,
+  onOpenFullDetail,
 }: {
   appointment: CalendarAppointment | null;
   onClose: () => void;
+  onOpenFullDetail: () => void;
 }) {
   if (!appointment) return null;
 
@@ -220,6 +223,13 @@ function AppointmentDetailPanel({
             </span>
             <span className="text-xs text-muted-foreground">Phone: {appointment.phone}</span>
           </div>
+          <button
+            type="button"
+            onClick={onOpenFullDetail}
+            className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Open full detail
+          </button>
         </div>
       </div>
     </div>
@@ -227,6 +237,7 @@ function AppointmentDetailPanel({
 }
 
 export function CalendarWorkspace() {
+  const router = useRouter();
   const [viewMode, setViewMode] = useState<ViewMode>('day');
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [dentistFilter, setDentistFilter] = useState<string>('All Dentists');
@@ -696,6 +707,7 @@ export function CalendarWorkspace() {
       <AppointmentDetailPanel
         appointment={selectedAppointment}
         onClose={() => setSelectedAppointment(null)}
+        onOpenFullDetail={() => router.push('/appointment-detail')}
       />
       <SlotInfoPanel
         slot={selectedSlot}

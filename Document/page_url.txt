@@ -5,11 +5,15 @@
 - http://localhost:3000/                      - Dashboard
 - http://localhost:3000/appointments          - Appointments
 - http://localhost:3000/patients              - Patients
+- http://localhost:3000/calendar               - Calendar
+- http://localhost:3000/appointment-detail     - Appointment Detail
+- http://localhost:3000/check-in                - Check-in
+- http://localhost:3000/queue-detail            - Queue Detail
+- http://localhost:3000/walk-in-appointment    - Walk-in Appointment
 
 ## Clinical Workflow
 - http://localhost:3000/clinical-examination       - Clinical Examination
-- http://localhost:3000/diagnosis                  - Diagnosis
-- http://localhost:3000/treatment-execution        - Treatment Execution
+- http://localhost:3000/diagnosis                  - Diagnosis- http://localhost:3000/treatment-execution        - Treatment Execution
 - http://localhost:3000/active-procedure-workspace - Active Procedure Workspace
 - http://localhost:3000/treatment-summary          - Treatment Summary
 

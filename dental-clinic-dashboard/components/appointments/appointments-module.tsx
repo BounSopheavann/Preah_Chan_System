@@ -1067,26 +1067,8 @@ export function AppointmentsModule() {
   };
 
   const handleCallPatient = (appointmentId: string) => {
-    const shouldMoveToChair = window.confirm('Send this patient to the treatment chair?');
-
-    if (!shouldMoveToChair) {
-      return;
-    }
-
-    setAppointments((currentAppointments) =>
-      currentAppointments.map((appointment) => {
-        if (appointment.id !== appointmentId) {
-          return appointment;
-        }
-
-        return {
-          ...appointment,
-          status: 'In Chair',
-        };
-      }),
-    );
-
-    router.push('/clinical-examination');
+    void appointmentId;
+    router.push('/queue-detail');
   };
 
   return (
@@ -1169,6 +1151,7 @@ export function AppointmentsModule() {
               <h2 className="text-lg font-bold text-foreground">Appointments</h2>
               <p className="text-sm text-muted-foreground">Sortable, filterable appointment schedule.</p>
             </div>
+            <div className="flex flex-wrap gap-2">
             <button
               type="button"
               className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:bg-primary/90 sm:w-auto"
@@ -1176,6 +1159,15 @@ export function AppointmentsModule() {
               <Plus className="size-4" />
               New Appointment
             </button>
+            <button
+              type="button"
+              onClick={() => router.push('/walk-in-appointment')}
+              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-4 text-sm font-bold text-primary transition-all hover:bg-primary/10 sm:w-auto"
+            >
+              <UserCheck className="size-4" />
+              Walk-in Appointment
+            </button>
+            </div>
           </div>
 
           <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
