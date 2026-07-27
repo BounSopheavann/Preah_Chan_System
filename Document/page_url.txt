@@ -34,6 +34,7 @@
 - http://localhost:3000/reminder-center            - Reminder Center
 - http://localhost:3000/recall-dashboard            - Recall Dashboard
 - http://localhost:3000/telegram-linking            - Telegram Linking
+- http://localhost:3000/telegram-patient-portal    - Telegram Patient Portal
 
 ## Other
 - http://localhost:3000/activity-log - Activity Log
