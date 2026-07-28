@@ -29,7 +29,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { icon: Users, label: 'Patients', href: '/patients' },
     { icon: Stethoscope, label: 'Appointments', href: '/appointments' },
     { icon: Activity, label: 'Treatment Execution', href: '/treatment-execution' },
-    { icon: BarChart3, label: 'Reports', href: '#' },
+    { icon: BarChart3, label: 'Reports', href: '/reports' },
     { icon: Pill, label: 'Treatments', href: '#' },
     { icon: Settings, label: 'Settings', href: '#' },
   ];
