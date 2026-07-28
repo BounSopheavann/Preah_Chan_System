@@ -6,7 +6,6 @@ import {
   Users,
   Settings,
   BarChart3,
-  Pill,
   LogOut,
   Stethoscope,
   X,
@@ -30,7 +29,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { icon: Stethoscope, label: 'Appointments', href: '/appointments' },
     { icon: Activity, label: 'Treatment Execution', href: '/treatment-execution' },
     { icon: BarChart3, label: 'Reports', href: '/reports' },
-    { icon: Pill, label: 'Treatments', href: '#' },
     { icon: Settings, label: 'Settings', href: '#' },
   ];
 
